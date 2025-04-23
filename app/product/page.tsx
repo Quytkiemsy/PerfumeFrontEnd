@@ -2,7 +2,7 @@
 
 export default function Product() {
   return (
-    <div className="min-h-screen bg-gradient-to-r from-blue-500 to-purple-600 text-white">
+    <div className="min-h-screen bg-purple-500 text-white">
       <header className="py-10 text-center">
         <h1 className="text-5xl font-extrabold">Explore Our Amazing Products</h1>
         <p className="mt-4 text-lg">Discover the best products tailored just for you</p>
