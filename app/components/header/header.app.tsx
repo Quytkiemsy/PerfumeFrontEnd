@@ -8,7 +8,7 @@ export default function Header() {
     return (
         <header className="border-b">
             <div className="max-w-8xl mx-auto px-4 py-3 flex items-center justify-between">
-                {/* Left: Country, Links (desktop) & Hamburger (mobile) */}
+                {/* Left: Country, Links (desktop) */}
                 <div className="flex items-center gap-6">
                     {/* Hamburger Menu (mobile only) */}
                     <button className="lg:hidden" />

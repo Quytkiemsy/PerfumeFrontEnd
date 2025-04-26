@@ -17,10 +17,10 @@ export default function Navbar() {
 
     return (
         <header
-            className={`fixed top-0 left-0 w-full bg-white z-50 shadow-sm border-b transition-transform duration-300 ${showNavbar ? "translate-y-0" : "-translate-y-full"
+            className={` fixed top-0 left-0 w-full bg-white z-50 shadow-sm border-b transition-transform duration-300 ${showNavbar ? "translate-y-0" : "-translate-y-full"
                 }`}
         >
-            <nav className="flex justify-between items-center px-6 py-3 overflow-x-auto whitespace-nowrap">
+            <nav className="max-lg:hidden flex justify-between items-center px-6 py-3 overflow-x-auto whitespace-nowrap">
                 <div className="flex space-x-6 text-sm font-medium">
                     <Link href="#" className="font-bold">Reformation</Link>
                     <Link href="#">New</Link>
