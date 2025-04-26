@@ -1,5 +1,6 @@
 
 // components/Header.tsx
+import LoginPopup from "@/app/components/login/login.modal";
 import MobileMenu from "@/app/components/moblieMenu/mobile.menu";
 import { Menu, Search, ShoppingBag, Heart } from "lucide-react";
 import Link from "next/link";
@@ -36,7 +37,8 @@ export default function Header() {
                     {/* Desktop-only items */}
                     <div className="hidden lg:flex items-center gap-4 font-bold">
                         <Heart className="w-5 h-5" />
-                        <Link href="#" className="cursor-pointer hover:underline underline-offset-4 decoration-[2px]">Sign in</Link>
+                        <LoginPopup />
+                        {/* <Link href="#" className="cursor-pointer hover:underline underline-offset-4 decoration-[2px]">Sign in</Link> */}
                     </div>
                 </div>
             </div>

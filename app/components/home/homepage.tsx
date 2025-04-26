@@ -1,7 +1,12 @@
 import ProductGrid from "@/app/components/home/product.home";
+import { authOptions } from "@/app/lib/auth/authOptions";
+import { getServerSession } from "next-auth";
 import Image from "next/image";
 
-const Homepage = () => {
+
+const Homepage = async () => {
+    const session = await getServerSession(authOptions);
+    console.log(session)
     return (
         <>
             <section className="w-full overflow-hidden">
@@ -150,6 +155,7 @@ const Homepage = () => {
                 </div>
             </section>
             <ProductGrid />
+
         </>
     );
 };
