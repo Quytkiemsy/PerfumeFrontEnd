@@ -3,6 +3,7 @@ import "./globals.css";
 import Header from "@/app/components/header/header.app";
 import Navbar from "@/app/components/navbar/navbar.menu";
 import Footer from "@/app/components/footer/footer.app";
+import { Toaster } from "react-hot-toast";
 
 
 
@@ -24,6 +25,7 @@ export default function RootLayout({
         <Navbar />
         {children}
         <Footer />
+        <Toaster position="top-center" reverseOrder={false} />
       </body>
     </html>
   );

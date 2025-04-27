@@ -1,13 +1,16 @@
 'use client';
 
+import { AnimatePresence, motion } from "framer-motion";
 import { signIn } from "next-auth/react";
+import { useRouter } from 'next/navigation';
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { toast } from 'react-hot-toast';
 
 export default function LoginPopup() {
     const [isOpen, setIsOpen] = useState(false);
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
+    const router = useRouter();
 
     const handleCredentialLogin = async () => {
         const res = await signIn("credentials", {
@@ -17,8 +20,15 @@ export default function LoginPopup() {
             callbackUrl: `${window.location.origin}`
         });
 
-        if (res?.ok) setIsOpen(false);
-        else alert("Login failed");
+        if (res?.error) {
+            toast.error(res?.error ? res.error as string : "");
+        } else {
+            toast.success('Đăng nhập thành công!');
+            setIsOpen(false);
+        }
+        if (res?.url) {
+            router.push(res.url);
+        }
     };
 
     const handleGoogleLogin = () => signIn("google");

@@ -1,11 +1,15 @@
-
 // components/Header.tsx
 import LoginPopup from "@/app/components/login/login.modal";
-import MobileMenu from "@/app/components/moblieMenu/mobile.menu";
-import { Menu, Search, ShoppingBag, Heart } from "lucide-react";
+import MobileMenu, { ButtonLogout } from "@/app/components/moblieMenu/mobile.menu";
+import { Heart, Search, ShoppingBag } from "lucide-react";
 import Link from "next/link";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/lib/auth/authOptions";
+import { signOut } from "next-auth/react";
 
-export default function Header() {
+export default async function Header() {
+    const session = await getServerSession(authOptions);
+    console.log(session)
     return (
         <header className="border-b">
             <div className="max-w-8xl mx-auto px-4 py-3 flex items-center justify-between">
@@ -37,7 +41,35 @@ export default function Header() {
                     {/* Desktop-only items */}
                     <div className="hidden lg:flex items-center gap-4 font-bold">
                         <Heart className="w-5 h-5" />
-                        <LoginPopup />
+                        {
+                            session?.user ? (
+                                <div className="relative group z-10">
+                                    <button className="cursor-pointer hover:underline underline-offset-4 decoration-[2px]">
+                                        {session.user.username}
+                                    </button>
+                                    <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <ul className="py-1">
+                                            <li>
+                                                <Link href="/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                                    Profile
+                                                </Link>
+                                            </li>
+                                            <li>
+                                                <Link href="/settings" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                                    Settings
+                                                </Link>
+                                            </li>
+                                            <li>
+                                                <ButtonLogout />
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            ) : (
+                                // <Link href="#" className="cursor-pointer hover:underline underline-offset-4 decoration-[2px]">Sign in</Link>
+                                <LoginPopup />
+                            )
+                        }
                         {/* <Link href="#" className="cursor-pointer hover:underline underline-offset-4 decoration-[2px]">Sign in</Link> */}
                     </div>
                 </div>

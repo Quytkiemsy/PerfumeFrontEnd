@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useState } from "react";
 import clsx from "clsx";
 import LoginPopup from "@/app/components/login/login.modal";
+import { signOut } from "next-auth/react";
 
 export default function MobileMenu() {
     const [open, setOpen] = useState(false);
@@ -63,3 +64,13 @@ export default function MobileMenu() {
         </>
     );
 }
+
+
+export const ButtonLogout = () => {
+    return (
+        <button onClick={() => signOut()} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+            Logout
+        </button>
+    )
+}
+

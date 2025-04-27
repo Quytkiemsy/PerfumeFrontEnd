@@ -30,12 +30,23 @@ const authOptions: AuthOptions = {
                     password: string;
                 };
 
-                // 🛡️ Fake logic, thay bằng check DB thực tế
-                if (username === "admin@example.com" && password === "123456") {
-                    return { id: "1", name: "Admin", username };
-                }
+                // Add logic here to look up the user from the credentials supplied
+                const res = await sendRequest<IBackendRes<JWT>>({
+                    url: `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/auth/login`,
+                    method: 'POST',
+                    body: { username: credentials?.username, password: credentials?.password }
+                });
 
-                return null;
+                if (res.data) {
+                    // Any object returned will be saved in `user` property of the JWT
+                    return res.data as any;
+                } else {
+                    // If you return null then an error will be displayed advising the user to check their details.
+                    // Trả về lỗi khi thông tin đăng nhập sai
+                    throw new Error(res.message);
+
+                    // You can also Reject this callback with an Error thus the user will be sent to the error page with the error message as a query parameter
+                }
             },
         }),
     ],
@@ -53,6 +64,32 @@ const authOptions: AuthOptions = {
                     token.refreshToken = res.data.refreshToken;
                     token.user = res.data.user;
                     token.user.image = user?.image as string;
+                }
+            }
+
+            if (trigger === 'signIn' && account?.provider === 'google') {
+                const res = await sendRequest<IBackendRes<JWT>>({
+                    url: `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/auth/social-media`,
+                    method: 'POST',
+                    body: { typeOfLogin: "google", username: user.email }
+                });
+                if (res.data) {
+                    token.accessToken = res.data?.accessToken;
+                    token.refreshToken = res.data.refreshToken;
+                    token.user = res.data.user;
+                    token.user.image = user?.image as string;
+                }
+            }
+
+            if (trigger === 'signIn' && account?.provider === 'credentials') {
+
+                if (user) {
+                    //@ts-ignore
+                    token.accessToken = user?.accessToken;
+                    //@ts-ignore
+                    token.refreshToken = user?.refreshToken;
+                    //@ts-ignore
+                    token.user = user?.user;
                 }
             }
             return token;
