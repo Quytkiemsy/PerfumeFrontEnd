@@ -4,6 +4,7 @@ import Header from "@/app/components/header/header.app";
 import Navbar from "@/app/components/navbar/navbar.menu";
 import Footer from "@/app/components/footer/footer.app";
 import { Toaster } from "react-hot-toast";
+import NextAuthWrapper from "@/app/lib/next.auth.wrapper";
 
 
 
@@ -21,11 +22,13 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <Header />
-        <Navbar />
-        {children}
-        <Footer />
-        <Toaster position="top-center" reverseOrder={false} />
+        <NextAuthWrapper>
+          <Header />
+          <Navbar />
+          {children}
+          <Footer />
+          <Toaster position="top-center" reverseOrder={false} />
+        </NextAuthWrapper>
       </body>
     </html>
   );

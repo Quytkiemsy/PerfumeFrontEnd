@@ -1,11 +1,10 @@
 // components/Header.tsx
 import LoginPopup from "@/app/components/login/login.modal";
 import MobileMenu, { ButtonLogout } from "@/app/components/moblieMenu/mobile.menu";
-import { Heart, Search, ShoppingBag } from "lucide-react";
-import Link from "next/link";
-import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/lib/auth/authOptions";
-import { signOut } from "next-auth/react";
+import { Heart, Search, ShoppingBag } from "lucide-react";
+import { getServerSession } from "next-auth";
+import Link from "next/link";
 
 export default async function Header() {
     const session = await getServerSession(authOptions);
@@ -55,22 +54,15 @@ export default async function Header() {
                                                 </Link>
                                             </li>
                                             <li>
-                                                <Link href="/settings" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                                    Settings
-                                                </Link>
-                                            </li>
-                                            <li>
                                                 <ButtonLogout />
                                             </li>
                                         </ul>
                                     </div>
                                 </div>
                             ) : (
-                                // <Link href="#" className="cursor-pointer hover:underline underline-offset-4 decoration-[2px]">Sign in</Link>
                                 <LoginPopup />
                             )
                         }
-                        {/* <Link href="#" className="cursor-pointer hover:underline underline-offset-4 decoration-[2px]">Sign in</Link> */}
                     </div>
                 </div>
             </div>

@@ -6,10 +6,11 @@ import Link from "next/link";
 import { useState } from "react";
 import clsx from "clsx";
 import LoginPopup from "@/app/components/login/login.modal";
-import { signOut } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 
 export default function MobileMenu() {
     const [open, setOpen] = useState(false);
+    const { data: session } = useSession();
 
     const toggleMenu = () => setOpen(!open);
 
@@ -52,13 +53,21 @@ export default function MobileMenu() {
                 </nav>
 
                 <div className="mt-6 px-4 flex flex-col gap-4 text-sm">
-                    <Link href="#" className="flex items-center gap-2"><Cloud className="w-4 h-4" /> Sustainability</Link>
-                    <Link href="#" className="flex items-center gap-2"><Store className="w-4 h-4" /> Stores</Link>
-                    <Link href="#" className="flex items-center gap-2"><Heart className="w-4 h-4" /> Favorites</Link>
+
                     <Link href="#" className="flex items-center gap-2"><Eye className="w-4 h-4" /> Order lookup</Link>
                     <Link href="#" className="flex items-center gap-2"><Package className="w-4 h-4" /> Contact Ref</Link>
                     <Link href="#" className="flex items-center gap-2"><MapPin className="w-4 h-4" /> Vietnam</Link>
-                    <LoginPopup />
+
+                    {
+                        session?.user ? (
+                            <>
+                                <Link href="/profile" className="flex items-center gap-2"><User2 className="w-4 h-4" /> {session.user.username}</Link>
+                                <ButtonLogout />
+                            </>
+                        ) : (
+                            <LoginPopup />
+                        )
+                    }
                 </div>
             </aside>
         </>
