@@ -30,4 +30,20 @@ declare global {
         result: T[]
     }
 
+    interface IProduct {
+        id: number;
+        name: string;
+        brand?: string;
+        price: number;
+        images: string[];
+        description?: string;
+        fitInfo?: string;
+        details?: string;
+        sizes: string[];
+        createdAt: string;
+        updatedAt: string;
+        createdBy?: string;
+        updatedBy?: string;
+    }
+
 }

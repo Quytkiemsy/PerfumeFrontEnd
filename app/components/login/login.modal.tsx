@@ -27,7 +27,8 @@ export default function LoginPopup() {
             setIsOpen(false);
         }
         if (res?.url) {
-            router.push(res.url);
+            router.push("/");
+            router.refresh();
         }
     };
 
