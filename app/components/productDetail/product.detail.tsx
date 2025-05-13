@@ -13,7 +13,16 @@ interface IProductDetailProps {
 
 export default function ProductDetail({ product }: IProductDetailProps) {
     const [selectedSize, setSelectedSize] = useState<string>('');
-    const [selectedColor, setSelectedColor] = useState<string>('');
+    const [selectedVariant, setSelectedVariant] = useState<{
+        id: number;
+        variantType?: string;
+        volume?: string;
+        price?: number;
+        stockQuantity?: number;
+    }>();
+    const [selectedIndex, setSelectedIndex] = useState<number>(0);
+    const [selectVar, setSelectVar] = useState<string>('');
+    const [selectedVolume, setSelectedVolume] = useState<string>('');
 
     console.log(product);
 
@@ -31,8 +40,6 @@ export default function ProductDetail({ product }: IProductDetailProps) {
 
     // Tham chiếu cho các hình ảnh
     const mainImgRef = useRef<HTMLImageElement | null>(null);
-    const closeUpImgRef = useRef<HTMLImageElement | null>(null);
-    const backViewImgRef = useRef<HTMLImageElement | null>(null);
 
     return (
         <div className="max-w-7xl mx-auto p-4 grid grid-cols-1 md:grid-cols-3  gap-8">
@@ -72,20 +79,20 @@ export default function ProductDetail({ product }: IProductDetailProps) {
 
             {/* Info */}
             <div>
-                <h1 className="text-2xl font-semibold mb-2">Everett Linen Dress</h1>
-                <p className="text-xl font-bold mb-4">₫ {product?.price.toLocaleString('en-US')}</p>
-
+                <h1 className="text-2xl font-semibold mb-2">{product?.name}</h1>
+                <p className="text-xl font-bold mb-4">
+                    ₫ {product?.perfumeVariants?.find((variant) => variant.variantType === selectVar && variant.volume === selectedVolume)?.price?.toLocaleString('en-US') ?? '0'}
+                </p>
                 {/* Colors */}
                 <div className="mb-4">
-                    <p className="mb-1 font-medium">Color</p>
+                    <p className="mb-1 font-medium">Options</p>
                     <div className="flex gap-2">
-                        {colors.map((color, i) => (
+                        {['FULLBOTTLE', 'DECANT'].map((variant, i) => (
                             <button
                                 key={i}
-                                onClick={() => setSelectedColor(color)}
-                                className={`w-8 h-8 rounded-full border ${selectedColor === color ? 'ring-2 ring-black' : ''}`}
-                                style={{ backgroundColor: color }}
-                            ></button>
+                                onClick={() => setSelectVar(variant)}
+                                className={`w-18 h-8 border rounded-md ${variant === selectVar ? 'ring-2 ring-black' : ''}`}
+                            >{variant === 'FULLBOTTLE' ? 'FULL' : 'DECANT'}</button>
                         ))}
                     </div>
                 </div>
@@ -94,15 +101,23 @@ export default function ProductDetail({ product }: IProductDetailProps) {
                 <div className="mb-4">
                     <p className="mb-1 font-medium">Size</p>
                     <div className="flex flex-wrap gap-2">
-                        {sizes.map((size) => (
-                            <button
-                                key={size}
-                                onClick={() => setSelectedSize(size)}
-                                className={`w-10 h-10 flex items-center justify-center border rounded-md ${selectedSize === size ? 'bg-black text-white' : 'bg-white text-black'}`}
-                            >
-                                {size}
-                            </button>
-                        ))}
+                        {
+                            product?.perfumeVariants !== null && product?.perfumeVariants?.map((variant, i) => {
+                                if (variant.variantType !== selectVar) return null;
+                                return (
+                                    <button
+                                        key={i}
+                                        onClick={() => setSelectedVolume(variant.volume ?? '')}
+                                        className={`w-15 h-10 flex items-center justify-center border rounded-md ${selectedVolume === variant.volume ? 'bg-black text-white' : 'bg-white text-black'}`}
+                                    >
+                                        {variant?.volume}ml
+                                    </button>
+                                )
+                            })
+                        }
+
+
+
                     </div>
                 </div>
 
@@ -116,11 +131,9 @@ export default function ProductDetail({ product }: IProductDetailProps) {
 
                 {/* Fit */}
                 <div className="mb-4">
-                    <h2 className="font-semibold mb-1">The fit</h2>
+                    <h2 className="font-semibold mb-1">Decription</h2>
                     <ul className="list-disc ml-5 text-sm text-gray-700">
-                        <li>Designed to be fitted at bodice with an A-line skirt</li>
-                        <li>Also available in Mini</li>
-                        <li>Model is wearing size 0: 175.3cm height, 61cm waist, 87.6cm hips, 86.4cm bust</li>
+                        <li>{product?.description}</li>
                     </ul>
                 </div>
 

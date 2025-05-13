@@ -28,7 +28,9 @@ export default async function Header() {
 
                 {/* Center: Logo */}
                 <div className="text-lg font-semibold text-center flex-1 lg:flex-none">
-                    Reformation
+                    <Link href="/" className="flex items-center justify-center gap-2">
+                        <span className="hidden lg:block">Reformation</span>
+                    </Link>
                 </div>
 
                 {/* Right: Icons + Auth (desktop only) */}
