@@ -2,25 +2,11 @@
 import Image from 'next/image';
 import { useRef, useState } from 'react';
 
-const sizes = ['0', '2', '4', '6', '8', '10', '12'];
-const colors = [
-    '#E3C6BE', '#1B1B1B', '#CAD1D6', '#F6F4EC', '#F1E7C9', '#D5C6B4'
-];
-
 interface IProductDetailProps {
     product: IProduct | null;
 }
 
 export default function ProductDetail({ product }: IProductDetailProps) {
-    const [selectedSize, setSelectedSize] = useState<string>('');
-    const [selectedVariant, setSelectedVariant] = useState<{
-        id: number;
-        variantType?: string;
-        volume?: string;
-        price?: number;
-        stockQuantity?: number;
-    }>();
-    const [selectedIndex, setSelectedIndex] = useState<number>(0);
     const [selectVar, setSelectVar] = useState<string>('');
     const [selectedVolume, setSelectedVolume] = useState<string>('');
 
@@ -45,7 +31,7 @@ export default function ProductDetail({ product }: IProductDetailProps) {
         <div className="max-w-7xl mx-auto p-4 grid grid-cols-1 md:grid-cols-3  gap-8">
             {/* Images */}
             <div className="col-span-2 grid grid-cols-1 md:grid-cols-2 ">
-                <div className="md:col-span-2 relative aspect-[1/1] md:border-b md:border-r border-gray-300 overflow-hidden">
+                <div className="md:col-span-2 relative aspect-[4/3] md:border-b md:border-r border-gray-300 overflow-hidden">
                     <Image
                         ref={mainImgRef}
                         src={`/api/image?filename=${product?.images[0]}`}
@@ -60,14 +46,14 @@ export default function ProductDetail({ product }: IProductDetailProps) {
                         }}
                     />
                 </div>
-                <div className="relative aspect-[3/4] md:border-b md:border-r border-gray-300 overflow-hidden">
+                <div className="relative aspect-[4/3] md:border-b md:border-r border-gray-300 overflow-hidden">
                     <Image
                         src={`/api/image?filename=${product?.images[0]}`}
                         alt="Close up"
                         fill
                         className="object-cover transition-transform duration-300 hover:scale-160" />
                 </div>
-                <div className="relative aspect-[3/4] md:border-b md:border-r border-gray-300 overflow-hidden" >
+                <div className="relative aspect-[4/3] md:border-b md:border-r border-gray-300 overflow-hidden" >
                     <Image
                         src={`/api/image?filename=${product?.images[0]}`}
                         alt="Back view"
@@ -79,7 +65,9 @@ export default function ProductDetail({ product }: IProductDetailProps) {
 
             {/* Info */}
             <div>
-                <h1 className="text-2xl font-semibold mb-2">{product?.name}</h1>
+                <h1 className="text-2xl font-semibold ">{product?.name}</h1>
+                {/* Brand */}
+                <p className="text-sm text-gray-600 mb-2">{product?.brand?.name}</p>
                 <p className="text-xl font-bold mb-4">
                     ₫ {product?.perfumeVariants?.find((variant) => variant.variantType === selectVar && variant.volume === selectedVolume)?.price?.toLocaleString('en-US') ?? '0'}
                 </p>
@@ -91,7 +79,7 @@ export default function ProductDetail({ product }: IProductDetailProps) {
                             <button
                                 key={i}
                                 onClick={() => setSelectVar(variant)}
-                                className={`w-18 h-8 border rounded-md ${variant === selectVar ? 'ring-2 ring-black' : ''}`}
+                                className={`w-18 h-10 border rounded-md ${variant === selectVar ? 'ring-2 ring-black' : ''}`}
                             >{variant === 'FULLBOTTLE' ? 'FULL' : 'DECANT'}</button>
                         ))}
                     </div>
@@ -103,12 +91,14 @@ export default function ProductDetail({ product }: IProductDetailProps) {
                     <div className="flex flex-wrap gap-2">
                         {
                             product?.perfumeVariants !== null && product?.perfumeVariants?.map((variant, i) => {
-                                if (variant.variantType !== selectVar) return null;
+
                                 return (
                                     <button
+                                        disabled={selectVar !== variant.variantType}
                                         key={i}
                                         onClick={() => setSelectedVolume(variant.volume ?? '')}
-                                        className={`w-15 h-10 flex items-center justify-center border rounded-md ${selectedVolume === variant.volume ? 'bg-black text-white' : 'bg-white text-black'}`}
+                                        className={`w-15 h-10 flex items-center justify-center border rounded-md ${selectedVolume === variant.volume ? 'ring-2 ring-black' : ''}
+                                        ${selectVar !== variant.variantType ? 'opacity-50 cursor-not-allowed' : ''}`}
                                     >
                                         {variant?.volume}ml
                                     </button>
@@ -141,9 +131,7 @@ export default function ProductDetail({ product }: IProductDetailProps) {
                 <div>
                     <h2 className="font-semibold mb-1">The details</h2>
                     <ul className="list-disc ml-5 text-sm text-gray-700">
-                        <li>Back smocking, square neckline</li>
-                        <li>Lightweight linen fabric – 100% linen</li>
-                        <li>Wash cold + dry flat</li>
+                        <li>{product?.details}</li>
                     </ul>
                 </div>
             </div>

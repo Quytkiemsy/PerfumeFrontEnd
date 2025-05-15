@@ -37,26 +37,32 @@ declare global {
         description?: string;
         fitInfo?: string;
         details?: string;
-        brand?: {
-            name: string;
-            description?: string;
-            origin?: string;
-        }
-        fragranceTypes?: {
-            name: string;
-            description?: string;
-        }
-        perfumeVariants?: {
-            id: number;
-            variantType?: string;
-            volume?: string;
-            price?: number;
-            stockQuantity?: number;
-        }[]
+        brand?: IBrand;
+        fragranceTypes?: IFragranceTypes
+        perfumeVariants?: IPerfumeVariant[]
         createdAt: string;
         updatedAt: string;
         createdBy?: string;
         updatedBy?: string;
     }
 
+    interface IPerfumeVariant {
+        id: number;
+        variantType?: string;
+        volume?: string;
+        price?: number;
+        stockQuantity?: number;
+    }
+
+    interface IFragranceTypes {
+        id: number;
+        name: string;
+        description?: string;
+    }
+
+    interface IBrand {
+        name: string;
+        description?: string;
+        origin?: string;
+    }
 }
