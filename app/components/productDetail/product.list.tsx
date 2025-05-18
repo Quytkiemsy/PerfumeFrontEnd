@@ -11,7 +11,7 @@ interface IProps {
 export default function ListProduct({ products }: IProps) {
 
     return (
-        <div className="container mx-auto p-4 h-200">
+        <div className="container mx-auto p-4">
             <div className="flex flex-col md:flex-row">
                 {/* Bộ lọc bên trái */}
                 <FilterProduct />

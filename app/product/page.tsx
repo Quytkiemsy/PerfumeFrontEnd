@@ -6,6 +6,13 @@ const Page = async () => {
     const res = await sendRequest<IBackendRes<IModelPaginate<IProduct>>>({
         url: url,
         method: 'GET',
+        queryParams: {
+            page: 0,
+            size: 8,
+        },
+        nextOption: {
+            cache: 'no-store'
+        }
     });
 
     return (
