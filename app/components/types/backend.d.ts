@@ -65,4 +65,16 @@ declare global {
         description?: string;
         origin?: string;
     }
+
+    interface IModelPaginateRestJPA<T> {
+        page: {
+            current: number;
+            pageSize: number;
+            pages: number;
+            total: number;
+        },
+        _embedded: {
+            [key: string]: T[];
+        }
+    }
 }

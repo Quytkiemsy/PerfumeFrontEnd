@@ -1,23 +1,22 @@
 import ListProduct from '@/app/components/productDetail/product.list';
-import { sendRequest } from '@/app/util/api';
-const Page = async () => {
+import { sendRequest } from '../util/api';
 
-    const url = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/products`;
-    const res = await sendRequest<IBackendRes<IModelPaginate<IProduct>>>({
-        url: url,
-        method: 'GET',
-        queryParams: {
-            page: 0,
-            size: 8,
-        },
-        nextOption: {
-            cache: 'no-store'
-        }
+type PageProps = {
+    searchParams: { [key: string]: string | string[] | undefined }
+}
+const Page = async ({ searchParams }: PageProps) => {
+
+    const res = await sendRequest<IBackendRes<IModelPaginateRestJPA<IBrand>>>({
+        url: `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/brands`,
+        method: 'GET'
     });
+
+    const brands = res.data?._embedded.brands || [] as IBrand[];
+
 
     return (
         <>
-            <ListProduct products={res.data?.result ?? []} />
+            <ListProduct searchParams={searchParams} brands={brands} />
         </>
     );
 }
