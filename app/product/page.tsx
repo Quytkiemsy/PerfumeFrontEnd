@@ -2,7 +2,7 @@ import ListProduct from '@/app/components/productDetail/product.list';
 import { sendRequest } from '../util/api';
 
 type PageProps = {
-    searchParams: { [key: string]: string | string[] | undefined }
+    searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }
 const Page = async ({ searchParams }: PageProps) => {
 

@@ -1,21 +1,34 @@
-
-
 import FilterProduct from '@/app/components/productDetail/filter.product';
 import ProductCard from '@/app/components/productDetail/product.card';
 import { sendRequest } from '@/app/util/api';
 
 
-export default async function ListProduct({ searchParams, brands }: { searchParams: { brand?: string, volume?: string }, brands: IBrand[] }) {
+export default async function ListProduct({ searchParams, brands }: { searchParams: Promise<{ [key: string]: string | string[] | undefined }>, brands: IBrand[] }) {
 
     const queryParams: any = {
         page: 0,
         size: 8,
     };
-    if (searchParams.brand) {
-        queryParams.filter = `brand.name='${searchParams.brand}'`;
+    let filterArr: string[] = [];
+    const params = await searchParams;
+    if (params.brand) {
+        filterArr.push(`brand.name='${params.brand}'`);
     }
-    if (searchParams.volume) {
-        queryParams.filter = `perfumeVariants.volume>='${searchParams.volume}'`;
+    if (params.volume && params.volume !== 'all') {
+        if (params.volume !== '100+') {
+            filterArr.push(`perfumeVariants.volume<='${params.volume}'`);
+        } else {
+            filterArr.push(`perfumeVariants.volume>='${params.volume}'`);
+        }
+    }
+    if (params.priceFrom) {
+        filterArr.push(`perfumeVariants.price>='${params.priceFrom}'`);
+    }
+    if (params.priceTo) {
+        filterArr.push(`perfumeVariants.price<='${params.priceTo}'`);
+    }
+    if (filterArr.length > 0) {
+        queryParams.filter = filterArr.join(' and ');
     }
     const res = await sendRequest<IBackendRes<IModelPaginate<IProduct>>>({
         url: `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/products`,
