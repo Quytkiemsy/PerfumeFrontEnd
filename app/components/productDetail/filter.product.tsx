@@ -8,6 +8,10 @@ interface FilterProductProps {
 
 const VOLUMES_OPTIONS = ['20', '50', '100', '100+']
 
+const SEX_OPTIONS = ['MEN', 'WOMEN', 'UNISEX']
+
+const TIERS_OPTIONS = ['BASIC', 'PREMIUM', 'LUXURY']
+
 const FilterProduct = ({ brands }: FilterProductProps) => {
     const router = useRouter()
     const searchParams = useSearchParams()
@@ -54,7 +58,7 @@ const FilterProduct = ({ brands }: FilterProductProps) => {
 
     // Giá trị mặc định và giới hạn cho khoảng giá
     const minPrice = 0;
-    const maxPrice = 10000000;
+    const maxPrice = 5000000;
     // Lấy giá trị từ URL, nếu không có thì dùng mặc định
     const getPriceFromParams = () => {
         const from = Number(searchParams.get('priceFrom'));
@@ -112,7 +116,7 @@ const FilterProduct = ({ brands }: FilterProductProps) => {
                                     setLocalPrice(l => ({ ...l, from: Math.min(val, l.to) }));
                                 }}
                                 onBlur={commitRange}
-                                className="w-25 text-center border border-gray-300 rounded-lg p-1 bg-white text-gray-800 font-semibold focus:outline-none focus:ring-2 focus:ring-gray-500 text-sm"
+                                className="w-3/7 text-center border border-gray-300 rounded-lg p-1 bg-white text-gray-800 font-semibold focus:outline-none focus:ring-2 focus:ring-gray-500 text-sm"
                                 placeholder="Từ"
                             />
                             <span className="text-gray-400">—</span>
@@ -129,7 +133,7 @@ const FilterProduct = ({ brands }: FilterProductProps) => {
                                     setLocalPrice(l => ({ ...l, to: Math.max(val, l.from) }));
                                 }}
                                 onBlur={commitRange}
-                                className="w-25 text-center border border-gray-300 rounded-lg p-1 bg-white text-gray-800 font-semibold focus:outline-none focus:ring-2 focus:ring-gray-500 text-sm"
+                                className="w-3/7 text-center border border-gray-300 rounded-lg p-1 bg-white text-gray-800 font-semibold focus:outline-none focus:ring-2 focus:ring-gray-500 text-sm"
                                 placeholder="Đến"
                             />
                         </div>
@@ -171,6 +175,44 @@ const FilterProduct = ({ brands }: FilterProductProps) => {
                                     checked={isChecked(volume)}
                                 />
                                 <span>{volume} ml</span>
+                            </label>
+                        ))}
+                    </div>
+                </section>
+                {/* Sex Filter */}
+                <section>
+                    <h3 className="text-base font-bold mb-3 text-gray-800 tracking-wide uppercase">Giới tính</h3>
+                    <div className="flex flex-col gap-2">
+                        {SEX_OPTIONS.map((sex, i) => (
+                            <label key={i} className="flex items-center gap-2 text-gray-700 cursor-pointer">
+                                <input
+                                    type="radio"
+                                    name="sex"
+                                    value={sex}
+                                    checked={searchParams.get('sex') === sex}
+                                    onChange={e => updateParams('sex', e.target.value)}
+                                    className="accent-gray-700"
+                                />
+                                <span className=''>{sex.charAt(0).toUpperCase() + sex.slice(1).toLowerCase()}</span>
+                            </label>
+                        ))}
+                    </div>
+                </section>
+                {/* Tier Filter */}
+                <section>
+                    <h3 className="text-base font-bold mb-3 text-gray-800 tracking-wide uppercase">PHÂN KHÚC</h3>
+                    <div className="flex flex-col gap-2">
+                        {TIERS_OPTIONS.map((tier, i) => (
+                            <label key={i} className="flex items-center gap-2 text-gray-700 cursor-pointer">
+                                <input
+                                    type="radio"
+                                    name="tier"
+                                    value={tier}
+                                    checked={searchParams.get('tier') === tier}
+                                    onChange={e => updateParams('tier', e.target.value)}
+                                    className="accent-gray-700"
+                                />
+                                <span className=''>{tier.charAt(0).toUpperCase() + tier.slice(1).toLowerCase()}</span>
                             </label>
                         ))}
                     </div>

@@ -16,7 +16,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     };
 
     return (
-        <div className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-transform transform hover:scale-105">
+        <div className="bg-white h-90 border border-gray-200 rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-transform transform hover:scale-105">
             <img
                 src={`/api/image?filename=${product?.images[0]}`}
                 alt={product.name}

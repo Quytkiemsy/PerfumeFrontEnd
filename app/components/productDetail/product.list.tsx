@@ -27,6 +27,12 @@ export default async function ListProduct({ searchParams, brands }: { searchPara
     if (params.priceTo) {
         filterArr.push(`perfumeVariants.price<='${params.priceTo}'`);
     }
+    if (params.sex) {
+        filterArr.push(`sex='${params.sex}'`);
+    }
+    if (params.tier) {
+        filterArr.push(`tier='${params.tier}'`);
+    }
     if (filterArr.length > 0) {
         queryParams.filter = filterArr.join(' and ');
     }
