@@ -1,6 +1,7 @@
 import FilterProduct from '@/app/components/productDetail/filter.product';
 import ProductCard from '@/app/components/productDetail/product.card';
 import { sendRequest } from '@/app/util/api';
+import Pagination from './product.pagination';
 
 
 export default async function ListProduct({ searchParams, brands }: { searchParams: Promise<{ [key: string]: string | string[] | undefined }>, brands: IBrand[] }) {
@@ -10,7 +11,11 @@ export default async function ListProduct({ searchParams, brands }: { searchPara
         size: 8,
     };
     let filterArr: string[] = [];
+
     const params = await searchParams;
+    if (params.page) {
+        queryParams.page = parseInt(params.page as string, 10) - 1;
+    }
     if (params.brand) {
         filterArr.push(`brand.name='${params.brand}'`);
     }
@@ -56,6 +61,8 @@ export default async function ListProduct({ searchParams, brands }: { searchPara
                     ))}
                 </div>
             </div>
+            {/* Phân trang có thể thêm vào đây nếu cần */}
+            <Pagination currentPage={res.data?.meta?.page as number} totalPages={res.data?.meta?.pages as number} />
         </div>
     );
 }
