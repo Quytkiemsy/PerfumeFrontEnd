@@ -55,7 +55,7 @@ export default async function ListProduct({ searchParams, brands }: { searchPara
                 <FilterProduct brands={brands} />
 
                 {/* Danh sách sản phẩm */}
-                <div className="w-full md:w-4/5 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                <div className="w-full h-190 md:w-4/5 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                     {products.map((product) => (
                         <ProductCard key={product.id} product={product} />
                     ))}

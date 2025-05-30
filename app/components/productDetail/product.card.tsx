@@ -1,5 +1,6 @@
 // components/ProductCard.tsx
 'use client';
+import Image from "next/image";
 import Link from "next/link";
 
 interface ProductCardProps {
@@ -17,9 +18,11 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
 
     return (
         <div className="bg-white h-90 border border-gray-200 rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-transform transform hover:scale-105">
-            <img
+            <Image
                 src={`/api/image?filename=${product?.images[0]}`}
                 alt={product.name}
+                width={300}
+                height={200}
                 className="w-full h-50 object-cover"
             />
             <div className="p-4 text-center">
