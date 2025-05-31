@@ -3,6 +3,7 @@
 import { formatPrice, getMinPrice } from "@/app/util/api";
 import Image from "next/image";
 import Link from "next/link";
+import { MdFiberNew } from "react-icons/md";
 
 interface ProductCardProps {
     product: IProduct;
@@ -12,6 +13,11 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
 
     return (
         <div className="bg-white h-105 md:h-75 lg:h-90 border border-gray-200 rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-transform transform hover:scale-105">
+            {product.new && (
+                <span className="absolute top-2 left-2  rounded-full p-1 z-10">
+                    <MdFiberNew size={25} color="black" />
+                </span>
+            )}
             <Image
                 src={`/api/image?filename=${product?.images[0]}`}
                 alt={product.name}

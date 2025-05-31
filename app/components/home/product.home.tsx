@@ -52,11 +52,11 @@ export default function ProductGrid({ sortedProductByPrice }: IProductProps) {
                 </div>
 
 
-                <button className="border px-6 py-2 rounded-md hover:bg-black hover:text-white transition">
-                    <Link href={`/product`} className="mt-2 text-sm hover:no-underline">
+                <Link href={`/product`} className="mt-2 text-sm hover:no-underline">
+                    <button className="border px-6 py-2 rounded-md hover:bg-black hover:text-white transition">
                         Show more
-                    </Link>
-                </button>
+                    </button>
+                </Link>
             </div>
             <div className=" hidden max-md:flex  flex-col items-center space-y-8 py-10">
                 <h2 className="text-2xl font-semibold">We're cute, too</h2>
@@ -84,11 +84,11 @@ export default function ProductGrid({ sortedProductByPrice }: IProductProps) {
                     </div>
                 </div>
 
-                <button className="border px-6 py-2 rounded-md hover:bg-black hover:text-white transition">
-                    <Link href={`/product`} className="mt-2 text-sm hover:no-underline">
+                <Link href={`/product`} className="mt-2 text-sm hover:no-underline">
+                    <button className="border px-6 py-2 rounded-md hover:bg-black hover:text-white transition">
                         Show more
-                    </Link>
-                </button>
+                    </button>
+                </Link>
             </div>
         </>
 

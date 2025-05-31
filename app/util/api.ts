@@ -109,3 +109,9 @@ export const getMinPrice = (variants: IPerfumeVariant[]): number => {
 export const formatPrice = (price: number): string => {
     return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
 };
+
+export const VOLUMES_OPTIONS = ['20', '50', '100', '100+']
+
+export const SEX_OPTIONS = ['MEN', 'WOMEN', 'UNISEX']
+
+export const TIERS_OPTIONS = ['BASIC', 'PREMIUM', 'LUXURY']

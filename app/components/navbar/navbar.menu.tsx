@@ -2,8 +2,9 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { FaShoppingBag } from "react-icons/fa";
+import { SEX_OPTIONS, TIERS_OPTIONS } from "@/app/util/api";
 
-export default function Navbar() {
+export default function Navbar({ brands }: { brands: IBrand[] }) {
     const [showNavbar, setShowNavbar] = useState(false);
 
     useEffect(() => {
@@ -22,19 +23,38 @@ export default function Navbar() {
         >
             <nav className="max-lg:hidden flex justify-between items-center px-6 py-3 overflow-x-auto whitespace-nowrap">
                 <div className="flex space-x-6 text-sm font-medium">
-                    <Link href="#" className="font-bold">Reformation</Link>
-                    <Link href="#">New</Link>
-                    <Link href="#">Clothing</Link>
-                    <Link href="#">Dresses</Link>
-                    <Link href="#">Tops</Link>
-                    <Link href="#">Jeans</Link>
-                    <Link href="#">Sweaters</Link>
-                    <Link href="#">Weddings</Link>
-                    <Link href="#">Shoes</Link>
-                    <Link href="#">Bags</Link>
-                    <Link href="#">Vacation</Link>
-                    <Link href="#">Edits</Link>
-                    <Link href="#">Search</Link>
+                    <Link href={`/product?isNew=true`} className="cursor-pointer hover:underline underline-offset-4 decoration-[2px]">New</Link>
+                    {
+                        brands.map((brand: IBrand, i) => (
+                            <Link
+                                key={brand.name}
+                                href={`/product?brand=${brand.name}`}
+                                className="cursor-pointer hover:underline underline-offset-4 decoration-[2px]">
+                                {brand.name}
+                            </Link>
+                        ))
+                    }
+                    {
+                        SEX_OPTIONS.map((sex, i) => (
+                            <Link
+                                key={sex}
+                                href={`/product?sex=${sex}`}
+                                className="cursor-pointer hover:underline underline-offset-4 decoration-[2px]">
+                                {sex.charAt(0).toUpperCase() + sex.slice(1).toLowerCase()}
+                            </Link>
+                        ))
+                    }
+                    {
+                        TIERS_OPTIONS.map((tier, i) => (
+                            <Link
+                                key={tier}
+                                href={`/product?tier=${tier}`}
+                                className="cursor-pointer hover:underline underline-offset-4 decoration-[2px]"
+                            >
+                                {tier.charAt(0).toUpperCase() + tier.slice(1).toLowerCase()}
+                            </Link>
+                        ))
+                    }
                 </div>
                 <div className="text-sm">
                     <Link href="#" className="flex items-center gap-1">

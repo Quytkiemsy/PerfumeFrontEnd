@@ -42,6 +42,7 @@ declare global {
         perfumeVariants?: IPerfumeVariant[]
         tier?: string;
         sex?: string;
+        new?: boolean;
         createdAt: string;
         updatedAt: string;
         createdBy?: string;

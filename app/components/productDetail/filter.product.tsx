@@ -1,16 +1,11 @@
 'use client'
+import { SEX_OPTIONS, TIERS_OPTIONS, VOLUMES_OPTIONS } from '@/app/util/api';
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useMemo, useState, useTransition } from 'react'
 
 interface FilterProductProps {
     brands?: IBrand[];
 }
-
-const VOLUMES_OPTIONS = ['20', '50', '100', '100+']
-
-const SEX_OPTIONS = ['MEN', 'WOMEN', 'UNISEX']
-
-const TIERS_OPTIONS = ['BASIC', 'PREMIUM', 'LUXURY']
 
 const FilterProduct = ({ brands }: FilterProductProps) => {
     const router = useRouter()
@@ -152,7 +147,7 @@ const FilterProduct = ({ brands }: FilterProductProps) => {
                     <h3 className="text-base font-bold mb-3 text-gray-800 tracking-wide uppercase">Thương hiệu</h3>
                     <select
                         onChange={e => updateParams('brand', e.target.value)}
-                        defaultValue={searchParams.get('brand') || ''}
+                        value={searchParams.get('brand') || ''}
                         className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 bg-gray-50 text-gray-700"
                     >
                         <option value="">Tất cả</option>
@@ -196,6 +191,18 @@ const FilterProduct = ({ brands }: FilterProductProps) => {
                                 <span className=''>{sex.charAt(0).toUpperCase() + sex.slice(1).toLowerCase()}</span>
                             </label>
                         ))}
+                        {/* Radio all */}
+                        <label className="flex items-center gap-2 text-gray-700 cursor-pointer">
+                            <input
+                                type="radio"
+                                name="sex"
+                                value=""
+                                checked={!searchParams.get('sex')}
+                                onChange={() => updateParams('sex', undefined)}
+                                className="accent-gray-700"
+                            />
+                            <span className=''>Tất cả</span>
+                        </label>
                     </div>
                 </section>
                 {/* Tier Filter */}
@@ -215,6 +222,18 @@ const FilterProduct = ({ brands }: FilterProductProps) => {
                                 <span className=''>{tier.charAt(0).toUpperCase() + tier.slice(1).toLowerCase()}</span>
                             </label>
                         ))}
+                        {/* Radio all */}
+                        <label className="flex items-center gap-2 text-gray-700 cursor-pointer">
+                            <input
+                                type="radio"
+                                name="tier"
+                                value=""
+                                checked={!searchParams.get('tier')}
+                                onChange={() => updateParams('tier', undefined)}
+                                className="accent-gray-700"
+                            />
+                            <span className=''>Tất cả</span>
+                        </label>
                     </div>
                 </section>
             </div>

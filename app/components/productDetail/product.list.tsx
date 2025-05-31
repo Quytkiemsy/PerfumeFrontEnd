@@ -38,6 +38,9 @@ export default async function ListProduct({ searchParams, brands }: { searchPara
     if (params.tier) {
         filterArr.push(`tier='${params.tier}'`);
     }
+    if (params.isNew) {
+        filterArr.push(`isNew=true`);
+    }
     if (filterArr.length > 0) {
         queryParams.filter = filterArr.join(' and ');
     }
