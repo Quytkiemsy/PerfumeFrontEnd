@@ -4,45 +4,19 @@ import Image from 'next/image';
 
 import 'keen-slider/keen-slider.min.css';
 import { useKeenSlider } from 'keen-slider/react';
+import { formatPrice, getMinPrice } from '@/app/util/api';
+import Link from 'next/link';
 
-interface Product {
-    id: number;
-    name: string;
-    price: number;
-    category?: string;
-    imageUrl: string;
+interface IProductProps {
+    sortedProductByPrice: IProduct[];
 }
 
-const products: Product[] = [
-    {
-        id: 1,
-        name: 'Everett Linen Dress',
-        price: 8385200,
-        category: 'Spring Things',
-        imageUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSH6Ux75AXGv1rvA5SfH7e5wyDo8Q8wuqNb_g&s',
-    },
-    {
-        id: 2,
-        name: 'Monette Linen Dress',
-        price: 5571400,
-        imageUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSH6Ux75AXGv1rvA5SfH7e5wyDo8Q8wuqNb_g&s',
-    },
-    {
-        id: 3,
-        name: 'Bess Linen Top',
-        price: 4727200,
-        imageUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSH6Ux75AXGv1rvA5SfH7e5wyDo8Q8wuqNb_g&s',
-    },
-    {
-        id: 4,
-        name: 'Aubree Linen Dress',
-        price: 2757600,
-        category: 'Spring Things',
-        imageUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSH6Ux75AXGv1rvA5SfH7e5wyDo8Q8wuqNb_g&s',
-    },
-];
+const imageSizes = {
+    grid: "(max-width: 768px) 100vw, 25vw",
+    slider: "(max-width: 768px) 100vw, 50vw"
+};
 
-export default function ProductGrid() {
+export default function ProductGrid({ sortedProductByPrice }: IProductProps) {
 
     const [sliderRef] = useKeenSlider<HTMLDivElement>({
         slides: {
@@ -57,28 +31,31 @@ export default function ProductGrid() {
                 <h2 className="text-2xl font-semibold">We're cute, too</h2>
 
                 <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-2 md:gap-8 w-full px-4">
-                    {products.map((product) => (
+                    {sortedProductByPrice.map((product) => (
                         <div key={product.id} className="flex flex-col space-y-2">
                             <div className="relative w-full h-80">
                                 <Image
-                                    src={product.imageUrl}
-                                    alt={product.name}
-                                    layout="fill"
-                                    objectFit="cover"
-                                    className="rounded-md"
+                                    src={`/api/image?filename=${product?.images[0]}`}
+                                    alt={product?.name}
+                                    fill
+                                    className="rounded-md object-cover"
+                                    sizes={imageSizes.grid}
                                 />
                             </div>
-                            <div className="text-sm font-medium">{product.name}</div>
-                            <div className="text-sm font-semibold">₫ {product.price.toLocaleString()}</div>
-                            {product.category && (
-                                <div className="text-xs text-gray-500">{product.category}</div>
+                            <Link href={`/product/${product.id}`} className="text-sm font-semibold text-gray-800">{product.name}</Link>
+                            <div className="text-sm font-semibold">{product?.perfumeVariants ? formatPrice(getMinPrice(product?.perfumeVariants)) : '0'}đ</div>
+                            {product?.tier && (
+                                <div className="text-xs text-gray-500">{product?.tier}</div>
                             )}
                         </div>
                     ))}
                 </div>
 
+
                 <button className="border px-6 py-2 rounded-md hover:bg-black hover:text-white transition">
-                    Show more
+                    <Link href={`/product`} className="mt-2 text-sm hover:no-underline">
+                        Show more
+                    </Link>
                 </button>
             </div>
             <div className=" hidden max-md:flex  flex-col items-center space-y-8 py-10">
@@ -86,20 +63,21 @@ export default function ProductGrid() {
 
                 <div className="w-full max-w-6xl px-6">
                     <div ref={sliderRef} className="keen-slider">
-                        {products.map((product) => (
+                        {sortedProductByPrice.map((product) => (
                             <div key={product.id} className="keen-slider__slide flex flex-col space-y-2">
                                 <div className="relative w-full h-50 rounded-md overflow-hidden">
                                     <Image
-                                        src={product.imageUrl}
-                                        alt={product.name}
-                                        layout="fill"
-                                        objectFit="cover"
+                                        src={`/api/image?filename=${product?.images[0]}`}
+                                        alt={product?.name}
+                                        fill
+                                        className="object-cover"
+                                        sizes={imageSizes.slider}
                                     />
                                 </div>
-                                <div className="text-sm font-medium">{product.name}</div>
-                                <div className="text-sm font-semibold">₫ {product.price.toLocaleString()}</div>
-                                {product.category && (
-                                    <div className="text-xs text-gray-500">{product.category}</div>
+                                <Link href={`/product/${product.id}`} className="text-sm font-semibold text-gray-800">{product.name}</Link>
+                                <div className="text-sm font-semibold">{product?.perfumeVariants ? formatPrice(getMinPrice(product?.perfumeVariants)) : '0'}đ</div>
+                                {product?.tier && (
+                                    <div className="text-xs text-gray-500">{product?.tier}</div>
                                 )}
                             </div>
                         ))}
@@ -107,7 +85,9 @@ export default function ProductGrid() {
                 </div>
 
                 <button className="border px-6 py-2 rounded-md hover:bg-black hover:text-white transition">
-                    Show more
+                    <Link href={`/product`} className="mt-2 text-sm hover:no-underline">
+                        Show more
+                    </Link>
                 </button>
             </div>
         </>

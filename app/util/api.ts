@@ -101,3 +101,11 @@ export const convertToSlug = (text: string) => {
 
         })
 }
+
+export const getMinPrice = (variants: IPerfumeVariant[]): number => {
+    return Math.min(...variants.map((v) => v.price).filter((price): price is number => price !== undefined));
+};
+
+export const formatPrice = (price: number): string => {
+    return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+};

@@ -92,6 +92,16 @@ export default async function Home() {
     },
   });
 
+  const sortedProductByPrice = await sendRequest<IBackendRes<IModelPaginate<IProduct>>>({
+    url: `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/products`,
+    method: 'GET',
+    queryParams: {
+      page: 0,
+      size: 4,
+      sort: 'perfumeVariants.price,asc',
+    },
+  });
+
 
   return (
     <div>
@@ -105,6 +115,7 @@ export default async function Home() {
         diorProduct={diorProduct.data?.result[0] as IProduct}
         byredoProduct={byredoProduct.data?.result[0] as IProduct}
         tomFordProduct={tomFordProduct.data?.result[0] as IProduct}
+        sortedProductByPrice={sortedProductByPrice.data?.result || [] as IProduct[]}
       />
     </div>
   );

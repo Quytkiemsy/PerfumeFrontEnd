@@ -14,9 +14,17 @@ interface IProductProps {
     diorProduct: IProduct;
     byredoProduct: IProduct;
     tomFordProduct: IProduct;
+    sortedProductByPrice: IProduct[];
 }
 
-const Homepage = async ({ luxuryProduct, menProduct, womenProduct, unisexProduct, vintageVibeProduct, chanelProduct, diorProduct, byredoProduct, tomFordProduct }: IProductProps) => {
+const imageSizes = {
+    banner: "100vw",
+    twoCol: "(max-width: 768px) 100vw, 50vw",
+    threeCol: "(max-width: 768px) 100vw, 33vw",
+};
+
+const Homepage = async ({ luxuryProduct, menProduct, womenProduct, unisexProduct, vintageVibeProduct,
+    chanelProduct, diorProduct, byredoProduct, tomFordProduct, sortedProductByPrice }: IProductProps) => {
     const session = await getServerSession(authOptions);
     console.log(session)
     return (
@@ -30,6 +38,7 @@ const Homepage = async ({ luxuryProduct, menProduct, womenProduct, unisexProduct
                         fill
                         className="object-cover"
                         priority
+                        sizes={imageSizes.banner}
                     />
                     <div className="absolute inset-0 flex flex-col items-center justify-center text-white text-center">
                         <h2 className="text-4xl md:text-3xl font-semibold">Not a mirage</h2>
@@ -55,8 +64,9 @@ const Homepage = async ({ luxuryProduct, menProduct, womenProduct, unisexProduct
                                 src={`/api/image?filename=${menProduct?.images[0]}`}
                                 alt={menProduct?.name}
                                 fill
-                                className="object-cover"
                                 priority
+                                className="object-cover"
+                                sizes={imageSizes.threeCol}
                             />
                         </div>
                         <Link href={`/product?sex=MEN`} className="mt-3 text-sm hover:no-underline font-extrabold">
@@ -71,8 +81,9 @@ const Homepage = async ({ luxuryProduct, menProduct, womenProduct, unisexProduct
                                 src={`/api/image?filename=${womenProduct?.images[0]}`}
                                 alt={womenProduct?.name}
                                 fill
-                                className="object-cover"
                                 priority
+                                className="object-cover"
+                                sizes={imageSizes.threeCol}
                             />
                         </div>
                         <Link href={`/product?sex=WOMEN`} className="mt-3 text-sm hover:no-underline font-extrabold">
@@ -87,8 +98,9 @@ const Homepage = async ({ luxuryProduct, menProduct, womenProduct, unisexProduct
                                 src={`/api/image?filename=${unisexProduct?.images[0]}`}
                                 alt={unisexProduct?.name}
                                 fill
-                                className="object-cover"
                                 priority
+                                className="object-cover"
+                                sizes={imageSizes.threeCol}
                             />
                         </div>
                         <Link href={`/product?sex=UNISEX`} className="mt-3 text-sm hover:no-underline font-extrabold">
@@ -108,10 +120,9 @@ const Homepage = async ({ luxuryProduct, menProduct, womenProduct, unisexProduct
                             alt={vintageVibeProduct?.name}
                             fill
                             className="object-cover"
-                            priority
-                            sizes="(max-width: 768px) 100vw, 50vw"
+                            sizes={imageSizes.twoCol}
                         />
-                        <div className="absolute inset-0 flex flex-col justify-center items-center text-black">
+                        <div className="absolute inset-0 flex flex-col justify-center items-center text-white">
                             <h2 className="text-3xl font-bold mb-2">Vintage Vibe</h2>
                             <Link href={`/product?brand=Vintage+Vibe`} className="text-md hover:no-underline">
                                 <p className="text-md">→ These perfumes, for one</p>
@@ -124,10 +135,9 @@ const Homepage = async ({ luxuryProduct, menProduct, womenProduct, unisexProduct
                             alt={chanelProduct?.name}
                             fill
                             className="object-cover"
-                            priority
-                            sizes="(max-width: 768px) 100vw, 50vw"
+                            sizes={imageSizes.twoCol}
                         />
-                        <div className="absolute inset-0 flex flex-col justify-center items-center text-black">
+                        <div className="absolute inset-0 flex flex-col justify-center items-center text-white">
                             <h2 className="text-3xl font-bold mb-2">Chanel</h2>
                             <Link href={`/product?brand=Chanel`} className="text-md hover:no-underline">
                                 <p className="text-md">→ These perfumes, for one</p>
@@ -145,10 +155,9 @@ const Homepage = async ({ luxuryProduct, menProduct, womenProduct, unisexProduct
                             alt={diorProduct?.name}
                             fill
                             className="object-cover"
-                            priority
-                            sizes="(max-width: 768px) 100vw, 33vw"
+                            sizes={imageSizes.threeCol}
                         />
-                        <div className="absolute inset-0 flex flex-col justify-center items-center text-black">
+                        <div className="absolute inset-0 flex flex-col justify-center items-center text-white">
                             <h2 className="text-3xl font-bold mb-2">Dior</h2>
                             <Link href={`/product?brand=Dior`} className="text-md hover:no-underline">
                                 <p className="text-md">→ These perfumes, for one</p>
@@ -161,10 +170,9 @@ const Homepage = async ({ luxuryProduct, menProduct, womenProduct, unisexProduct
                             alt={byredoProduct?.name}
                             fill
                             className="object-cover"
-                            priority
-                            sizes="(max-width: 768px) 100vw, 33vw"
+                            sizes={imageSizes.threeCol}
                         />
-                        <div className="absolute inset-0 flex flex-col justify-center items-center text-black">
+                        <div className="absolute inset-0 flex flex-col justify-center items-center text-white">
                             <h3 className="text-2xl font-bold mb-2">Byredo</h3>
                             <Link href={`/product?brand=Byredo`} className="text-md hover:no-underline">
                                 <p className="text-md">→ These perfumes, for one</p>
@@ -177,10 +185,9 @@ const Homepage = async ({ luxuryProduct, menProduct, womenProduct, unisexProduct
                             alt={tomFordProduct?.name}
                             fill
                             className="object-cover"
-                            priority
-                            sizes="(max-width: 768px) 100vw, 33vw"
+                            sizes={imageSizes.threeCol}
                         />
-                        <div className="absolute inset-0 flex flex-col justify-center items-center text-black">
+                        <div className="absolute inset-0 flex flex-col justify-center items-center text-white">
                             <h3 className="text-2xl font-bold mb-2">Tom Ford</h3>
                             <Link href={`/product?brand=Tom+Ford`} className="text-md hover:no-underline">
                                 <p className="text-md">→ Reformation x Devon Lee Carlson</p>
@@ -189,7 +196,7 @@ const Homepage = async ({ luxuryProduct, menProduct, womenProduct, unisexProduct
                     </div>
                 </div>
             </section>
-            <ProductGrid />
+            <ProductGrid sortedProductByPrice={sortedProductByPrice} />
 
         </>
     );

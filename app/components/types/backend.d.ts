@@ -40,6 +40,8 @@ declare global {
         brand?: IBrand;
         fragranceTypes?: IFragranceTypes
         perfumeVariants?: IPerfumeVariant[]
+        tier?: string;
+        sex?: string;
         createdAt: string;
         updatedAt: string;
         createdBy?: string;

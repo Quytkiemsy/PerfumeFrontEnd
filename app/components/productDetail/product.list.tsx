@@ -49,13 +49,13 @@ export default async function ListProduct({ searchParams, brands }: { searchPara
     const products = res.data?.result || [] as IProduct[];
 
     return (
-        <div className="container mx-auto p-4">
+        <div className="lg:container mx-auto p-4">
             <div className="flex flex-col md:flex-row">
                 {/* Bộ lọc bên trái */}
                 <FilterProduct brands={brands} />
 
                 {/* Danh sách sản phẩm */}
-                <div className="w-full h-190 md:w-4/5 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                <div className="w-full h-auto lg:h-185 md:w-4/5 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                     {products.map((product) => (
                         <ProductCard key={product.id} product={product} />
                     ))}
