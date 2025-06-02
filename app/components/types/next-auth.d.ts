@@ -27,5 +27,7 @@ declare module "next-auth/jwt" {
         accessToken: string;
         refreshToken: string;
         user: IUser;
+        expiresAt?: number;
+        hasRefreshed?: boolean; // flag để ngăn refresh tiếp
     }
 }

@@ -9,8 +9,18 @@ const Product = async ({ params }: { params: Promise<{ slug: string }> }) => {
         method: 'GET',
     });
 
+    const sortedProductByPrice = await sendRequest<IBackendRes<IModelPaginate<IProduct>>>({
+        url: `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/products`,
+        method: 'GET',
+        queryParams: {
+            page: 0,
+            size: 4,
+            sort: 'perfumeVariants.price,asc',
+        },
+    });
+
     return (
-        <ProductDetail product={res.data ?? null} />
+        <ProductDetail product={res.data as IProduct} sortedProductByPrice={sortedProductByPrice.data?.result as IProduct[]} />
     );
 }
 

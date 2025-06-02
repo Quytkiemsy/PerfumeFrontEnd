@@ -1,10 +1,10 @@
 
+import { sendRequest } from "@/app/util/api"
 import { AuthOptions, getServerSession } from "next-auth"
+import { JWT } from "next-auth/jwt"
+import CredentialsProvider from "next-auth/providers/credentials"
 import GithubProvider from "next-auth/providers/github"
 import GoogleProvider from "next-auth/providers/google"
-import CredentialsProvider from "next-auth/providers/credentials"
-import { JWT } from "next-auth/jwt"
-import { sendRequest } from "@/app/util/api"
 
 
 const authOptions: AuthOptions = {
@@ -64,6 +64,9 @@ const authOptions: AuthOptions = {
                     token.refreshToken = res.data.refreshToken;
                     token.user = res.data.user;
                     token.user.image = user?.image as string;
+                    token.expiresAt = typeof res.data.expiresIn === 'number'
+                        ? Math.floor(Date.now() / 1000 + res.data.expiresIn - 10) // trừ đi 20 giây để tránh trường hợp token hết hạn trước khi sử dụng
+                        : Math.floor(Date.now() / 1000 + 3600);
                 }
             }
 
@@ -78,6 +81,9 @@ const authOptions: AuthOptions = {
                     token.refreshToken = res.data.refreshToken;
                     token.user = res.data.user;
                     token.user.image = user?.image as string;
+                    token.expiresAt = typeof res.data.expiresIn === 'number'
+                        ? Math.floor(Date.now() / 1000 + res.data.expiresIn - 10) // trừ đi 20 giây để tránh trường hợp token hết hạn trước khi sử dụng
+                        : Math.floor(Date.now() / 1000 + 3600);
                 }
             }
 
@@ -90,9 +96,22 @@ const authOptions: AuthOptions = {
                     token.refreshToken = user?.refreshToken;
                     //@ts-ignore
                     token.user = user?.user;
+                    //@ts-ignore
+                    token.expiresAt = typeof res.data.expiresIn === 'number'
+                        //@ts-ignore
+                        ? Math.floor(Date.now() / 1000 + user?.expiresIn - 10)
+                        : Math.floor(Date.now() / 1000 + 3600);
                 }
             }
-            return token;
+
+            if (Date.now() < token.expiresAt! * 1000 || token.hasRefreshed) {
+                return token;
+            } else {
+                const newToken = await refreshAccessToken(token);
+                newToken.hasRefreshed = true; // flag để ngăn refresh tiếp
+                return newToken;
+            }
+
         },
         // sau khi modify cái token thì nạp ngược lại cho session
         //@ts-ignore
@@ -105,6 +124,37 @@ const authOptions: AuthOptions = {
     }
 }
 
+async function refreshAccessToken(token: JWT) {
+
+    const res = await sendRequest<IBackendRes<JWT>>({
+        url: `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/auth/account/refresh`,
+        method: "POST",
+        body: { refreshToken: token?.refreshToken },
+    })
+
+    if (res.data) {
+        console.log(">>> refresh token success")
+
+        return {
+            ...token,
+            accessToken: res.data?.accessToken,
+            refreshToken: res.data?.refreshToken,
+            user: res.data?.user ?? token.user,
+            expiresAt: typeof res.data.expiresIn === 'number'
+                ? Math.floor(Date.now() / 1000 + res.data.expiresIn - 10) // trừ đi 10 giây để tránh trường hợp token hết hạn trước khi sử dụng
+                : Math.floor(Date.now() / 1000 + 3600),
+            error: "",
+            hasRefreshed: true
+        }
+    } else {
+        console.log(">>> refresh token failed")
+        //failed to refresh token => do nothing
+        return {
+            ...token,
+            error: "RefreshAccessTokenError", // This is used in the front-end, and if present, we can force a re-login, or similar
+        }
+    }
+}
 
 
 /**
