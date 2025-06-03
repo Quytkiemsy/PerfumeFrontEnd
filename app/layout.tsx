@@ -6,6 +6,7 @@ import Footer from "@/app/components/footer/footer.app";
 import { Toaster } from "react-hot-toast";
 import NextAuthWrapper from "@/app/lib/next.auth.wrapper";
 import { sendRequest } from "./util/api";
+import SessionErrorHandler from "./lib/session.error";
 
 
 
@@ -30,11 +31,13 @@ export default async function RootLayout({
     <html lang="en">
       <body>
         <NextAuthWrapper>
-          <Header brands={brands} />
-          <Navbar brands={brands} />
-          {children}
-          <Footer />
-          <Toaster position="top-center" reverseOrder={false} />
+          <SessionErrorHandler>
+            <Header brands={brands} />
+            <Navbar brands={brands} />
+            {children}
+            <Footer />
+            <Toaster position="top-center" reverseOrder={false} />
+          </SessionErrorHandler>
         </NextAuthWrapper>
       </body>
     </html>

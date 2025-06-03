@@ -97,20 +97,24 @@ const authOptions: AuthOptions = {
                     //@ts-ignore
                     token.user = user?.user;
                     //@ts-ignore
-                    token.expiresAt = typeof res.data.expiresIn === 'number'
+                    token.expiresAt = typeof user.expiresIn === 'number'
                         //@ts-ignore
                         ? Math.floor(Date.now() / 1000 + user?.expiresIn - 10)
                         : Math.floor(Date.now() / 1000 + 3600);
                 }
             }
 
-            if (Date.now() < token.expiresAt! * 1000 || token.hasRefreshed) {
+            if (Date.now() < token.expiresAt! * 1000) {
                 return token;
-            } else {
-                const newToken = await refreshAccessToken(token);
-                newToken.hasRefreshed = true; // flag để ngăn refresh tiếp
-                return newToken;
             }
+            if ((token as any).hasRefreshed && Date.now() < token.expiresAt! * 1000) {
+                return token;
+            }
+            const newToken = await refreshAccessToken(token);
+            return {
+                ...newToken,
+                hasRefreshed: true
+            };
 
         },
         // sau khi modify cái token thì nạp ngược lại cho session
@@ -144,7 +148,6 @@ async function refreshAccessToken(token: JWT) {
                 ? Math.floor(Date.now() / 1000 + res.data.expiresIn - 10) // trừ đi 10 giây để tránh trường hợp token hết hạn trước khi sử dụng
                 : Math.floor(Date.now() / 1000 + 3600),
             error: "",
-            hasRefreshed: true
         }
     } else {
         console.log(">>> refresh token failed")
