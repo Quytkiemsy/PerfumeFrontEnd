@@ -2,14 +2,13 @@
 import LoginPopup from "@/app/components/login/login.modal";
 import MobileMenu, { ButtonLogout } from "@/app/components/moblieMenu/mobile.menu";
 import { authOptions } from "@/app/lib/auth/authOptions";
-import { sendRequest, SEX_OPTIONS, TIERS_OPTIONS } from "@/app/util/api";
+import { SEX_OPTIONS, TIERS_OPTIONS } from "@/app/util/api";
 import { Heart, Search, ShoppingBag } from "lucide-react";
 import { getServerSession } from "next-auth";
 import Link from "next/link";
 
 export default async function Header({ brands }: { brands: IBrand[] }) {
     const session = await getServerSession(authOptions);
-    console.log(session)
 
     return (
         <header className="border-b">

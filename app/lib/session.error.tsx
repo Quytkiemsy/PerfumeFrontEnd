@@ -9,7 +9,7 @@ export default function SessionErrorHandler({ children }: { children: React.Reac
     useEffect(() => {
         if (session?.error === "RefreshAccessTokenError") {
             toast.error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại!");
-            signOut({ callbackUrl: "/login" });
+            signOut({ callbackUrl: "/" });
         }
     }, [session]);
 

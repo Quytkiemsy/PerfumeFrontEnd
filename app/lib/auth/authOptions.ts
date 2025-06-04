@@ -123,6 +123,7 @@ const authOptions: AuthOptions = {
             session.user = token.user
             session.accessToken = token.accessToken
             session.refreshToken = token.refreshToken
+            session.error = token.error as string
             return session
         },
     }

@@ -1,6 +1,4 @@
 import ProductGrid from "@/app/components/home/product.home";
-import { authOptions } from "@/app/lib/auth/authOptions";
-import { getServerSession } from "next-auth";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -25,8 +23,7 @@ const imageSizes = {
 
 const Homepage = async ({ luxuryProduct, menProduct, womenProduct, unisexProduct, vintageVibeProduct,
     chanelProduct, diorProduct, byredoProduct, tomFordProduct, sortedProductByPrice }: IProductProps) => {
-    const session = await getServerSession(authOptions);
-    console.log(session)
+    // const session = await getServerSession(authOptions);
     return (
         <>
             <section className="w-full overflow-hidden">
