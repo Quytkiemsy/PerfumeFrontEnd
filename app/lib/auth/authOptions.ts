@@ -1,10 +1,10 @@
-
 import { sendRequest } from "@/app/util/api"
 import { AuthOptions, getServerSession } from "next-auth"
 import { JWT } from "next-auth/jwt"
 import CredentialsProvider from "next-auth/providers/credentials"
 import GithubProvider from "next-auth/providers/github"
 import GoogleProvider from "next-auth/providers/google"
+import dayjs, { ManipulateType } from "dayjs";
 
 
 const authOptions: AuthOptions = {
@@ -64,9 +64,8 @@ const authOptions: AuthOptions = {
                     token.refreshToken = res.data.refreshToken;
                     token.user = res.data.user;
                     token.user.image = user?.image as string;
-                    token.expiresAt = typeof res.data.expiresIn === 'number'
-                        ? Math.floor(Date.now() / 1000 + res.data.expiresIn - 10) // trừ đi 20 giây để tránh trường hợp token hết hạn trước khi sử dụng
-                        : Math.floor(Date.now() / 1000 + 3600);
+                    token.expiresAt = dayjs(new Date()).add(+(res.data.expiresIn as string) - 10,
+                        ('second' as ManipulateType)).unix()
                 }
             }
 
@@ -81,9 +80,8 @@ const authOptions: AuthOptions = {
                     token.refreshToken = res.data.refreshToken;
                     token.user = res.data.user;
                     token.user.image = user?.image as string;
-                    token.expiresAt = typeof res.data.expiresIn === 'number'
-                        ? Math.floor(Date.now() / 1000 + res.data.expiresIn - 10) // trừ đi 20 giây để tránh trường hợp token hết hạn trước khi sử dụng
-                        : Math.floor(Date.now() / 1000 + 3600);
+                    token.expiresAt = dayjs(new Date()).add(+(res.data.expiresIn as string) - 10,
+                        ('second' as ManipulateType)).unix()
                 }
             }
 
@@ -97,23 +95,22 @@ const authOptions: AuthOptions = {
                     //@ts-ignore
                     token.user = user?.user;
                     //@ts-ignore
-                    token.expiresAt = typeof user.expiresIn === 'number'
-                        //@ts-ignore
-                        ? Math.floor(Date.now() / 1000 + user?.expiresIn - 10)
-                        : Math.floor(Date.now() / 1000 + 3600);
+                    token.expiresAt = dayjs(new Date()).add(+(user.expiresIn as string) - 10,
+                        ('second' as ManipulateType)).unix()
                 }
             }
-
-            if (Date.now() < token.expiresAt! * 1000) {
-                return token;
-            }
-            if ((token as any).hasRefreshed && Date.now() < token.expiresAt! * 1000) {
+            console.log(">>> old token ", token?.refreshToken?.slice(-4));
+            // Sửa lỗi cú pháp và logic kiểm tra hạn token
+            const isTimeAfter = dayjs().isAfter(dayjs.unix((token?.expiresAt as number ?? 0)));
+            if (!isTimeAfter) {
                 return token;
             }
             const newToken = await refreshAccessToken(token);
+            console.log(">>> new token ", newToken?.refreshToken?.slice(-4));
             return {
+                ...token,
                 ...newToken,
-                hasRefreshed: true
+                refreshToken: newToken.refreshToken ?? token.refreshToken, // luôn ưu tiên refreshToken mới
             };
 
         },
@@ -139,23 +136,20 @@ async function refreshAccessToken(token: JWT) {
 
     if (res.data) {
         console.log(">>> refresh token success")
-
         return {
             ...token,
             accessToken: res.data?.accessToken,
-            refreshToken: res.data?.refreshToken,
+            refreshToken: res.data?.refreshToken ?? token.refreshToken, // fallback về token cũ nếu không có mới
             user: res.data?.user ?? token.user,
-            expiresAt: typeof res.data.expiresIn === 'number'
-                ? Math.floor(Date.now() / 1000 + res.data.expiresIn - 10) // trừ đi 10 giây để tránh trường hợp token hết hạn trước khi sử dụng
-                : Math.floor(Date.now() / 1000 + 3600),
+            expiresAt: dayjs(new Date()).add(+(res.data.expiresIn as string) - 10,
+                ('second' as ManipulateType)).unix(),
             error: "",
         }
     } else {
         console.log(">>> refresh token failed")
-        //failed to refresh token => do nothing
         return {
             ...token,
-            error: "RefreshAccessTokenError", // This is used in the front-end, and if present, we can force a re-login, or similar
+            error: "RefreshAccessTokenError",
         }
     }
 }

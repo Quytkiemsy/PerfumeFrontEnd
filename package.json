@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "clsx": "^2.1.1",
+    "dayjs": "^1.11.13",
     "framer-motion": "^12.9.2",
     "keen-slider": "^6.8.6",
     "lucide-react": "^0.503.0",
