@@ -23,7 +23,6 @@ const imageSizes = {
 
 const Homepage = async ({ luxuryProduct, menProduct, womenProduct, unisexProduct, vintageVibeProduct,
     chanelProduct, diorProduct, byredoProduct, tomFordProduct, sortedProductByPrice }: IProductProps) => {
-    // const session = await getServerSession(authOptions);
     return (
         <>
             <section className="w-full overflow-hidden">

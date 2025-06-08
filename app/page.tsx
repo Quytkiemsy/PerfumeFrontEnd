@@ -2,7 +2,6 @@ import Homepage from "@/app/components/home/homepage";
 import { sendRequest } from "@/app/util/api";
 
 export default async function Home() {
-  // const session = await getServerSession(authOptions);
 
   const luxuryProduct = await sendRequest<IBackendRes<IModelPaginate<IProduct>>>({
     url: `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/products`,

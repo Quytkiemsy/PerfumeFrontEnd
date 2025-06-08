@@ -1,10 +1,10 @@
 import { sendRequest } from "@/app/util/api"
+import dayjs, { ManipulateType } from "dayjs"
 import { AuthOptions, getServerSession } from "next-auth"
 import { JWT } from "next-auth/jwt"
 import CredentialsProvider from "next-auth/providers/credentials"
 import GithubProvider from "next-auth/providers/github"
 import GoogleProvider from "next-auth/providers/google"
-import dayjs, { ManipulateType } from "dayjs";
 
 
 const authOptions: AuthOptions = {
@@ -99,7 +99,7 @@ const authOptions: AuthOptions = {
                         ('second' as ManipulateType)).unix()
                 }
             }
-            console.log(">>> old token ", token?.refreshToken?.slice(-4));
+            console.log(">>> old token ", token?.refreshToken?.slice(-4), " time", new Date().toISOString());
             // Sửa lỗi cú pháp và logic kiểm tra hạn token
             const isTimeAfter = dayjs().isAfter(dayjs.unix((token?.expiresAt as number ?? 0)));
             if (!isTimeAfter) {
@@ -126,31 +126,47 @@ const authOptions: AuthOptions = {
     }
 }
 
+// Lock to prevent concurrent refreshAccessToken calls
+let refreshPromise: Promise<JWT> | null = null;
+
 async function refreshAccessToken(token: JWT) {
-
-    const res = await sendRequest<IBackendRes<JWT>>({
-        url: `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/auth/account/refresh`,
-        method: "POST",
-        body: { refreshToken: token?.refreshToken },
-    })
-
-    if (res.data) {
-        console.log(">>> refresh token success")
-        return {
-            ...token,
-            accessToken: res.data?.accessToken,
-            refreshToken: res.data?.refreshToken ?? token.refreshToken, // fallback về token cũ nếu không có mới
-            user: res.data?.user ?? token.user,
-            expiresAt: dayjs(new Date()).add(+(res.data.expiresIn as string) - 10,
-                ('second' as ManipulateType)).unix(),
-            error: "",
-        }
-    } else {
-        console.log(">>> refresh token failed")
-        return {
-            ...token,
-        }
+    // Nếu đã có refreshPromise đang chạy, chờ nó xong rồi trả kết quả
+    if (refreshPromise) {
+        console.log('>>> Waiting for ongoing refreshAccessToken...');
+        return refreshPromise;
     }
+    // Tạo promise mới cho lần refresh này
+    refreshPromise = (async () => {
+        try {
+            const res = await sendRequest<IBackendRes<JWT>>({
+                url: `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/auth/account/refresh`,
+                method: "POST",
+                body: { refreshToken: token?.refreshToken },
+            });
+            if (res.data) {
+                console.log(">>> refresh token success");
+                return {
+                    ...token,
+                    accessToken: res.data?.accessToken,
+                    refreshToken: res.data?.refreshToken ?? token.refreshToken, // fallback về token cũ nếu không có mới
+                    user: res.data?.user ?? token.user,
+                    expiresAt: dayjs(new Date()).add(+(res.data.expiresIn as string) - 10,
+                        ('second' as ManipulateType)).unix(),
+                    error: "",
+                };
+            } else {
+                console.log(">>> refresh token failed");
+                return {
+                    ...token,
+                    error: "RefreshAccessTokenError"
+                };
+            }
+        } finally {
+            // Đảm bảo luôn reset lock sau khi xong
+            refreshPromise = null;
+        }
+    })();
+    return refreshPromise;
 }
 
 
@@ -161,3 +177,4 @@ async function refreshAccessToken(token: JWT) {
 const getSession = () => getServerSession(authOptions)
 
 export { authOptions, getSession }
+
