@@ -149,7 +149,6 @@ async function refreshAccessToken(token: JWT) {
         console.log(">>> refresh token failed")
         return {
             ...token,
-            error: "RefreshAccessTokenError",
         }
     }
 }
