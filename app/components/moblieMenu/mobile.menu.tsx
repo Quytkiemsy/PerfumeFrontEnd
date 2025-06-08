@@ -1,13 +1,13 @@
 // components/MobileMenu.tsx
 "use client";
 
-import { X, Heart, Search, MapPin, User2, Eye, Store, Package, Cloud } from "lucide-react";
+import LoginPopup from "@/app/components/login/login.modal";
+import { sendRequest, SEX_OPTIONS, TIERS_OPTIONS } from "@/app/util/api";
+import clsx from "clsx";
+import { Eye, MapPin, Package, User2, X } from "lucide-react";
+import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
 import { useState } from "react";
-import clsx from "clsx";
-import LoginPopup from "@/app/components/login/login.modal";
-import { signOut, useSession } from "next-auth/react";
-import { SEX_OPTIONS, TIERS_OPTIONS } from "@/app/util/api";
 
 export default function MobileMenu({ brands }: { brands: IBrand[] }) {
     const [open, setOpen] = useState(false);
@@ -109,8 +109,19 @@ export default function MobileMenu({ brands }: { brands: IBrand[] }) {
 
 
 export const ButtonLogout = () => {
+
+    const logoutFromBackend = async () => {
+        await sendRequest<void>({
+            url: `/api/logout`,
+            method: 'POST',
+        });
+    }
+    const handleLogout = async () => {
+        await logoutFromBackend();
+        signOut();
+    }
     return (
-        <button onClick={() => signOut()} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+        <button onClick={handleLogout} className="cursor-pointer block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
             Logout
         </button>
     )
