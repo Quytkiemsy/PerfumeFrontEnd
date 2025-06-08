@@ -25,10 +25,6 @@ const authOptions: AuthOptions = {
                 password: { label: "password", type: "password" },
             },
             async authorize(credentials) {
-                const { username, password } = credentials as {
-                    username: string;
-                    password: string;
-                };
 
                 // Add logic here to look up the user from the credentials supplied
                 const res = await sendRequest<IBackendRes<JWT>>({

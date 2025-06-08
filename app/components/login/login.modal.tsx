@@ -11,13 +11,14 @@ export default function LoginPopup() {
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     const router = useRouter();
+    const callbackUrl = typeof window !== "undefined" ? window.location.href : "/";
 
     const handleCredentialLogin = async () => {
         const res = await signIn("credentials", {
             username,
             password,
             redirect: false,
-            callbackUrl: `${window.location.origin}`
+            callbackUrl: `${callbackUrl}`
         });
 
         if (res?.error) {
@@ -27,12 +28,14 @@ export default function LoginPopup() {
             setIsOpen(false);
         }
         if (res?.url) {
-            router.push("/");
+            router.push(`${callbackUrl}`);
             router.refresh();
         }
     };
 
-    const handleGoogleLogin = () => signIn("google");
+    const handleGoogleLogin = () => {
+        signIn("google");
+    }
 
     return (
         <>

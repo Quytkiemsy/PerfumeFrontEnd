@@ -17,7 +17,7 @@ export default async function Header({ brands }: { brands: IBrand[] }) {
                 <div className="flex items-center gap-6">
                     {/* Hamburger Menu (mobile only) */}
                     <button className="lg:hidden" />
-                    <MobileMenu />
+                    <MobileMenu brands={brands} />
 
                     {/* Country + Links (desktop only) */}
                     <div className="hidden lg:flex items-center gap-6 text-sm text-black font-bold ">

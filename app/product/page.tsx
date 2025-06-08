@@ -12,9 +12,6 @@ const Page = async ({ searchParams }: PageProps) => {
     const res = await sendRequest<IBackendRes<IModelPaginateRestJPA<IBrand>>>({
         url: `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/brands`,
         method: 'GET',
-        headers: {
-            'Authorization': `Bearer ${session?.accessToken}`
-        },
     });
 
     const brands = res.data?._embedded.brands || [] as IBrand[];

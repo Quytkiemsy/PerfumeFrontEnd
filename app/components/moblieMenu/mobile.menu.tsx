@@ -7,8 +7,9 @@ import { useState } from "react";
 import clsx from "clsx";
 import LoginPopup from "@/app/components/login/login.modal";
 import { signOut, useSession } from "next-auth/react";
+import { SEX_OPTIONS, TIERS_OPTIONS } from "@/app/util/api";
 
-export default function MobileMenu() {
+export default function MobileMenu({ brands }: { brands: IBrand[] }) {
     const [open, setOpen] = useState(false);
     const { data: session } = useSession();
 
@@ -33,7 +34,7 @@ export default function MobileMenu() {
             {/* Side menu */}
             <aside
                 className={clsx(
-                    " lg:hidden fixed left-0 top-0 h-full w-[90%] max-w-sm bg-white z-50 transition-transform duration-300",
+                    " lg:hidden fixed left-0 top-0 h-full w-[90%] max-w-sm bg-white z-50 transition-transform duration-300 overflow-y-auto",
                     open ? "translate-x-0" : "-translate-x-full"
                 )}
             >
@@ -45,11 +46,43 @@ export default function MobileMenu() {
                 </div>
 
                 <nav className="flex flex-col divide-y text-sm">
-                    {["New", "Clothing", "Dresses", "Tops", "Jeans", "Sweaters", "Weddings", "Shoes", "Bags", "Vacation", "Edits"].map((item) => (
-                        <Link key={item} href="#" className="px-4 py-3 hover:bg-gray-50 border-b-[0.5px] border-gray-100">
-                            {item}
-                        </Link>
-                    ))}
+                    <Link href={`/product?isNew=true`} className="px-4 py-3 hover:bg-gray-50 border-b-[0.5px] border-gray-100" onClick={() => setOpen(false)}>New</Link>
+                    {
+                        brands.map((brand: IBrand, i) => (
+                            <Link
+                                key={brand.name}
+                                href={`/product?brand=${brand.name}`}
+                                className="px-4 py-3 hover:bg-gray-50 border-b-[0.5px] border-gray-100"
+                                onClick={() => setOpen(false)}
+                            >
+                                {brand.name}
+                            </Link>
+                        ))
+                    }
+                    {
+                        SEX_OPTIONS.map((sex, i) => (
+                            <Link
+                                key={sex}
+                                href={`/product?sex=${sex}`}
+                                className="px-4 py-3 hover:bg-gray-50 border-b-[0.5px] border-gray-100"
+                                onClick={() => setOpen(false)}
+                            >
+                                {sex.charAt(0).toUpperCase() + sex.slice(1).toLowerCase()}
+                            </Link>
+                        ))
+                    }
+                    {
+                        TIERS_OPTIONS.map((tier, i) => (
+                            <Link
+                                key={tier}
+                                href={`/product?tier=${tier}`}
+                                className="px-4 py-3 hover:bg-gray-50 border-b-[0.5px] border-gray-100"
+                                onClick={() => setOpen(false)}
+                            >
+                                {tier.charAt(0).toUpperCase() + tier.slice(1).toLowerCase()}
+                            </Link>
+                        ))
+                    }
                 </nav>
 
                 <div className="mt-6 px-4 flex flex-col gap-4 text-sm">
