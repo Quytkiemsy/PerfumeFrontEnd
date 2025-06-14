@@ -2,6 +2,8 @@
 import Image from 'next/image';
 import { useRef, useState } from 'react';
 import ProductGrid from '../home/product.home';
+import { useCartStore } from '@/app/store/cartStore';
+import toast from 'react-hot-toast';
 
 interface IProductDetailProps {
     product: IProduct;
@@ -11,6 +13,24 @@ interface IProductDetailProps {
 export default function ProductDetail({ product, sortedProductByPrice }: IProductDetailProps) {
     const [selectVar, setSelectVar] = useState<string>('');
     const [selectedVolume, setSelectedVolume] = useState<string>('');
+    const addItem = useCartStore(state => state.addItem)
+
+    const handleAddToCart = () => {
+        if (!product || !selectVar || !selectedVolume) {
+            toast.error('Please select a variant and size before adding to cart.');
+            return;
+        }
+        const productCart: IProductCart = {
+            id: product.id,
+            name: product.name,
+            brand: product.brand,
+            images: product.images,
+            description: product.description,
+            details: product.details,
+            perfumeVariants: product.perfumeVariants?.find((variant) => variant.variantType === selectVar && variant.volume === selectedVolume),
+        };
+        addItem(productCart);
+    }
 
     console.log(product);
 
@@ -113,9 +133,21 @@ export default function ProductDetail({ product, sortedProductByPrice }: IProduc
 
                         </div>
                     </div>
+                    {/* Stock */}
+                    <div className="mb-2">
+                        <p className="font-medium">Stock</p>
+                        <p className="text-sm text-gray-600">
+                            {product?.perfumeVariants?.find((variant) => variant.variantType === selectVar && variant.volume === selectedVolume)?.stockQuantity ?? '0'}
+                        </p>
+                    </div>
 
-                    {/* Add to bag */}
-                    <button className="w-full bg-black text-white py-3 rounded-md mb-4">Add to bag</button>
+                    <button
+                        onClick={handleAddToCart}
+                        disabled={product?.perfumeVariants?.find((variant) => variant.variantType === selectVar && variant.volume === selectedVolume)?.stockQuantity === 0}
+                        className="w-full bg-gray-600 text-white py-2 px-4 rounded-md hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors mb-2"
+                    >
+                        {product?.perfumeVariants?.find((variant) => variant.variantType === selectVar && variant.volume === selectedVolume)?.stockQuantity === 0 ? 'Out of Stock' : 'Add to Cart'}
+                    </button>
 
                     {/* Shipping */}
                     <p className="text-sm text-gray-600 mb-1">Free express shipping</p>
@@ -139,7 +171,9 @@ export default function ProductDetail({ product, sortedProductByPrice }: IProduc
                     </div>
                 </div>
             </div>
-            <ProductGrid sortedProductByPrice={sortedProductByPrice} />
+            <div className="max-w-7xl mx-auto">
+                <ProductGrid sortedProductByPrice={sortedProductByPrice} />
+            </div>
         </>
     );
 }

@@ -1,9 +1,10 @@
 // components/Header.tsx
+import CounterShoppingBar from "@/app/components/header/counter.shoppingbar";
 import LoginPopup from "@/app/components/login/login.modal";
 import MobileMenu, { ButtonLogout } from "@/app/components/moblieMenu/mobile.menu";
 import { authOptions } from "@/app/lib/auth/authOptions";
 import { SEX_OPTIONS, TIERS_OPTIONS } from "@/app/util/api";
-import { Heart, Search, ShoppingBag } from "lucide-react";
+import { Heart, Search } from "lucide-react";
 import { getServerSession } from "next-auth";
 import Link from "next/link";
 
@@ -38,8 +39,7 @@ export default async function Header({ brands }: { brands: IBrand[] }) {
                 <div className="flex items-center gap-4 text-sm">
                     {/* Icons (always shown) */}
                     <Search className="w-5 h-5" />
-                    <ShoppingBag className="w-5 h-5" />
-
+                    <CounterShoppingBar />
                     {/* Desktop-only items */}
                     <div className="hidden lg:flex items-center gap-4 font-bold">
                         <Heart className="w-5 h-5" />

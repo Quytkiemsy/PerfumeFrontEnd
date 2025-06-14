@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { FaShoppingBag } from "react-icons/fa";
 import { SEX_OPTIONS, TIERS_OPTIONS } from "@/app/util/api";
+import CounterShoppingBar from "@/app/components/header/counter.shoppingbar";
 
 export default function Navbar({ brands }: { brands: IBrand[] }) {
     const [showNavbar, setShowNavbar] = useState(false);
@@ -57,9 +58,7 @@ export default function Navbar({ brands }: { brands: IBrand[] }) {
                     }
                 </div>
                 <div className="text-sm">
-                    <Link href="#" className="flex items-center gap-1">
-                        <FaShoppingBag /> <span>Bag</span>
-                    </Link>
+                    <CounterShoppingBar />
                 </div>
             </nav>
         </header>

@@ -37,6 +37,12 @@ export default function LoginPopup() {
         signIn("google");
     }
 
+    const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+        if (event.key === 'Enter') {
+            handleCredentialLogin();
+        }
+    }
+
     return (
         <>
             <button
@@ -92,6 +98,7 @@ export default function LoginPopup() {
                                 className="w-full border border-black px-4 py-3 mb-6 text-sm outline-none"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
+                                onKeyDown={handleKeyDown}
                             />
 
                             {/* Sign in Button */}

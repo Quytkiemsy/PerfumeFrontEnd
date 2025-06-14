@@ -43,8 +43,8 @@ declare global {
         tier?: string;
         sex?: string;
         new?: boolean;
-        createdAt: string;
-        updatedAt: string;
+        createdAt?: string;
+        updatedAt?: string;
         createdBy?: string;
         updatedBy?: string;
     }
@@ -79,5 +79,9 @@ declare global {
         _embedded: {
             [key: string]: T[];
         }
+    }
+
+    export interface IProductCart extends IProduct {
+        perfumeVariants?: IPerfumeVariant; // chỉ 1 variant, không phải mảng
     }
 }

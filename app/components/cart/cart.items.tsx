@@ -1,0 +1,67 @@
+'use client'
+
+import { useCartStore } from '@/app/store/cartStore'
+import Image from 'next/image'
+
+interface CartItemProps {
+    item: ICartItem
+}
+
+export function CartItem({ item }: CartItemProps) {
+    const { updateQuantity, removeItem } = useCartStore()
+
+    const handleQuantityChange = (newQuantity: number) => {
+        updateQuantity(item.product, newQuantity)
+    }
+
+    const handleRemove = () => {
+        removeItem(item.product)
+    }
+
+    const itemTotal = (item?.product?.perfumeVariants?.price ?? 0) * item.quantity
+
+    return (
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4 p-4 border-b border-gray-200 w-full">
+            <div className="relative w-16 h-16 flex-shrink-0 mx-auto sm:mx-0">
+                <Image
+                    src={`/api/image?filename=${item.product?.images[0]}`}
+                    alt="Close up"
+                    fill
+                    className="object-cover rounded-md" />
+            </div>
+
+            <div className="flex-1 min-w-0">
+                <h3 className="font-medium text-gray-900 truncate">{item.product.name}</h3>
+                <p className="text-xs sm:text-sm text-gray-500">₫{(item?.product?.perfumeVariants?.price?.toLocaleString('en-US') ?? 0)} mỗi cái</p>
+                <p className="text-xs sm:text-sm text-gray-500">Dung tích: {item?.product?.perfumeVariants?.volume ?? 0} ml</p>
+            </div>
+
+            <div className="flex items-center gap-2 sm:gap-3 mt-2 sm:mt-0">
+                <button
+                    onClick={() => handleQuantityChange(item.quantity - 1)}
+                    className="w-8 h-8 flex items-center justify-center border border-gray-300 rounded hover:bg-gray-50 text-lg"
+                    disabled={item.quantity <= 1}
+                >
+                    -
+                </button>
+                <span className="w-8 text-center font-medium">{item.quantity}</span>
+                <button
+                    onClick={() => handleQuantityChange(item.quantity + 1)}
+                    className="w-8 h-8 flex items-center justify-center border border-gray-300 rounded hover:bg-gray-50 text-lg"
+                >
+                    +
+                </button>
+            </div>
+
+            <div className="text-right min-w-[90px] sm:min-w-[100px] mt-2 sm:mt-0">
+                <p className="font-semibold text-gray-900 text-sm sm:text-base">₫ {itemTotal.toLocaleString('en-US')}</p>
+                <button
+                    onClick={handleRemove}
+                    className="text-red-500 text-xs sm:text-sm hover:text-red-700 hover:underline mt-1"
+                >
+                    Remove
+                </button>
+            </div>
+        </div>
+    )
+}

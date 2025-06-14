@@ -28,7 +28,7 @@ export default function ProductGrid({ sortedProductByPrice }: IProductProps) {
     return (
         <>
             <hr className="my-10 border-t-2 border-gray-200 w-full max-w-6xl mx-auto rounded" />
-            <div className="hidden md:flex flex-col items-center space-y-8 ">
+            <div className="hidden md:flex flex-col items-center space-y-8 my-3">
                 <h2 className="text-2xl font-semibold">The same product !!!</h2>
 
                 <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-2 md:gap-8 w-full px-4">
