@@ -1,12 +1,14 @@
+import { cartApi } from '@/app/util/cartApi'
 import { create } from 'zustand'
 import { devtools, persist, createJSONStorage } from 'zustand/middleware'
+import { toast } from "react-hot-toast";
 
 
 type CartStore = ICartState & ICartActions
 
 const calculateTotals = (items: ICartItem[]) => ({
   totalItems: items.reduce((sum, item) => sum + item.quantity, 0),
-  totalPrice: items.reduce((sum, item) => sum + (item?.product?.perfumeVariants?.price ?? 0) * item.quantity, 0),
+  totalPrice: items.reduce((sum, item) => sum + (item?.product?.perfumeVariant?.price ?? 0) * item.quantity, 0),
 })
 
 export const useCartStore = create<CartStore>()(
@@ -20,80 +22,70 @@ export const useCartStore = create<CartStore>()(
         hasHydrated: false,
         isLoading: false,
         error: null,
+        userId: '', // Assuming userId will be set later
 
         // Actions
         setHasHydrated: () => set({ hasHydrated: true }),
 
-        addItem: (product: IProductCart, quantity = 1) => {
-          const currentItems = get().items
-          const existingItem = currentItems.find(item => item.product.id === product.id
-            && item.product.perfumeVariants?.id === product.perfumeVariants?.id)
+        fetchCart: async (userId: string) => {
+          set({ isLoading: true, error: null });
+          try {
+            const cart: ICartState = await cartApi.getCart(userId);
+            set({ ...cart, isLoading: false });
+          } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : 'Failed to fetch cart';
+            set({ error: errorMessage, isLoading: false });
+          }
+        },
 
-          let newItems: ICartItem[]
-
-          if (existingItem) {
-            // Update quantity của item có sẵn
-            newItems = currentItems.map(item =>
-              item.product.id === product.id
-                && item.product.perfumeVariants?.id === product.perfumeVariants?.id
-                ? { ...item, quantity: item.quantity + quantity }
-                : item
-            )
-          } else {
-            // Thêm item mới
+        addItem: async (product: IProductCart, userId: string, quantity = 1) => {
+          set({ isLoading: true, error: null });
+          try {
             const newItem: ICartItem = {
               id: Date.now(), // Simple ID generation
               product,
               quantity,
               totalPrice: 0
             }
-            newItems = [...currentItems, newItem]
+            const updatedCart = await cartApi.addItem(userId, newItem);
+            set({ ...updatedCart, isLoading: false });
+          } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : 'Failed to add item';
+            set({ error: errorMessage, isLoading: false });
           }
-
-          const totals = calculateTotals(newItems)
-          set({
-            items: newItems,
-            ...totals
-          })
         },
 
-        removeItem: (product: IProductCart) => {
-          const newItems = get().items.filter(item => item.product.id !== product.id
-            && item.product.perfumeVariants?.id !== product.perfumeVariants?.id)
-          const totals = calculateTotals(newItems)
-
-          set({
-            items: newItems,
-            ...totals
-          })
-        },
-
-        updateQuantity: (product: IProductCart, quantity: number) => {
-          if (quantity <= 0) {
-            get().removeItem(product)
-            return
+        removeItem: async (product: IProductCart, userId: string, variantId: string) => {
+          set({ isLoading: true, error: null });
+          try {
+            const updatedCart = await cartApi.removeItem(userId, String(product.id), variantId);
+            set({ ...updatedCart, isLoading: false });
+          } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : 'Failed to remove item';
+            set({ error: errorMessage, isLoading: false });
           }
-
-          const newItems = get().items.map(item =>
-            item.product.id === product.id
-              && item.product.perfumeVariants?.id === product.perfumeVariants?.id
-              ? { ...item, quantity }
-              : item
-          )
-
-          const totals = calculateTotals(newItems)
-          set({
-            items: newItems,
-            ...totals
-          })
         },
 
-        clearCart: () => {
-          set({
-            items: [],
-            totalItems: 0,
-            totalPrice: 0
-          })
+        updateQuantity: async (product: IProductCart, quantity: number, userId: string) => {
+          set({ isLoading: true, error: null });
+          try {
+            const updatedCart = await cartApi.updateQuantity(userId, String(product.id), quantity, String(product.perfumeVariant?.id) ?? '');
+            set({ ...updatedCart, isLoading: false });
+          } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : 'Failed to add item';
+            set({ error: errorMessage, isLoading: false });
+          }
+        },
+
+        clearCart: async (userId: string) => {
+          set({ isLoading: true, error: null });
+          try {
+            const clearCart = await cartApi.clearCart(userId);
+            set({ ...clearCart, isLoading: false });
+          } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : 'Failed to clear cart';
+            set({ error: errorMessage, isLoading: false });
+          }
         },
       }),
       {

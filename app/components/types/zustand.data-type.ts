@@ -11,6 +11,7 @@ declare global {
     }
 
     export interface ICartState {
+        userId: string,
         items: ICartItem[]
         totalItems: number
         totalPrice: number
@@ -20,11 +21,12 @@ declare global {
     }
 
     export interface ICartActions {
-        addItem: (product: IProductCart, quantity?: number) => void
-        removeItem: (product: IProductCart) => void
-        updateQuantity: (product: IProductCart, quantity: number) => void
-        clearCart: () => void
+        addItem: (product: IProductCart, userId: string, quantity?: number) => void
+        removeItem: (product: IProductCart, userId: string, variantId: string) => void
+        updateQuantity: (product: IProductCart, quantity: number, userId: string) => void
+        clearCart: (userId: string) => void
         syncWithServer?: () => void
         setHasHydrated: () => void
+        fetchCart: (userId: string) => Promise<void>
     }
 }

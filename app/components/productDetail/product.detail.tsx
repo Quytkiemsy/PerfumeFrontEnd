@@ -4,6 +4,7 @@ import { useRef, useState } from 'react';
 import ProductGrid from '../home/product.home';
 import { useCartStore } from '@/app/store/cartStore';
 import toast from 'react-hot-toast';
+import { useSession } from 'next-auth/react';
 
 interface IProductDetailProps {
     product: IProduct;
@@ -14,6 +15,7 @@ export default function ProductDetail({ product, sortedProductByPrice }: IProduc
     const [selectVar, setSelectVar] = useState<string>('');
     const [selectedVolume, setSelectedVolume] = useState<string>('');
     const addItem = useCartStore(state => state.addItem)
+    const { data: session, status } = useSession();
 
     const handleAddToCart = () => {
         if (!product || !selectVar || !selectedVolume) {
@@ -27,9 +29,11 @@ export default function ProductDetail({ product, sortedProductByPrice }: IProduc
             images: product.images,
             description: product.description,
             details: product.details,
-            perfumeVariants: product.perfumeVariants?.find((variant) => variant.variantType === selectVar && variant.volume === selectedVolume),
+            perfumeVariant: product.perfumeVariants?.find((variant) => variant.variantType === selectVar && variant.volume === selectedVolume),
         };
-        addItem(productCart);
+        if (session?.user?.username) {
+            addItem(productCart, session.user.username);
+        }
     }
 
     console.log(product);

@@ -82,6 +82,6 @@ declare global {
     }
 
     export interface IProductCart extends IProduct {
-        perfumeVariants?: IPerfumeVariant; // chỉ 1 variant, không phải mảng
+        perfumeVariant?: IPerfumeVariant; // chỉ 1 variant, không phải mảng
     }
 }
