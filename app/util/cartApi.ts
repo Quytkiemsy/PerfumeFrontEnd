@@ -50,4 +50,15 @@ export const cartApi = {
         });
         return response.data as ICartState;
     },
+    mergeGuestToUserCart: async (userId: string, guestId: string): Promise<ICartState> => {
+        const response = await sendRequest<IBackendRes<ICartState>>({
+            url: `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/cart/merge/${userId}`,
+            method: 'POST',
+            queryParams: {
+                guestId: guestId
+            }
+        });
+        return response.data as ICartState;
+    }
+
 };

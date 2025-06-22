@@ -23,6 +23,7 @@ export const useCartStore = create<CartStore>()(
         isLoading: false,
         error: null,
         userId: '', // Assuming userId will be set later
+        setUserId: (userId: string) => set({ userId }),
 
         // Actions
         setHasHydrated: () => set({ hasHydrated: true }),
@@ -87,6 +88,16 @@ export const useCartStore = create<CartStore>()(
             set({ error: errorMessage, isLoading: false });
           }
         },
+        mergeGuestToUserCart: async (userId: string, guestId: string) => {
+          set({ isLoading: true, error: null });
+          try {
+            const mergeCart = await cartApi.mergeGuestToUserCart(userId, guestId);
+            set({ ...mergeCart, isLoading: false });
+          } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : 'Failed to clear cart';
+            set({ error: errorMessage, isLoading: false });
+          }
+        }
       }),
       {
         name: 'cart-storage',

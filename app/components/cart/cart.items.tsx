@@ -13,11 +13,21 @@ export function CartItem({ item }: CartItemProps) {
     const { data: session, status } = useSession();
 
     const handleQuantityChange = (newQuantity: number) => {
-        updateQuantity(item.product, newQuantity, session?.user?.username ?? '');
+        if (session?.user?.username) {
+            updateQuantity(item.product, newQuantity, session?.user?.username ?? '');
+        } else {
+            const guestId = localStorage.getItem('guestId') || '';
+            updateQuantity(item.product, newQuantity, guestId);
+        }
     }
 
     const handleRemove = () => {
-        removeItem(item.product, session?.user?.username ?? '', String(item?.product?.perfumeVariant?.id));
+        if (session?.user?.username) {
+            removeItem(item.product, session?.user?.username ?? '', String(item?.product?.perfumeVariant?.id));
+        } else {
+            const guestId = localStorage.getItem('guestId') || '';
+            removeItem(item.product, guestId, String(item?.product?.perfumeVariant?.id));
+        }
     }
 
     const itemTotal = (item?.product?.perfumeVariant?.price ?? 0) * item.quantity

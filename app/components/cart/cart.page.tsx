@@ -1,6 +1,5 @@
 "use client"
 import { CartItem } from "@/app/components/cart/cart.items"
-import { authOptions } from "@/app/lib/auth/authOptions"
 import { useCartStore } from "@/app/store/cartStore"
 import { useSession } from "next-auth/react"
 import Link from "next/link"
@@ -12,8 +11,18 @@ export default function CartPage() {
     useEffect(() => {
         if (status === "authenticated" && session?.user?.username) {
             fetchCart(session.user.username);
+        } else {
+            fetchCart(localStorage.getItem('guestId') || '');
         }
     }, [session?.user?.username, fetchCart]);
+
+    const handleClearCart = () => {
+        if (session?.user?.username) {
+            clearCart(session.user.username);
+        } else {
+            clearCart(localStorage.getItem('guestId') || '');
+        }
+    }
 
     // Loading state cho đến khi hydration hoàn thành
     if (!hasHydrated) {
@@ -96,7 +105,7 @@ export default function CartPage() {
                         Shopping Cart <span className="text-gray-400 font-normal">({totalItems} {totalItems === 1 ? 'item' : 'items'})</span>
                     </h1>
                     <button
-                        onClick={() => clearCart(session?.user?.username ?? '')}
+                        onClick={() => handleClearCart()}
                         className="text-gray-500 hover:text-black font-medium hover:underline transition-colors px-2 py-1 rounded w-fit self-end sm:self-auto"
                     >
                         Clear Cart

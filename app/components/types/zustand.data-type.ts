@@ -28,5 +28,7 @@ declare global {
         syncWithServer?: () => void
         setHasHydrated: () => void
         fetchCart: (userId: string) => Promise<void>
+        setUserId: (userId: string) => void
+        mergeGuestToUserCart: (userId: string, guestId: string) => Promise<void>
     }
 }

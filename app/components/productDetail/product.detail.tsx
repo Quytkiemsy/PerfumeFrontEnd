@@ -33,6 +33,8 @@ export default function ProductDetail({ product, sortedProductByPrice }: IProduc
         };
         if (session?.user?.username) {
             addItem(productCart, session.user.username);
+        } else {
+            addItem(productCart, localStorage.getItem('guestId') || '', 1);
         }
     }
 
