@@ -1,10 +1,11 @@
 'use client';
 import { useCartStore } from '@/app/store/cartStore';
 import { ShoppingCart } from 'lucide-react';
-import { useSession } from "next-auth/react"
+import { useSession } from "next-auth/react";
 import { useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 
+import { cartApi } from '@/app/util/cartApi';
 import Link from 'next/link';
 const CounterShoppingBar = () => {
     const { totalItems: total, hasHydrated, fetchCart, setUserId } = useCartStore();
@@ -23,13 +24,23 @@ const CounterShoppingBar = () => {
         }
     }, [session?.user?.username, fetchCart]);
 
+    useEffect(() => {
+        if (status === "authenticated" && session?.user?.username) {
+            const guestId = localStorage.getItem("guestId");
+            if (guestId) {
+                (async () => {
+                    await cartApi.mergeGuestToUserCart(session.user.username, guestId);
+                    await fetchCart(session.user.username); // fetch lại cart sau khi merge
+                    localStorage.removeItem("guestId");
+                })();
+            }
+        }
+    }, [status, session?.user?.username]);
+
     if (!hasHydrated) {
         return (
             <div className="relative">
                 <ShoppingCart className="w-5 h-5" />
-                <span className="absolute -top-1 -right-2 bg-red-500 text-white text-xs rounded-full px-1.5">
-                    0
-                </span>
             </div>
         )
     }

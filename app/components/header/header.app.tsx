@@ -8,6 +8,7 @@ import { Heart, Search } from "lucide-react";
 import { getServerSession } from "next-auth";
 import Link from "next/link";
 
+
 export default async function Header({ brands }: { brands: IBrand[] }) {
     const session = await getServerSession(authOptions);
 

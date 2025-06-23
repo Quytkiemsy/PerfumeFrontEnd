@@ -36,7 +36,7 @@ export default async function RootLayout({
             <Navbar brands={brands} />
             {children}
             <Footer />
-            <Toaster position="top-right" reverseOrder={false} />
+            <Toaster position="top-center" reverseOrder={false} />
           </SessionErrorHandler>
         </NextAuthWrapper>
       </body>

@@ -1,6 +1,5 @@
 'use client';
 
-import { cartApi } from "@/app/util/cartApi";
 import { AnimatePresence, motion } from "framer-motion";
 import { signIn } from "next-auth/react";
 import { useRouter } from 'next/navigation';
@@ -27,43 +26,27 @@ export default function LoginPopup() {
         } else {
             toast.success('Đăng nhập thành công!');
             setIsOpen(false);
-            const guestId = localStorage.getItem('guestId');
-            await cartApi.mergeGuestToUserCart(username || '', guestId || '')
         }
         if (res?.url) {
             router.push(`${callbackUrl}`);
             router.refresh();
         }
-        // delete localStorage guestId
-        localStorage.removeItem('guestId');
     };
 
     const handleGoogleLogin = async () => {
-        const currentGuestId = localStorage.getItem('guestId');
-        const result = await signIn('google', {
+        await signIn('google', {
             redirect: false
         })
-        if (currentGuestId) {
-
-            if (result?.ok) {
-                // Đợi session update
-                await new Promise(resolve => setTimeout(resolve, 1000))
-
-                // Trigger merge cart
-                if (currentGuestId) {
-                    await cartApi.mergeGuestToUserCart(username || '', currentGuestId || '')
-                }
-            }
-        }
-        // delete localStorage guestId
-        localStorage.removeItem('guestId');
     }
+
 
     const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
         if (event.key === 'Enter') {
             handleCredentialLogin();
         }
     }
+
+
 
     return (
         <>
