@@ -1,7 +1,7 @@
 import ListProduct from '@/app/components/productDetail/product.list';
-import { sendRequest } from '../util/api';
+import { sendRequest } from '../../util/api';
 import { getServerSession } from "next-auth";
-import { authOptions } from '../lib/auth/authOptions';
+import { authOptions } from '../../lib/auth/authOptions';
 
 type PageProps = {
     searchParams: Promise<{ [key: string]: string | string[] | undefined }>
