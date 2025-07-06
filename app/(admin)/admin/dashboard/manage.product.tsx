@@ -1,19 +1,30 @@
 'use client';
-import React, { useState } from 'react';
 import {
-    Plus, Search, Edit, Trash2, Package,
-    Users, BarChart3, Settings, Menu, X, Upload, Download,
-    Grid, List, MoreHorizontal
+    Download,
+    Edit,
+    Grid, List,
+    Menu,
+    MoreHorizontal,
+    Plus, Search,
+    Trash2,
+    Upload
 } from 'lucide-react';
+import { useState } from 'react';
 
 // shadcn/ui components
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { TIERS_OPTIONS } from '@/app/util/api';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger
+} from '@/components/ui/dropdown-menu';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
     Table,
     TableBody,
@@ -22,78 +33,21 @@ import {
     TableHeader,
     TableRow
 } from '@/components/ui/table';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Textarea } from '@/components/ui/textarea';
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger
-} from '@/components/ui/dropdown-menu';
+import Image from 'next/image';
+import ProductFormDialog from './modal.product';
 
-const PerfumeAdminDashboard = () => {
-    const [sidebarOpen, setSidebarOpen] = useState(false);
+const PerfumeAdminDashboard = ({ products, brands }: { products: IProduct[], brands: IBrand[] }) => {
+
     const [viewMode, setViewMode] = useState('table');
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedBrand, setSelectedBrand] = useState('');
     const [selectedTier, setSelectedTier] = useState('');
     const [showAddModal, setShowAddModal] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
-    const [editingProduct, setEditingProduct] = useState(null);
 
     // Mock data
-    const [products, setProducts] = useState([
-        {
-            id: 1,
-            name: "Chanel No. 5",
-            images: ["https://images.unsplash.com/photo-1541643600914-78b084683601?w=300&h=300&fit=crop"],
-            description: "Iconic floral fragrance with aldehydes",
-            brand: { name: "Chanel", origin: "France" },
-            fragranceTypes: { id: 1, name: "Floral" },
-            perfumeVariants: [
-                { id: 1, variantType: "EDT", volume: "50ml", price: 150, stockQuantity: 25 },
-                { id: 2, variantType: "EDP", volume: "100ml", price: 200, stockQuantity: 15 }
-            ],
-            tier: "Luxury",
-            sex: "Women",
-            new: true,
-            createdAt: "2024-01-15"
-        },
-        {
-            id: 2,
-            name: "Dior Sauvage",
-            images: ["https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=300&h=300&fit=crop"],
-            description: "Fresh and woody fragrance",
-            brand: { name: "Dior", origin: "France" },
-            fragranceTypes: { id: 2, name: "Woody" },
-            perfumeVariants: [
-                { id: 3, variantType: "EDT", volume: "100ml", price: 120, stockQuantity: 30 }
-            ],
-            tier: "Premium",
-            sex: "Men",
-            new: false,
-            createdAt: "2024-01-10"
-        },
-        {
-            id: 3,
-            name: "Tom Ford Black Orchid",
-            images: ["https://images.unsplash.com/photo-1563170351-be82bc888aa4?w=300&h=300&fit=crop"],
-            description: "Luxurious and mysterious fragrance",
-            brand: { name: "Tom Ford", origin: "USA" },
-            fragranceTypes: { id: 3, name: "Oriental" },
-            perfumeVariants: [
-                { id: 4, variantType: "EDP", volume: "50ml", price: 180, stockQuantity: 12 }
-            ],
-            tier: "Luxury",
-            sex: "Unisex",
-            new: false,
-            createdAt: "2024-01-05"
-        }
-    ]);
 
-    const brands = ["Chanel", "Dior", "Tom Ford", "Gucci", "Versace"];
-    const tiers = ["Luxury", "Premium", "Mid-range", "Budget"];
-    const fragranceTypes = ["Floral", "Woody", "Oriental", "Fresh", "Gourmand"];
+    const tiers = TIERS_OPTIONS;
 
     const filteredProducts = products.filter(product => {
         const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -103,155 +57,18 @@ const PerfumeAdminDashboard = () => {
         return matchesSearch && matchesBrand && matchesTier;
     });
 
-    const handleDeleteProduct = (id) => {
+    const handleDeleteProduct = (id: number) => {
         if (window.confirm('Bạn có chắc muốn xóa sản phẩm này?')) {
-            setProducts(products.filter(p => p.id !== id));
+            // setProducts(products.filter(p => p.id !== id));
         }
     };
 
-    const handleEditProduct = (product) => {
-        setEditingProduct(product);
+    const handleEditProduct = (product: IProduct) => {
         setShowEditModal(true);
     };
 
-    const ProductFormDialog = ({ product = null, isOpen, onClose }) => {
-        const [formData, setFormData] = useState({
-            name: product?.name || '',
-            description: product?.description || '',
-            brand: product?.brand?.name || '',
-            fragranceType: product?.fragranceTypes?.name || '',
-            tier: product?.tier || '',
-            sex: product?.sex || 'Unisex',
-        });
 
-        const handleSubmit = () => {
-            if (!formData.name) return;
-
-            const newProduct = {
-                id: product?.id || Date.now(),
-                ...formData,
-                brand: { name: formData.brand, origin: "Unknown" },
-                fragranceTypes: { id: 1, name: formData.fragranceType },
-                perfumeVariants: product?.perfumeVariants || [],
-                new: !product,
-                createdAt: product?.createdAt || new Date().toISOString().split('T')[0],
-                images: product?.images || []
-            };
-
-            if (product) {
-                setProducts(products.map(p => p.id === product.id ? newProduct : p));
-            } else {
-                setProducts([...products, newProduct]);
-            }
-
-            onClose();
-        };
-
-        return (
-            <Dialog open={isOpen} onOpenChange={onClose}>
-                <DialogContent className="sm:max-w-[600px]">
-                    <DialogHeader>
-                        <DialogTitle>
-                            {product ? 'Chỉnh sửa sản phẩm' : 'Thêm sản phẩm mới'}
-                        </DialogTitle>
-                    </DialogHeader>
-
-                    <div className="space-y-4 py-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="name">Tên sản phẩm</Label>
-                            <Input
-                                id="name"
-                                value={formData.name}
-                                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                placeholder="Nhập tên sản phẩm"
-                            />
-                        </div>
-
-                        <div className="space-y-2">
-                            <Label htmlFor="description">Mô tả</Label>
-                            <Textarea
-                                id="description"
-                                value={formData.description}
-                                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                                placeholder="Nhập mô tả sản phẩm"
-                            />
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="brand">Thương hiệu</Label>
-                                <Select value={formData.brand} onValueChange={(value) => setFormData({ ...formData, brand: value })}>
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Chọn thương hiệu" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {brands.map(brand => (
-                                            <SelectItem key={brand} value={brand}>{brand}</SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label htmlFor="fragranceType">Loại hương</Label>
-                                <Select value={formData.fragranceType} onValueChange={(value) => setFormData({ ...formData, fragranceType: value })}>
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Chọn loại hương" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {fragranceTypes.map(type => (
-                                            <SelectItem key={type} value={type}>{type}</SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="tier">Phân khúc</Label>
-                                <Select value={formData.tier} onValueChange={(value) => setFormData({ ...formData, tier: value })}>
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Chọn phân khúc" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {tiers.map(tier => (
-                                            <SelectItem key={tier} value={tier}>{tier}</SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label htmlFor="sex">Giới tính</Label>
-                                <Select value={formData.sex} onValueChange={(value) => setFormData({ ...formData, sex: value })}>
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Chọn giới tính" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="Women">Nữ</SelectItem>
-                                        <SelectItem value="Men">Nam</SelectItem>
-                                        <SelectItem value="Unisex">Unisex</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        </div>
-
-                        <div className="flex justify-end space-x-2 pt-4">
-                            <Button variant="outline" onClick={onClose}>
-                                Hủy
-                            </Button>
-                            <Button onClick={handleSubmit}>
-                                {product ? 'Cập nhật' : 'Thêm mới'}
-                            </Button>
-                        </div>
-                    </div>
-                </DialogContent>
-            </Dialog>
-        );
-    };
-
-    const getTierBadgeVariant = (tier) => {
+    const getTierBadgeVariant = (tier: string) => {
         switch (tier) {
             case 'Luxury': return 'destructive';
             case 'Premium': return 'default';
@@ -263,43 +80,6 @@ const PerfumeAdminDashboard = () => {
 
     return (
         <div className="min-h-screen bg-gray-50">
-            {/* Sidebar */}
-            <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform transition-transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-                } lg:translate-x-0`}>
-                <div className="p-6">
-                    <div className="flex items-center justify-between mb-8">
-                        <h1 className="text-2xl font-bold text-gray-900">Perfume Admin</h1>
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => setSidebarOpen(false)}
-                            className="lg:hidden"
-                        >
-                            <X size={20} />
-                        </Button>
-                    </div>
-
-                    <nav className="space-y-2">
-                        <Button variant="secondary" className="w-full justify-start">
-                            <Package className="mr-2 h-4 w-4" />
-                            Sản phẩm
-                        </Button>
-                        <Button variant="ghost" className="w-full justify-start">
-                            <Users className="mr-2 h-4 w-4" />
-                            Thương hiệu
-                        </Button>
-                        <Button variant="ghost" className="w-full justify-start">
-                            <BarChart3 className="mr-2 h-4 w-4" />
-                            Thống kê
-                        </Button>
-                        <Button variant="ghost" className="w-full justify-start">
-                            <Settings className="mr-2 h-4 w-4" />
-                            Cài đặt
-                        </Button>
-                    </nav>
-                </div>
-            </div>
-
             {/* Main Content */}
             <div className="lg:ml-64">
                 {/* Header */}
@@ -309,7 +89,7 @@ const PerfumeAdminDashboard = () => {
                             <Button
                                 variant="ghost"
                                 size="icon"
-                                onClick={() => setSidebarOpen(true)}
+                                // onClick={() => setSidebarOpen(true)}
                                 className="lg:hidden mr-2"
                             >
                                 <Menu size={20} />
@@ -355,7 +135,7 @@ const PerfumeAdminDashboard = () => {
                             <SelectContent>
                                 <SelectItem value="all">Tất cả thương hiệu</SelectItem>
                                 {brands.map(brand => (
-                                    <SelectItem key={brand} value={brand}>{brand}</SelectItem>
+                                    <SelectItem key={brand.name} value={brand.name}>{brand.name}</SelectItem>
                                 ))}
                             </SelectContent>
                         </Select>
@@ -417,11 +197,12 @@ const PerfumeAdminDashboard = () => {
                                             </TableCell>
                                             <TableCell>
                                                 <div className="flex items-center space-x-3">
-                                                    <img
-                                                        src={product.images[0]}
+                                                    <Image
+                                                        src={`/api/image?filename=${product?.images?.[0]}`}
                                                         alt={product.name}
-                                                        className="w-10 h-10 rounded-lg object-cover"
-                                                    />
+                                                        width={40}
+                                                        height={40}
+                                                        className="w-10 h-10 rounded-lg object-cover" />
                                                     <div>
                                                         <div className="font-medium flex items-center gap-2">
                                                             {product.name}
@@ -439,7 +220,7 @@ const PerfumeAdminDashboard = () => {
                                             </TableCell>
                                             <TableCell>{product.brand?.name}</TableCell>
                                             <TableCell>
-                                                <Badge variant={getTierBadgeVariant(product.tier)}>
+                                                <Badge variant={getTierBadgeVariant(product?.tier)}>
                                                     {product.tier}
                                                 </Badge>
                                             </TableCell>
@@ -477,11 +258,12 @@ const PerfumeAdminDashboard = () => {
                             {filteredProducts.map((product) => (
                                 <Card key={product.id} className="overflow-hidden hover:shadow-lg transition-shadow">
                                     <div className="relative">
-                                        <img
-                                            src={product.images[0]}
+                                        <Image
+                                            src={`/api/image?filename=${product?.images?.[0]}`}
                                             alt={product.name}
-                                            className="w-full h-48 object-cover"
-                                        />
+                                            width={200}
+                                            height={200}
+                                            className="w-full h-48 object-cover" />
                                         {product.new && (
                                             <Badge variant="destructive" className="absolute top-2 left-2">
                                                 MỚI
@@ -561,6 +343,8 @@ const PerfumeAdminDashboard = () => {
             <ProductFormDialog
                 isOpen={showAddModal}
                 onClose={() => setShowAddModal(false)}
+                brands={brands}
+                tiers={tiers}
             />
 
             {/* Edit Product Modal */}
@@ -571,15 +355,17 @@ const PerfumeAdminDashboard = () => {
                     setShowEditModal(false);
                     setEditingProduct(null);
                 }}
+                brands={brands}
+                tiers={tiers}
             />
 
             {/* Mobile Sidebar Overlay */}
-            {sidebarOpen && (
+            {/* {sidebarOpen && (
                 <div
                     className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
                     onClick={() => setSidebarOpen(false)}
                 />
-            )}
+            )} */}
         </div>
     );
 };

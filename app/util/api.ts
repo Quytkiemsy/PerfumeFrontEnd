@@ -115,3 +115,11 @@ export const VOLUMES_OPTIONS = ['20', '50', '100', '100+']
 export const SEX_OPTIONS = ['MEN', 'WOMEN', 'UNISEX']
 
 export const TIERS_OPTIONS = ['BASIC', 'PREMIUM', 'LUXURY']
+
+export const FRAGRANCE_TYPES_OPTIONS = [
+    'Floral',
+    'Woody',
+    'Oriental',
+    'Fresh',
+    'Gourmand'
+];
