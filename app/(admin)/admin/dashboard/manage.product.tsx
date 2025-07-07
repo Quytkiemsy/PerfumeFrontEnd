@@ -43,9 +43,6 @@ const PerfumeAdminDashboard = ({ products, brands }: { products: IProduct[], bra
     const [selectedBrand, setSelectedBrand] = useState('');
     const [selectedTier, setSelectedTier] = useState('');
     const [showAddModal, setShowAddModal] = useState(false);
-    const [showEditModal, setShowEditModal] = useState(false);
-
-    // Mock data
 
     const tiers = TIERS_OPTIONS;
 
@@ -64,7 +61,42 @@ const PerfumeAdminDashboard = ({ products, brands }: { products: IProduct[], bra
     };
 
     const handleEditProduct = (product: IProduct) => {
-        setShowEditModal(true);
+    };
+
+    // Tạo danh sách các row với từng variant
+    const getExpandedRows = () => {
+        const expandedRows: Array<{
+            product: IProduct;
+            variant: IPerfumeVariant;
+            isFirstRow: boolean;
+            rowSpan: number;
+        }> = [];
+
+        filteredProducts.forEach(product => {
+            const variants = product.perfumeVariants || [];
+
+            if (variants.length === 0) {
+                // Nếu không có variant nào, vẫn hiển thị product
+                expandedRows.push({
+                    product,
+                    variant: {} as IPerfumeVariant,
+                    isFirstRow: true,
+                    rowSpan: 1
+                });
+            } else {
+                // Nếu có variants, tạo một row cho mỗi variant
+                variants.forEach((variant, index) => {
+                    expandedRows.push({
+                        product,
+                        variant,
+                        isFirstRow: index === 0,
+                        rowSpan: variants.length
+                    });
+                });
+            }
+        });
+
+        return expandedRows;
     };
 
 
@@ -77,6 +109,15 @@ const PerfumeAdminDashboard = ({ products, brands }: { products: IProduct[], bra
             default: return 'default';
         }
     };
+
+    const formatPrice = (price: number) => {
+        return new Intl.NumberFormat('vi-VN', {
+            style: 'currency',
+            currency: 'VND'
+        }).format(price);
+    };
+
+    const expandedRows = getExpandedRows();
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -185,47 +226,64 @@ const PerfumeAdminDashboard = ({ products, brands }: { products: IProduct[], bra
                                         <TableHead>Thương hiệu</TableHead>
                                         <TableHead>Phân khúc</TableHead>
                                         <TableHead>Giới tính</TableHead>
-                                        <TableHead>Phiên bản</TableHead>
+                                        <TableHead>Loại</TableHead>
+                                        <TableHead>Dung tích</TableHead>
+                                        <TableHead>Giá</TableHead>
+                                        <TableHead>Tồn kho</TableHead>
                                         <TableHead className="text-right">Thao tác</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {filteredProducts.map((product) => (
-                                        <TableRow key={product.id}>
-                                            <TableCell>
-                                                <Checkbox />
-                                            </TableCell>
-                                            <TableCell>
-                                                <div className="flex items-center space-x-3">
-                                                    <Image
-                                                        src={`/api/image?filename=${product?.images?.[0]}`}
-                                                        alt={product.name}
-                                                        width={40}
-                                                        height={40}
-                                                        className="w-10 h-10 rounded-lg object-cover" />
-                                                    <div>
-                                                        <div className="font-medium flex items-center gap-2">
-                                                            {product.name}
-                                                            {product.new && (
-                                                                <Badge variant="destructive" className="text-xs">
-                                                                    MỚI
-                                                                </Badge>
-                                                            )}
+                                    {expandedRows.map((row, index) => (
+                                        <TableRow key={`${row.product.id}-${row.variant.id || index}`}>
+                                            {row.isFirstRow && (
+                                                <>
+                                                    <TableCell rowSpan={row.rowSpan} className="w-[50px]">
+                                                        <Checkbox />
+                                                    </TableCell>
+                                                    <TableCell rowSpan={row.rowSpan}>
+                                                        <div className="flex items-center space-x-3">
+                                                            <Image
+                                                                src={`/api/image?filename=${row.product?.images?.[0]}`}
+                                                                alt={row.product.name}
+                                                                width={40}
+                                                                height={40}
+                                                                className="w-10 h-10 rounded-lg object-cover" />
+                                                            <div>
+                                                                <div className="font-medium flex items-center gap-2">
+                                                                    {row.product.name}
+                                                                    {row.product.new && (
+                                                                        <Badge variant="destructive" className="text-xs">
+                                                                            MỚI
+                                                                        </Badge>
+                                                                    )}
+                                                                </div>
+                                                                <div className="text-sm text-gray-500 line-clamp-1">
+                                                                    {row.product.description
+                                                                        ? row.product.description.length > 30
+                                                                            ? row.product.description.slice(0, 30) + "..."
+                                                                            : row.product.description
+                                                                        : ""}
+                                                                </div>
+                                                            </div>
                                                         </div>
-                                                        <div className="text-sm text-gray-500 line-clamp-1">
-                                                            {product.description}
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </TableCell>
-                                            <TableCell>{product.brand?.name}</TableCell>
-                                            <TableCell>
-                                                <Badge variant={getTierBadgeVariant(product?.tier)}>
-                                                    {product.tier}
-                                                </Badge>
-                                            </TableCell>
-                                            <TableCell>{product.sex}</TableCell>
-                                            <TableCell>{product.perfumeVariants?.length} phiên bản</TableCell>
+                                                    </TableCell>
+                                                    <TableCell rowSpan={row.rowSpan}>{row.product.brand?.name}</TableCell>
+                                                    <TableCell rowSpan={row.rowSpan}>
+                                                        <Badge variant={getTierBadgeVariant(row.product?.tier as string)}>
+                                                            {row.product.tier}
+                                                        </Badge>
+                                                    </TableCell>
+                                                    <TableCell rowSpan={row.rowSpan}>{row.product.sex}</TableCell>
+                                                    <TableCell rowSpan={row.rowSpan}>{row.product.fragranceTypes?.name}</TableCell>
+                                                </>
+                                            )}
+
+
+                                            <TableCell>{row.variant.volume || '-'} ml</TableCell>
+                                            <TableCell>{row.variant.price ? formatPrice(row.variant.price) : '-'}</TableCell>
+                                            <TableCell>{row.variant.stockQuantity || '-'} items</TableCell>
+
                                             <TableCell className="text-right">
                                                 <DropdownMenu>
                                                     <DropdownMenuTrigger asChild>
@@ -234,12 +292,12 @@ const PerfumeAdminDashboard = ({ products, brands }: { products: IProduct[], bra
                                                         </Button>
                                                     </DropdownMenuTrigger>
                                                     <DropdownMenuContent align="end">
-                                                        <DropdownMenuItem onClick={() => handleEditProduct(product)}>
+                                                        <DropdownMenuItem onClick={() => handleEditProduct(row.product)}>
                                                             <Edit className="mr-2 h-4 w-4" />
                                                             Chỉnh sửa
                                                         </DropdownMenuItem>
                                                         <DropdownMenuItem
-                                                            onClick={() => handleDeleteProduct(product.id)}
+                                                            onClick={() => handleDeleteProduct(row.product.id)}
                                                             className="text-red-600"
                                                         >
                                                             <Trash2 className="mr-2 h-4 w-4" />
@@ -280,7 +338,7 @@ const PerfumeAdminDashboard = ({ products, brands }: { products: IProduct[], bra
                                         </p>
 
                                         <div className="flex items-center justify-between mb-4">
-                                            <Badge variant={getTierBadgeVariant(product.tier)}>
+                                            <Badge variant={getTierBadgeVariant(product.tier as string)}>
                                                 {product.tier}
                                             </Badge>
                                             <span className="text-sm text-gray-600">{product.sex}</span>
@@ -348,7 +406,7 @@ const PerfumeAdminDashboard = ({ products, brands }: { products: IProduct[], bra
             />
 
             {/* Edit Product Modal */}
-            <ProductFormDialog
+            {/* <ProductFormDialog
                 product={editingProduct}
                 isOpen={showEditModal}
                 onClose={() => {
@@ -357,7 +415,7 @@ const PerfumeAdminDashboard = ({ products, brands }: { products: IProduct[], bra
                 }}
                 brands={brands}
                 tiers={tiers}
-            />
+            /> */}
 
             {/* Mobile Sidebar Overlay */}
             {/* {sidebarOpen && (

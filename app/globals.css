@@ -127,3 +127,10 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Loại bỏ hiệu ứng hover mặc định trên table row/cell */
+tr:hover, td:hover, th:hover {
+  background: none !important;
+  background-color: inherit !important;
+  transition: none !important;
+}
