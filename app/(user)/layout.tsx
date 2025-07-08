@@ -28,13 +28,11 @@ export default async function RootLayout({
 
   const brands = res.data?._embedded.brands || [] as IBrand[];
   return (
-    <NextAuthWrapper>
-      <SessionErrorHandler>
-        <Header brands={brands} />
-        <Navbar brands={brands} />
-        {children}
-        <Footer />
-      </SessionErrorHandler>
-    </NextAuthWrapper>
+    <>
+      <Header brands={brands} />
+      <Navbar brands={brands} />
+      {children}
+      <Footer />
+    </>
   );
 }

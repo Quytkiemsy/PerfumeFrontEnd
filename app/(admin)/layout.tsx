@@ -11,12 +11,8 @@ interface AdminLayoutProps {
 const AdminLayout = ({ children }: AdminLayoutProps) => {
     return (
         <>
-            <NextAuthWrapper>
-                <SessionErrorHandler>
-                    {children}
-                    <SidebarAdmin />
-                </SessionErrorHandler>
-            </NextAuthWrapper>
+            {children}
+            <SidebarAdmin />
         </>
     );
 };

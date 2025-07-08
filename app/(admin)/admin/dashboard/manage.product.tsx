@@ -283,29 +283,31 @@ const PerfumeAdminDashboard = ({ products, brands }: { products: IProduct[], bra
                                             <TableCell>{row.variant.volume || '-'} ml</TableCell>
                                             <TableCell>{row.variant.price ? formatPrice(row.variant.price) : '-'}</TableCell>
                                             <TableCell>{row.variant.stockQuantity || '-'} items</TableCell>
+                                            {row.isFirstRow && (
+                                                <TableCell className="text-right" rowSpan={row.rowSpan}>
+                                                    <DropdownMenu>
+                                                        <DropdownMenuTrigger asChild>
+                                                            <Button variant="ghost" className="h-8 w-8 p-0">
+                                                                <MoreHorizontal className="h-4 w-4" />
+                                                            </Button>
+                                                        </DropdownMenuTrigger>
+                                                        <DropdownMenuContent align="end">
+                                                            <DropdownMenuItem onClick={() => handleEditProduct(row.product)}>
+                                                                <Edit className="mr-2 h-4 w-4" />
+                                                                Chỉnh sửa
+                                                            </DropdownMenuItem>
+                                                            <DropdownMenuItem
+                                                                onClick={() => handleDeleteProduct(row.product.id)}
+                                                                className="text-red-600"
+                                                            >
+                                                                <Trash2 className="mr-2 h-4 w-4" />
+                                                                Xóa
+                                                            </DropdownMenuItem>
+                                                        </DropdownMenuContent>
+                                                    </DropdownMenu>
+                                                </TableCell>
+                                            )}
 
-                                            <TableCell className="text-right">
-                                                <DropdownMenu>
-                                                    <DropdownMenuTrigger asChild>
-                                                        <Button variant="ghost" className="h-8 w-8 p-0">
-                                                            <MoreHorizontal className="h-4 w-4" />
-                                                        </Button>
-                                                    </DropdownMenuTrigger>
-                                                    <DropdownMenuContent align="end">
-                                                        <DropdownMenuItem onClick={() => handleEditProduct(row.product)}>
-                                                            <Edit className="mr-2 h-4 w-4" />
-                                                            Chỉnh sửa
-                                                        </DropdownMenuItem>
-                                                        <DropdownMenuItem
-                                                            onClick={() => handleDeleteProduct(row.product.id)}
-                                                            className="text-red-600"
-                                                        >
-                                                            <Trash2 className="mr-2 h-4 w-4" />
-                                                            Xóa
-                                                        </DropdownMenuItem>
-                                                    </DropdownMenuContent>
-                                                </DropdownMenu>
-                                            </TableCell>
                                         </TableRow>
                                     ))}
                                 </TableBody>
