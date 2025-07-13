@@ -85,4 +85,9 @@ declare global {
         perfumeVariant?: IPerfumeVariant; // chỉ 1 variant, không phải mảng
     }
 
+    export interface IImageUpload {
+        fileName: string;
+        uploadedAt: string;
+    }
+
 }

@@ -5,7 +5,7 @@ import { z } from "zod";
 // shadcn/ui components
 import { FRAGRANCE_TYPES_OPTIONS, sendRequest, sendRequestFile, SEX_OPTIONS } from '@/app/util/api';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -37,6 +37,7 @@ const ProductFormDialog = ({ product = null, isOpen, onClose, brands, tiers }: I
     const [files, setFiles] = useState<File[]>([]);
     const [previews, setPreviews] = useState<string[]>([]);
     const [loading, setLoading] = useState(false);
+    const [imageUrls, setImageUrls] = useState<string[]>([]); // URLs của ảnh đã tải lên
 
     const [variants, setVariants] = useState<IPerfumeVariant[]>(
         product?.perfumeVariants?.length ? product.perfumeVariants : [
@@ -107,18 +108,22 @@ const ProductFormDialog = ({ product = null, isOpen, onClose, brands, tiers }: I
     };
 
     const handleSubmit = () => {
+        let isErrors = false;
         const data = {
             ...formData,
             variants: variants,
         };
-        console.log("Submitted data:", data); // Debug
+        // Validate ảnh
+        if (imageUrls.length === 0 && (!product || !product.images || product.images.length === 0)) {
+            setFormErrors((prev: any) => ({ ...prev, images: ["Vui lòng upload trước khi thêm sản phẩm!"] }));
+            isErrors = true;
+        }
         const result = productSchema.safeParse(data);
-        if (!result.success) {
-            const errors = result.error.format();
-            console.log('Validation errors:', errors); // Debug
-            setFormErrors(errors);
+        if (!result.success || isErrors) {
+            const errors = !result.success && result.error.format();
+            setFormErrors((prev: any) => ({ ...prev, ...errors }));
             toast.error("Vui lòng kiểm tra lại thông tin!");
-            // return;
+            return;
         }
 
         // setFormErrors(null);
@@ -155,6 +160,13 @@ const ProductFormDialog = ({ product = null, isOpen, onClose, brands, tiers }: I
         setFiles([]);
         setPreviews([]);
         setLoading(false);
+        setFormErrors(null);
+        setVariants(
+            product?.perfumeVariants?.length ? product.perfumeVariants : [
+                { id: 0, volume: '', price: 0, stockQuantity: 0 }
+            ]
+        ); // reset variants về ban đầu
+        setImageUrls([]);
         onClose();
     };
 
@@ -174,7 +186,7 @@ const ProductFormDialog = ({ product = null, isOpen, onClose, brands, tiers }: I
                 formData.append("file", file);
                 formData.append("folder", "images");
 
-                const res = await sendRequestFile<IBackendRes<IModelPaginateRestJPA<IBrand>>>({
+                const res = await sendRequestFile<IBackendRes<IImageUpload>>({
                     url: `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/files`,
                     method: 'POST',
                     headers: {
@@ -185,6 +197,7 @@ const ProductFormDialog = ({ product = null, isOpen, onClose, brands, tiers }: I
 
                 if (res.error) throw new Error("Upload failed");
                 // Xử lý kết quả từng ảnh nếu cần
+                setImageUrls(prev => [...prev, res.data?.fileName as string]);
             }
             toast.success("Tải lên ảnh thành công");
             setFiles([]);
@@ -199,11 +212,14 @@ const ProductFormDialog = ({ product = null, isOpen, onClose, brands, tiers }: I
 
     return (
         <Dialog open={isOpen} onOpenChange={handleClose}>
-            <DialogContent className="sm:max-w-[600px]">
+            <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle>
                         {product ? 'Chỉnh sửa sản phẩm' : 'Thêm sản phẩm mới'}
                     </DialogTitle>
+                    <DialogDescription>
+                        Vui lòng nhập đầy đủ thông tin sản phẩm và tải lên ảnh trước khi lưu.
+                    </DialogDescription>
                 </DialogHeader>
 
                 <div className="space-y-4 py-4">
@@ -268,6 +284,23 @@ const ProductFormDialog = ({ product = null, isOpen, onClose, brands, tiers }: I
                                 ))}
                             </div>
                         )}
+                        {imageUrls.length > 0 && (
+                            <div className="mb-2 flex gap-2">
+                                {imageUrls.map((src, idx) => (
+                                    <Image
+                                        key={idx}
+                                        src={`/api/image?filename=${src}`}
+                                        alt={`Preview ${idx + 1}`}
+                                        className="rounded-md border border-muted object-cover aspect-video"
+                                        width={100}
+                                        height={80}
+                                    />
+                                ))}
+                            </div>
+                        )}
+                        {formErrors?.images?.[0] && (
+                            <p className="text-sm text-red-600">{formErrors.images[0]}</p>
+                        )}
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
@@ -283,8 +316,8 @@ const ProductFormDialog = ({ product = null, isOpen, onClose, brands, tiers }: I
                                     ))}
                                 </SelectContent>
                             </Select>
-                            {formErrors?.brand._errors[0] && (
-                                <p className="text-sm text-red-600">{formErrors?.brand._errors[0]}</p>
+                            {formErrors?.brand?._errors[0] && (
+                                <p className="text-sm text-red-600">{formErrors?.brand?._errors[0]}</p>
                             )}
                         </div>
 
@@ -300,8 +333,8 @@ const ProductFormDialog = ({ product = null, isOpen, onClose, brands, tiers }: I
                                     ))}
                                 </SelectContent>
                             </Select>
-                            {formErrors?.fragranceType._errors[0] && (
-                                <p className="text-sm text-red-600">{formErrors?.fragranceType._errors[0]}</p>
+                            {formErrors?.fragranceType?._errors[0] && (
+                                <p className="text-sm text-red-600">{formErrors?.fragranceType?._errors[0]}</p>
                             )}
                         </div>
                     </div>
@@ -319,8 +352,8 @@ const ProductFormDialog = ({ product = null, isOpen, onClose, brands, tiers }: I
                                     ))}
                                 </SelectContent>
                             </Select>
-                            {formErrors?.tier._errors[0] && (
-                                <p className="text-sm text-red-600">{formErrors?.tier._errors[0]}</p>
+                            {formErrors?.tier?._errors[0] && (
+                                <p className="text-sm text-red-600">{formErrors?.tier?._errors[0]}</p>
                             )}
                         </div>
 
@@ -350,7 +383,7 @@ const ProductFormDialog = ({ product = null, isOpen, onClose, brands, tiers }: I
                         </div>
                         {/* Hiển thị lỗi tổng thể cho variants nếu có */}
                         <div className="space-y-2">
-                            {variants.map((variant, idx) => (
+                            {variants != null && variants.length > 0 && variants?.map((variant, idx) => (
                                 <div key={idx} className="space-y-2">
                                     <div className="flex items-center gap-2">
                                         <div className="flex-1">
@@ -359,7 +392,7 @@ const ProductFormDialog = ({ product = null, isOpen, onClose, brands, tiers }: I
                                                 value={variant.volume}
                                                 onChange={e => handleVariantChange(idx, "volume", e.target.value)}
                                             />
-                                            {formErrors?.variants[idx]?.volume?._errors[0] && (
+                                            {formErrors?.variants?.[idx]?.volume?._errors?.[0] && (
                                                 <p className="text-sm text-red-600 mt-1">{formErrors?.variants[idx]?.volume?._errors[0]}</p>
                                             )}
                                         </div>
