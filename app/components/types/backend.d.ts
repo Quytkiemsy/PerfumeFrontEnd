@@ -64,6 +64,7 @@ declare global {
     }
 
     interface IBrand {
+        id: string;
         name: string;
         description?: string;
         origin?: string;

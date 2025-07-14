@@ -15,6 +15,7 @@ import Image from 'next/image';
 import toast from 'react-hot-toast';
 import { Plus, Trash2 } from "lucide-react"; // icon shadcn
 
+
 interface IProps {
     product?: IProduct | null;
     isOpen: boolean;
@@ -28,10 +29,13 @@ const ProductFormDialog = ({ product = null, isOpen, onClose, brands, tiers }: I
     const [formData, setFormData] = useState({
         name: product?.name || '',
         description: product?.description || '',
-        brand: product?.brand?.name || '',
+        brand: product?.brand?.id || '',
         fragranceType: product?.fragranceTypes?.name || '',
         tier: product?.tier || '',
         sex: product?.sex || '',
+        fitInfo: product?.fitInfo || '',
+        details: product?.details || '',
+        perfumeVariants: product?.perfumeVariants || [],
     });
 
     const [files, setFiles] = useState<File[]>([]);
@@ -40,14 +44,25 @@ const ProductFormDialog = ({ product = null, isOpen, onClose, brands, tiers }: I
     const [imageUrls, setImageUrls] = useState<string[]>([]); // URLs của ảnh đã tải lên
 
     const [variants, setVariants] = useState<IPerfumeVariant[]>(
-        product?.perfumeVariants?.length ? product.perfumeVariants : [
-            { id: 0, volume: '', price: 0, stockQuantity: 0 }
-        ]
+        product?.perfumeVariants?.length
+            ? (product.perfumeVariants as any[]).map(v => ({
+                id: v.id,
+                volume: v.volume ?? '',
+                price: v.price ?? 0,
+                stockQuantity: v.stockQuantity ?? 0,
+                variantType: v.type || 'FULLBOTTLE', // Giữ nguyên để tương thích với backend
+            }))
+            : [
+                { id: 0, variantType: 'FULLBOTTLE', volume: '', price: 0, stockQuantity: 0 }
+            ]
     );
     const [formErrors, setFormErrors] = useState<any>(null);
 
     // Zod schema cho variant
     const variantSchema = z.object({
+        type: z.enum(['FULLBOTTLE', 'DECANT'], {
+            errorMap: () => ({ message: "Vui lòng chọn loại sản phẩm" })
+        }),
         volume: z.string().min(1, "Vui lòng nhập dung tích"),
         price: z.preprocess(
             (v) => {
@@ -74,10 +89,12 @@ const ProductFormDialog = ({ product = null, isOpen, onClose, brands, tiers }: I
         tier: z.string().min(1, "Chọn phân khúc"),
         sex: z.string().min(1, "Chọn giới tính"),
         variants: z.array(variantSchema).min(1, "Cần ít nhất 1 phiên bản"),
+        fitInfo: z.string().optional(),
+        details: z.string().optional(),
     });
 
     const handleAddVariant = () => {
-        setVariants([...variants, { id: Math.floor(Math.random() * 1000000), volume: '', price: 0, stockQuantity: 0 }]);
+        setVariants([...variants, { id: Math.floor(Math.random() * 1000000), variantType: 'FULLBOTTLE', volume: '', price: 0, stockQuantity: 0 }]);
     };
 
     const handleRemoveVariant = (idx: number) => {
@@ -87,7 +104,6 @@ const ProductFormDialog = ({ product = null, isOpen, onClose, brands, tiers }: I
     const handleVariantChange = (idx: number, field: keyof IPerfumeVariant, value: string) => {
         const updatedVariants = variants.map((v, i) => {
             if (i === idx) {
-                // Xử lý riêng cho number fields
                 if (field === 'price' || field === 'stockQuantity') {
                     const numValue = parseFloat(value) || 0;
                     return { ...v, [field]: numValue };
@@ -107,11 +123,15 @@ const ProductFormDialog = ({ product = null, isOpen, onClose, brands, tiers }: I
         }
     };
 
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
+        setFormErrors(null);
         let isErrors = false;
+        // Loại bỏ id trước khi submit
+        const submitVariants = variants.map(({ id, ...rest }) => rest);
         const data = {
             ...formData,
-            variants: variants,
+            variants: submitVariants,
+            images: imageUrls.length > 0 ? imageUrls : (product?.images || []),
         };
         // Validate ảnh
         if (imageUrls.length === 0 && (!product || !product.images || product.images.length === 0)) {
@@ -129,24 +149,35 @@ const ProductFormDialog = ({ product = null, isOpen, onClose, brands, tiers }: I
         // setFormErrors(null);
 
         const newProduct = {
-            id: product?.id || Date.now(),
             ...formData,
-            brand: { name: formData.brand, origin: "Unknown" },
-            fragranceTypes: { id: 1, name: formData.fragranceType },
-            perfumeVariants: product?.perfumeVariants || [],
+            brand: { id: formData.brand },
+            fragranceTypes: { name: formData.fragranceType, description: "unknown" },
+            perfumeVariants: submitVariants,
             new: !product,
-            createdAt: product?.createdAt || new Date().toISOString().split('T')[0],
-            images: product?.images || []
+            images: imageUrls || [],
+            fitInfo: formData?.fitInfo || '',
+            details: formData?.details || '',
         };
 
+        console.log(">>> newProduct", newProduct);
+
         // call api to save the product
-        // if (product) {
-        //     setProducts(products.map(p => p.id === product.id ? newProduct : p));
-        // } else {
-        //     setProducts([...products, newProduct]);
-        // }
-        // console.log("Product data to save:", newProduct);
-    };
+        const res = await sendRequest<IBackendRes<IProduct>>({
+            url: `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/products`,
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${session?.accessToken}`
+            },
+            body: newProduct
+        });
+        if (res.error) {
+            toast.error("Lỗi khi lưu sản phẩm");
+            return;
+        } else {
+            toast.success("Lưu sản phẩm thành công");
+            handleClose();
+        }
+    }
 
     const handleClose = () => {
         setFormData({
@@ -156,15 +187,26 @@ const ProductFormDialog = ({ product = null, isOpen, onClose, brands, tiers }: I
             fragranceType: product?.fragranceTypes?.name || '',
             tier: product?.tier || '',
             sex: product?.sex || '',
+            fitInfo: product?.fitInfo || '',
+            details: product?.details || '',
+            perfumeVariants: product?.perfumeVariants || [],
         });
         setFiles([]);
         setPreviews([]);
         setLoading(false);
         setFormErrors(null);
         setVariants(
-            product?.perfumeVariants?.length ? product.perfumeVariants : [
-                { id: 0, volume: '', price: 0, stockQuantity: 0 }
-            ]
+            product?.perfumeVariants?.length
+                ? (product.perfumeVariants as any[]).map(v => ({
+                    id: v.id,
+                    variantType: v.type || 'FULLBOTTLE',
+                    volume: v.volume ?? '',
+                    price: v.price ?? 0,
+                    stockQuantity: v.stockQuantity ?? 0,
+                }))
+                : [
+                    { id: 0, variantType: 'FULLBOTTLE', volume: '', price: 0, stockQuantity: 0 }
+                ]
         ); // reset variants về ban đầu
         setImageUrls([]);
         onClose();
@@ -212,7 +254,7 @@ const ProductFormDialog = ({ product = null, isOpen, onClose, brands, tiers }: I
 
     return (
         <Dialog open={isOpen} onOpenChange={handleClose}>
-            <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+            <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle>
                         {product ? 'Chỉnh sửa sản phẩm' : 'Thêm sản phẩm mới'}
@@ -312,7 +354,7 @@ const ProductFormDialog = ({ product = null, isOpen, onClose, brands, tiers }: I
                                 </SelectTrigger>
                                 <SelectContent>
                                     {brands?.map(brand => (
-                                        <SelectItem key={brand.name} value={brand.name}>{brand.name}</SelectItem>
+                                        <SelectItem key={brand.name} value={String(brand.id)}>{brand.name}</SelectItem>
                                     ))}
                                 </SelectContent>
                             </Select>
@@ -375,6 +417,30 @@ const ProductFormDialog = ({ product = null, isOpen, onClose, brands, tiers }: I
                         </div>
                     </div>
                     <div className="space-y-2">
+                        <Label htmlFor="fitInfo">Thông tin phù hợp</Label>
+                        <Input
+                            id="fitInfo"
+                            value={formData.fitInfo}
+                            onChange={(e) => setFormData({ ...formData, fitInfo: e.target.value })}
+                            placeholder="Nhập thông tin phù hợp (fit info)"
+                        />
+                        {formErrors?.fitInfo?._errors?.[0] && (
+                            <p className="text-sm text-red-600">{formErrors.fitInfo._errors[0]}</p>
+                        )}
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="details">Chi tiết sản phẩm</Label>
+                        <Textarea
+                            id="details"
+                            value={formData.details}
+                            onChange={(e) => setFormData({ ...formData, details: e.target.value })}
+                            placeholder="Nhập chi tiết sản phẩm"
+                        />
+                        {formErrors?.details?._errors?.[0] && (
+                            <p className="text-sm text-red-600">{formErrors.details._errors[0]}</p>
+                        )}
+                    </div>
+                    <div className="space-y-2">
                         <div className="flex items-center justify-between">
                             <Label>Phiên bản sản phẩm</Label>
                             <Button type="button" size="icon" variant="outline" onClick={handleAddVariant}>
@@ -386,6 +452,17 @@ const ProductFormDialog = ({ product = null, isOpen, onClose, brands, tiers }: I
                             {variants != null && variants.length > 0 && variants?.map((variant, idx) => (
                                 <div key={idx} className="space-y-2">
                                     <div className="flex items-center gap-2">
+                                        <div className="w-32">
+                                            <Select value={variant.variantType} onValueChange={value => handleVariantChange(idx, "variantType", value)}>
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder="Loại" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="FULLBOTTLE">Nguyên seal</SelectItem>
+                                                    <SelectItem value="DECANT">Chiết</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
                                         <div className="flex-1">
                                             <Input
                                                 placeholder="Dung tích (ml)"
