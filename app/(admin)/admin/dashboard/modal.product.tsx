@@ -1,6 +1,6 @@
 'use client';
 import { useState } from 'react';
-import { z } from "zod";
+import { set, z } from "zod";
 
 // shadcn/ui components
 import { FRAGRANCE_TYPES_OPTIONS, sendRequest, sendRequestFile, SEX_OPTIONS } from '@/app/util/api';
@@ -13,7 +13,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useSession } from 'next-auth/react';
 import Image from 'next/image';
 import toast from 'react-hot-toast';
-import { Plus, Trash2 } from "lucide-react"; // icon shadcn
+import { Check, Plus, Trash2 } from "lucide-react"; // icon shadcn
 
 
 interface IProps {
@@ -24,15 +24,14 @@ interface IProps {
     tiers?: string[];
 }
 const ProductFormDialog = ({ product = null, isOpen, onClose, brands, tiers }: IProps) => {
-
     const { data: session, status } = useSession();
     const [formData, setFormData] = useState({
         name: product?.name || '',
         description: product?.description || '',
         brand: product?.brand?.id || '',
         fragranceType: product?.fragranceTypes?.name || '',
-        tier: product?.tier || '',
-        sex: product?.sex || '',
+        tier: product?.tier?.toUpperCase() || '',
+        sex: product?.sex?.toUpperCase() || '',
         fitInfo: product?.fitInfo || '',
         details: product?.details || '',
         perfumeVariants: product?.perfumeVariants || [],
@@ -41,7 +40,7 @@ const ProductFormDialog = ({ product = null, isOpen, onClose, brands, tiers }: I
     const [files, setFiles] = useState<File[]>([]);
     const [previews, setPreviews] = useState<string[]>([]);
     const [loading, setLoading] = useState(false);
-    const [imageUrls, setImageUrls] = useState<string[]>([]); // URLs của ảnh đã tải lên
+    const [imageUrls, setImageUrls] = useState<string[]>(product?.images || []); // URLs của ảnh đã tải lên
 
     const [variants, setVariants] = useState<IPerfumeVariant[]>(
         product?.perfumeVariants?.length
@@ -50,7 +49,7 @@ const ProductFormDialog = ({ product = null, isOpen, onClose, brands, tiers }: I
                 volume: v.volume ?? '',
                 price: v.price ?? 0,
                 stockQuantity: v.stockQuantity ?? 0,
-                variantType: v.type || 'FULLBOTTLE', // Giữ nguyên để tương thích với backend
+                variantType: v.variantType || 'FULLBOTTLE', // Giữ nguyên để tương thích với backend
             }))
             : [
                 { id: 0, variantType: 'FULLBOTTLE', volume: '', price: 0, stockQuantity: 0 }
@@ -60,7 +59,7 @@ const ProductFormDialog = ({ product = null, isOpen, onClose, brands, tiers }: I
 
     // Zod schema cho variant
     const variantSchema = z.object({
-        type: z.enum(['FULLBOTTLE', 'DECANT'], {
+        variantType: z.enum(['FULLBOTTLE', 'DECANT'], {
             errorMap: () => ({ message: "Vui lòng chọn loại sản phẩm" })
         }),
         volume: z.string().min(1, "Vui lòng nhập dung tích"),
@@ -223,6 +222,8 @@ const ProductFormDialog = ({ product = null, isOpen, onClose, brands, tiers }: I
         setLoading(true);
 
         try {
+            // Reset imageUrls nếu là sản phẩm mới
+            setImageUrls([]);
             for (const file of files) {
                 const formData = new FormData();
                 formData.append("file", file);
@@ -312,7 +313,7 @@ const ProductFormDialog = ({ product = null, isOpen, onClose, brands, tiers }: I
                                 {loading ? "Đang tải lên..." : "Tải lên"}
                             </Button>
                         </div>
-                        {previews.length > 0 && (
+                        {(previews.length > 0 || imageUrls.length > 0) && (
                             <div className="mb-2 flex gap-2">
                                 {previews.map((src, idx) => (
                                     <Image
@@ -326,17 +327,21 @@ const ProductFormDialog = ({ product = null, isOpen, onClose, brands, tiers }: I
                                 ))}
                             </div>
                         )}
-                        {imageUrls.length > 0 && (
+                        {imageUrls.length > 0 && previews.length === 0 && (
                             <div className="mb-2 flex gap-2">
                                 {imageUrls.map((src, idx) => (
-                                    <Image
-                                        key={idx}
-                                        src={`/api/image?filename=${src}`}
-                                        alt={`Preview ${idx + 1}`}
-                                        className="rounded-md border border-muted object-cover aspect-video"
-                                        width={100}
-                                        height={80}
-                                    />
+                                    <div key={idx} className="relative">
+                                        <Image
+                                            src={`/api/image?filename=${src}`}
+                                            alt={`Preview ${idx + 1}`}
+                                            className="rounded-md border border-muted object-cover aspect-video"
+                                            width={100}
+                                            height={80}
+                                        />
+                                        <div className="absolute -top-2 -right-2 bg-green-500 rounded-full p-1 shadow-lg">
+                                            <Check className="w-2 h-2 text-white" />
+                                        </div>
+                                    </div>
                                 ))}
                             </div>
                         )}
@@ -354,7 +359,7 @@ const ProductFormDialog = ({ product = null, isOpen, onClose, brands, tiers }: I
                                 </SelectTrigger>
                                 <SelectContent>
                                     {brands?.map(brand => (
-                                        <SelectItem key={brand.name} value={String(brand.id)}>{brand.name}</SelectItem>
+                                        <SelectItem key={brand.name} value={brand.id}>{brand.name}</SelectItem>
                                     ))}
                                 </SelectContent>
                             </Select>

@@ -43,13 +43,15 @@ const PerfumeAdminDashboard = ({ products, brands }: { products: IProduct[], bra
     const [selectedBrand, setSelectedBrand] = useState('');
     const [selectedTier, setSelectedTier] = useState('');
     const [showAddModal, setShowAddModal] = useState(false);
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [updatedProduct, setUpdatedProduct] = useState<IProduct>();
 
     const tiers = TIERS_OPTIONS;
 
     const filteredProducts = products.filter(product => {
         const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
             product.brand?.name.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesBrand = !selectedBrand || product.brand?.name === selectedBrand;
+        const matchesBrand = !selectedBrand || product.brand?.id === selectedBrand || selectedBrand === '0';
         const matchesTier = !selectedTier || product.tier === selectedTier;
         return matchesSearch && matchesBrand && matchesTier;
     });
@@ -61,6 +63,8 @@ const PerfumeAdminDashboard = ({ products, brands }: { products: IProduct[], bra
     };
 
     const handleEditProduct = (product: IProduct) => {
+        setUpdatedProduct(product);
+        setShowEditModal(true);
     };
 
     // Tạo danh sách các row với từng variant
@@ -174,9 +178,9 @@ const PerfumeAdminDashboard = ({ products, brands }: { products: IProduct[], bra
                                 <SelectValue placeholder="Tất cả thương hiệu" />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="all">Tất cả thương hiệu</SelectItem>
+                                <SelectItem value="0">Tất cả thương hiệu</SelectItem>
                                 {brands.map(brand => (
-                                    <SelectItem key={brand.name} value={brand.name}>{brand.name}</SelectItem>
+                                    <SelectItem key={brand.name} value={brand.id}>{brand.name}</SelectItem>
                                 ))}
                             </SelectContent>
                         </Select>
@@ -408,16 +412,21 @@ const PerfumeAdminDashboard = ({ products, brands }: { products: IProduct[], bra
             />
 
             {/* Edit Product Modal */}
-            {/* <ProductFormDialog
-                product={editingProduct}
-                isOpen={showEditModal}
-                onClose={() => {
-                    setShowEditModal(false);
-                    setEditingProduct(null);
-                }}
-                brands={brands}
-                tiers={tiers}
-            /> */}
+            {
+                updatedProduct && (
+                    <ProductFormDialog
+                        product={updatedProduct}
+                        isOpen={showEditModal}
+                        onClose={() => {
+                            setShowEditModal(false);
+                            setUpdatedProduct(undefined);
+                        }}
+                        brands={brands}
+                        tiers={tiers}
+                    />
+                )
+            }
+
 
             {/* Mobile Sidebar Overlay */}
             {/* {sidebarOpen && (
