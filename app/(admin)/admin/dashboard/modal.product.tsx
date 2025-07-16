@@ -14,6 +14,7 @@ import { useSession } from 'next-auth/react';
 import Image from 'next/image';
 import toast from 'react-hot-toast';
 import { Check, Plus, Trash2 } from "lucide-react"; // icon shadcn
+import { useRouter } from 'next/navigation';
 
 
 interface IProps {
@@ -25,10 +26,11 @@ interface IProps {
 }
 const ProductFormDialog = ({ product = null, isOpen, onClose, brands, tiers }: IProps) => {
     const { data: session, status } = useSession();
+    const router = useRouter();
     const [formData, setFormData] = useState({
         name: product?.name || '',
         description: product?.description || '',
-        brand: product?.brand?.id || '',
+        brand: String(product?.brand?.id) || '',
         fragranceType: product?.fragranceTypes?.name || '',
         tier: product?.tier?.toUpperCase() || '',
         sex: product?.sex?.toUpperCase() || '',
@@ -46,7 +48,7 @@ const ProductFormDialog = ({ product = null, isOpen, onClose, brands, tiers }: I
         product?.perfumeVariants?.length
             ? (product.perfumeVariants as any[]).map(v => ({
                 id: v.id,
-                volume: v.volume ?? '',
+                volume: String(v.volume) ?? '',
                 price: v.price ?? 0,
                 stockQuantity: v.stockQuantity ?? 0,
                 variantType: v.variantType || 'FULLBOTTLE', // Giữ nguyên để tương thích với backend
@@ -122,7 +124,7 @@ const ProductFormDialog = ({ product = null, isOpen, onClose, brands, tiers }: I
         }
     };
 
-    const handleSubmit = async () => {
+    const handleAdd = async () => {
         setFormErrors(null);
         let isErrors = false;
         // Loại bỏ id trước khi submit
@@ -158,8 +160,6 @@ const ProductFormDialog = ({ product = null, isOpen, onClose, brands, tiers }: I
             details: formData?.details || '',
         };
 
-        console.log(">>> newProduct", newProduct);
-
         // call api to save the product
         const res = await sendRequest<IBackendRes<IProduct>>({
             url: `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/products`,
@@ -175,6 +175,63 @@ const ProductFormDialog = ({ product = null, isOpen, onClose, brands, tiers }: I
         } else {
             toast.success("Lưu sản phẩm thành công");
             handleClose();
+        }
+    }
+
+    const handleUpdate = async () => {
+        setFormErrors(null);
+        let isErrors = false;
+        // Loại bỏ id trước khi submit
+        const submitVariants = variants.map(({ id, ...rest }) => rest);
+        const data = {
+            ...formData,
+            variants: submitVariants,
+            images: imageUrls.length > 0 ? imageUrls : (product?.images || []),
+        };
+        // Validate ảnh
+        if (imageUrls.length === 0 && (!product || !product.images || product.images.length === 0)) {
+            setFormErrors((prev: any) => ({ ...prev, images: ["Vui lòng upload trước khi thêm sản phẩm!"] }));
+            isErrors = true;
+        }
+        const result = productSchema.safeParse(data);
+        if (!result.success || isErrors) {
+            const errors = !result.success && result.error.format();
+            setFormErrors((prev: any) => ({ ...prev, ...errors }));
+            toast.error("Vui lòng kiểm tra lại thông tin!");
+            return;
+        }
+
+        // setFormErrors(null);
+
+        const updatedProduct = {
+            ...formData,
+            id: product?.id, // đảm bảo id được truyền vào
+            brand: { id: formData.brand },
+            fragranceTypes: { name: formData.fragranceType, description: "unknown" },
+            perfumeVariants: submitVariants,
+            new: !product,
+            images: imageUrls || [],
+            fitInfo: formData?.fitInfo || '',
+            details: formData?.details || '',
+        };
+
+        // call api to save the product
+        const res = await sendRequest<IBackendRes<IProduct>>({
+            url: `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/products`,
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${session?.accessToken}`
+            },
+            body: updatedProduct
+        });
+        if (res.error) {
+            toast.error("Lỗi khi lưu sản phẩm");
+            return;
+        } else {
+            toast.success("Lưu sản phẩm thành công");
+            handleClose();
+            // refresh list data
+            router.refresh()
         }
     }
 
@@ -353,13 +410,13 @@ const ProductFormDialog = ({ product = null, isOpen, onClose, brands, tiers }: I
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
                             <Label htmlFor="brand">Thương hiệu</Label>
-                            <Select value={formData.brand} onValueChange={(value) => setFormData({ ...formData, brand: value })}>
+                            <Select value={String(formData.brand)} onValueChange={(value) => setFormData({ ...formData, brand: value })}>
                                 <SelectTrigger>
                                     <SelectValue placeholder="Chọn thương hiệu" />
                                 </SelectTrigger>
                                 <SelectContent>
                                     {brands?.map(brand => (
-                                        <SelectItem key={brand.name} value={brand.id}>{brand.name}</SelectItem>
+                                        <SelectItem key={brand.name} value={String(brand.id)}>{brand.name}</SelectItem>
                                     ))}
                                 </SelectContent>
                             </Select>
@@ -471,8 +528,8 @@ const ProductFormDialog = ({ product = null, isOpen, onClose, brands, tiers }: I
                                         <div className="flex-1">
                                             <Input
                                                 placeholder="Dung tích (ml)"
-                                                value={variant.volume}
-                                                onChange={e => handleVariantChange(idx, "volume", e.target.value)}
+                                                value={String(variant.volume)}
+                                                onChange={e => handleVariantChange(idx, "volume", String(e.target.value))}
                                             />
                                             {formErrors?.variants?.[idx]?.volume?._errors?.[0] && (
                                                 <p className="text-sm text-red-600 mt-1">{formErrors?.variants[idx]?.volume?._errors[0]}</p>
@@ -520,9 +577,16 @@ const ProductFormDialog = ({ product = null, isOpen, onClose, brands, tiers }: I
                         <Button variant="outline" onClick={handleClose}>
                             Hủy
                         </Button>
-                        <Button onClick={handleSubmit}>
-                            {product ? 'Cập nhật' : 'Thêm mới'}
-                        </Button>
+                        {
+                            product ?
+                                <Button onClick={handleUpdate}>
+                                    Cập nhật
+                                </Button>
+                                :
+                                <Button onClick={handleAdd}>
+                                    Thêm mới
+                                </Button>
+                        }
                     </div>
                 </div>
             </DialogContent>

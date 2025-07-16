@@ -52,7 +52,7 @@ const PerfumeAdminDashboard = ({ products, brands }: { products: IProduct[], bra
         const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
             product.brand?.name.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesBrand = !selectedBrand || product.brand?.id === selectedBrand || selectedBrand === '0';
-        const matchesTier = !selectedTier || product.tier === selectedTier;
+        const matchesTier = !selectedTier || product.tier === selectedTier || selectedTier === 'all';
         return matchesSearch && matchesBrand && matchesTier;
     });
 
@@ -105,11 +105,11 @@ const PerfumeAdminDashboard = ({ products, brands }: { products: IProduct[], bra
 
 
     const getTierBadgeVariant = (tier: string) => {
-        switch (tier) {
-            case 'Luxury': return 'destructive';
-            case 'Premium': return 'default';
-            case 'Mid-range': return 'secondary';
-            case 'Budget': return 'outline';
+        switch (tier.toUpperCase()) {
+            case 'LUXURY': return 'destructive';
+            case 'PREMIUM': return 'default';
+            case 'MID-RANGE': return 'secondary';
+            case 'BUDGET': return 'outline';
             default: return 'default';
         }
     };
@@ -275,10 +275,10 @@ const PerfumeAdminDashboard = ({ products, brands }: { products: IProduct[], bra
                                                     <TableCell rowSpan={row.rowSpan}>{row.product.brand?.name}</TableCell>
                                                     <TableCell rowSpan={row.rowSpan}>
                                                         <Badge variant={getTierBadgeVariant(row.product?.tier as string)}>
-                                                            {row.product.tier}
+                                                            {row.product.tier?.toUpperCase()}
                                                         </Badge>
                                                     </TableCell>
-                                                    <TableCell rowSpan={row.rowSpan}>{row.product.sex}</TableCell>
+                                                    <TableCell rowSpan={row.rowSpan}>{row.product.sex?.toUpperCase()}</TableCell>
                                                     <TableCell rowSpan={row.rowSpan}>{row.product.fragranceTypes?.name}</TableCell>
                                                 </>
                                             )}
