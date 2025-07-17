@@ -1,5 +1,5 @@
 
-import PerfumeAdminDashboard from "@/app/(admin)/admin/dashboard/manage.product";
+import PerfumeAdminDashboard from "@/app/components/admin/manage.product";
 import { sendRequest } from "@/app/util/api";
 
 

@@ -12,7 +12,7 @@ import {
 import { useState } from 'react';
 
 // shadcn/ui components
-import { TIERS_OPTIONS } from '@/app/util/api';
+import { sendRequest, TIERS_OPTIONS } from '@/app/util/api';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -34,6 +34,10 @@ import {
     TableRow
 } from '@/components/ui/table';
 import Image from 'next/image';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { useSession } from 'next-auth/react';
+import toast from 'react-hot-toast';
+import { useRouter } from 'next/navigation';
 import ProductFormDialog from './modal.product';
 
 const PerfumeAdminDashboard = ({ products, brands }: { products: IProduct[], brands: IBrand[] }) => {
@@ -45,6 +49,10 @@ const PerfumeAdminDashboard = ({ products, brands }: { products: IProduct[], bra
     const [showAddModal, setShowAddModal] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
     const [updatedProduct, setUpdatedProduct] = useState<IProduct>();
+    const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+    const [deleteProductId, setDeleteProductId] = useState<number | null>(null);
+    const { data: session, status } = useSession();
+    const router = useRouter();
 
     const tiers = TIERS_OPTIONS;
 
@@ -57,9 +65,37 @@ const PerfumeAdminDashboard = ({ products, brands }: { products: IProduct[], bra
     });
 
     const handleDeleteProduct = (id: number) => {
-        if (window.confirm('Bạn có chắc muốn xóa sản phẩm này?')) {
-            // setProducts(products.filter(p => p.id !== id));
+        setDeleteProductId(id);
+        setShowDeleteDialog(true);
+    };
+
+    const confirmDeleteProduct = async () => {
+        if (deleteProductId != null) {
+
+            // call api to save the product
+            const res = await sendRequest<IBackendRes<IProduct>>({
+                url: `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/products/${deleteProductId}`,
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${session?.accessToken}`
+                },
+            });
+            setShowDeleteDialog(false);
+            setDeleteProductId(null);
+            if (res.error) {
+                toast.error("Lỗi khi xóa sản phẩm");
+                return;
+            } else {
+                toast.success("Xóa sản phẩm thành công");
+                // refresh list data
+                router.refresh()
+            }
         }
+    };
+
+    const cancelDeleteProduct = () => {
+        setShowDeleteDialog(false);
+        setDeleteProductId(null);
     };
 
     const handleEditProduct = (product: IProduct) => {
@@ -264,8 +300,8 @@ const PerfumeAdminDashboard = ({ products, brands }: { products: IProduct[], bra
                                                                 </div>
                                                                 <div className="text-sm text-gray-500 line-clamp-1">
                                                                     {row.product.description
-                                                                        ? row.product.description.length > 30
-                                                                            ? row.product.description.slice(0, 30) + "..."
+                                                                        ? row.product.description.length > 20
+                                                                            ? row.product.description.slice(0, 20) + "..."
                                                                             : row.product.description
                                                                         : ""}
                                                                 </div>
@@ -427,6 +463,21 @@ const PerfumeAdminDashboard = ({ products, brands }: { products: IProduct[], bra
                 )
             }
 
+            {/* Delete Confirm Dialog */}
+            <Dialog open={showDeleteDialog} onOpenChange={cancelDeleteProduct}>
+                <DialogContent className="max-w-sm">
+                    <DialogHeader>
+                        <DialogTitle>Xác nhận xóa sản phẩm</DialogTitle>
+                        <DialogDescription>
+                            Bạn có chắc chắn muốn xóa sản phẩm này không? Hành động này không thể hoàn tác.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="flex justify-end gap-2 pt-4">
+                        <Button variant="outline" onClick={cancelDeleteProduct}>Hủy</Button>
+                        <Button variant="destructive" onClick={confirmDeleteProduct}>Xóa</Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
 
             {/* Mobile Sidebar Overlay */}
             {/* {sidebarOpen && (

@@ -2,7 +2,7 @@ import NextAuthWrapper from "@/app/lib/next.auth.wrapper";
 import "../globals.css";
 import React, { ReactNode } from 'react';
 import SessionErrorHandler from "@/app/lib/session.error";
-import SidebarAdmin from "./admin/dashboard/sidebar.admin";
+import SidebarAdmin from "../components/admin/sidebar.admin";
 
 interface AdminLayoutProps {
     children: ReactNode;

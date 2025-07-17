@@ -30,7 +30,7 @@ const ProductFormDialog = ({ product = null, isOpen, onClose, brands, tiers }: I
     const [formData, setFormData] = useState({
         name: product?.name || '',
         description: product?.description || '',
-        brand: String(product?.brand?.id) || '',
+        brand: product?.brand?.id ? String(product.brand.id) : '',
         fragranceType: product?.fragranceTypes?.name || '',
         tier: product?.tier?.toUpperCase() || '',
         sex: product?.sex?.toUpperCase() || '',
@@ -175,6 +175,8 @@ const ProductFormDialog = ({ product = null, isOpen, onClose, brands, tiers }: I
         } else {
             toast.success("Lưu sản phẩm thành công");
             handleClose();
+            // refresh list data
+            router.refresh()
         }
     }
 
