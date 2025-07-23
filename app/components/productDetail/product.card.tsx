@@ -12,34 +12,49 @@ interface ProductCardProps {
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
 
     return (
-        <div className="bg-white h-105 md:h-75 lg:h-90 border border-gray-200 rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-transform transform hover:scale-105">
+        <div className="h-100 relative bg-white border border-gray-200 rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-transform transform hover:-translate-y-1 hover:scale-105 group">
+            {/* Badge new */}
             {product.new && (
-                <span className="absolute top-2 left-2  rounded-full p-1 z-10">
-                    <MdFiberNew size={25} color="black" />
+                <span className="absolute top-3 left-3 bg-red-500 text-white rounded-full px-2 py-1 text-xs font-bold z-10 shadow">
+                    MỚI
                 </span>
             )}
-            <Image
-                src={`/api/image?filename=${product?.images[0]}`}
-                alt={product.name}
-                width={300}
-                height={200}
-                className="w-full object-cover object-center"
-                style={{ width: '100%', aspectRatio: '3/2', objectFit: 'cover', objectPosition: 'center' }}
-            />
-            <div className="p-4 text-center">
-                <Link href={`/product/${product.id}`} className="text-sm font-semibold text-gray-800">{product.name}</Link>
-                <p className="text-black font-bold mt-2">
-                    {product.perfumeVariants ? formatPrice(getMinPrice(product.perfumeVariants)) : '0'}đ
-                </p>
-                <p className="text-xs text-gray-600 mt-1">
-                    Dung tích: {product?.perfumeVariants?.map((v) => `${v.volume}ml`).join(', ')}
-                </p>
-                <button
-                    className="mt-3 w-full bg-black text-white py-2 rounded hover:bg-black transition"
-                    onClick={() => alert(`Đã thêm ${product.name} vào giỏ hàng!`)}
-                >
-                    Thêm vào giỏ
-                </button>
+            {/* Product Image */}
+            <Link href={`/product/${product.id}`} className="block">
+                <Image
+                    src={`/api/image?filename=${product?.images[0]}`}
+                    alt={product.name}
+                    width={400}
+                    height={270}
+                    className="w-full h-48 object-cover object-center transition group-hover:scale-105 duration-300"
+                    style={{ aspectRatio: '4/3' }}
+                />
+            </Link>
+            {/* Info */}
+            <div className="p-4 flex flex-col gap-2">
+                <Link href={`/product/${product.id}`} className="text-base font-semibold text-gray-900 hover:text-primary line-clamp-1 transition">
+                    {product.name}
+                </Link>
+                <div className="flex flex-wrap items-center gap-2 text-xs text-gray-500">
+                    {product.brand?.name && <span className="bg-gray-100 px-2 py-0.5 rounded">{product.brand.name}</span>}
+                    {product.tier && <span className="bg-gray-100 px-2 py-0.5 rounded">{product.tier}</span>}
+                    {product.sex && <span className="bg-gray-100 px-2 py-0.5 rounded">{product.sex}</span>}
+                    {product.fragranceTypes?.name && <span className="bg-gray-100 px-2 py-0.5 rounded">{product.fragranceTypes.name}</span>}
+                </div>
+                <div className="flex items-center justify-between mt-1">
+                    <span className="text-lg font-bold text-black">
+                        {product.perfumeVariants ? formatPrice(getMinPrice(product.perfumeVariants)) : '0'}đ
+                    </span>
+                    <span className="text-xs text-gray-600">
+                        {product.perfumeVariants?.length ? `${product.perfumeVariants.length} phiên bản` : ''}
+                    </span>
+                </div>
+                <div className="text-xs text-gray-600 line-clamp-2 min-h-[32px]">
+                    {product.description}
+                </div>
+                <div className="text-xs text-gray-500 mt-1">
+                    Dung tích: {product?.perfumeVariants?.map((v) => v.volume ? `${v.volume}ml` : '').filter(Boolean).join(', ')}
+                </div>
             </div>
         </div>
     );

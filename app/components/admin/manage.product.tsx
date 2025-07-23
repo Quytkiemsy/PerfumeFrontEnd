@@ -64,6 +64,12 @@ const PerfumeAdminDashboard = ({ products, brands }: { products: IProduct[], bra
         return matchesSearch && matchesBrand && matchesTier;
     });
 
+    const [currentPage, setCurrentPage] = useState(1);
+    const pageSize = 3; // Số sản phẩm mỗi trang
+    const totalPages = Math.ceil(filteredProducts.length / pageSize);
+
+    const paginatedProducts = filteredProducts.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
     const handleDeleteProduct = (id: number) => {
         setDeleteProductId(id);
         setShowDeleteDialog(true);
@@ -104,7 +110,7 @@ const PerfumeAdminDashboard = ({ products, brands }: { products: IProduct[], bra
     };
 
     // Tạo danh sách các row với từng variant
-    const getExpandedRows = () => {
+    const getExpandedRows = (productsList = filteredProducts) => {
         const expandedRows: Array<{
             product: IProduct;
             variant: IPerfumeVariant;
@@ -112,7 +118,7 @@ const PerfumeAdminDashboard = ({ products, brands }: { products: IProduct[], bra
             rowSpan: number;
         }> = [];
 
-        filteredProducts.forEach(product => {
+        productsList.forEach(product => {
             const variants = product.perfumeVariants || [];
 
             if (variants.length === 0) {
@@ -157,7 +163,7 @@ const PerfumeAdminDashboard = ({ products, brands }: { products: IProduct[], bra
         }).format(price);
     };
 
-    const expandedRows = getExpandedRows();
+    const expandedRows = getExpandedRows(paginatedProducts);
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -209,7 +215,7 @@ const PerfumeAdminDashboard = ({ products, brands }: { products: IProduct[], bra
                             </div>
                         </div>
 
-                        <Select value={selectedBrand} onValueChange={setSelectedBrand}>
+                        <Select value={selectedBrand} onValueChange={(e) => { setSelectedBrand(e); setCurrentPage(1); }}>
                             <SelectTrigger className="w-[180px]">
                                 <SelectValue placeholder="Tất cả thương hiệu" />
                             </SelectTrigger>
@@ -221,7 +227,7 @@ const PerfumeAdminDashboard = ({ products, brands }: { products: IProduct[], bra
                             </SelectContent>
                         </Select>
 
-                        <Select value={selectedTier} onValueChange={setSelectedTier}>
+                        <Select value={selectedTier} onValueChange={(e) => { setSelectedTier(e); setCurrentPage(1); }}>
                             <SelectTrigger className="w-[180px]">
                                 <SelectValue placeholder="Tất cả phân khúc" />
                             </SelectTrigger>
@@ -355,7 +361,7 @@ const PerfumeAdminDashboard = ({ products, brands }: { products: IProduct[], bra
                         </Card>
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                            {filteredProducts.map((product) => (
+                            {paginatedProducts.map((product) => (
                                 <Card key={product.id} className="overflow-hidden hover:shadow-lg transition-shadow">
                                     <div className="relative">
                                         <Image
@@ -416,22 +422,23 @@ const PerfumeAdminDashboard = ({ products, brands }: { products: IProduct[], bra
                     {/* Pagination */}
                     <div className="mt-8 flex items-center justify-between">
                         <div className="text-sm text-gray-700">
-                            Hiển thị {filteredProducts.length} sản phẩm
+                            Hiển thị {paginatedProducts.length} / {filteredProducts.length} sản phẩm
                         </div>
                         <div className="flex space-x-2">
-                            <Button variant="outline" size="sm" disabled>
+                            <Button variant="outline" size="sm" disabled={currentPage === 1} onClick={() => setCurrentPage(currentPage - 1)}>
                                 Trước
                             </Button>
-                            <Button variant="outline" size="sm">
-                                1
-                            </Button>
-                            <Button variant="outline" size="sm">
-                                2
-                            </Button>
-                            <Button variant="outline" size="sm">
-                                3
-                            </Button>
-                            <Button variant="outline" size="sm">
+                            {Array.from({ length: totalPages }, (_, i) => (
+                                <Button
+                                    key={i + 1}
+                                    variant={currentPage === i + 1 ? 'default' : 'outline'}
+                                    size="sm"
+                                    onClick={() => setCurrentPage(i + 1)}
+                                >
+                                    {i + 1}
+                                </Button>
+                            ))}
+                            <Button variant="outline" size="sm" disabled={currentPage === totalPages || totalPages === 0} onClick={() => setCurrentPage(currentPage + 1)}>
                                 Sau
                             </Button>
                         </div>
@@ -479,13 +486,6 @@ const PerfumeAdminDashboard = ({ products, brands }: { products: IProduct[], bra
                 </DialogContent>
             </Dialog>
 
-            {/* Mobile Sidebar Overlay */}
-            {/* {sidebarOpen && (
-                <div
-                    className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
-                    onClick={() => setSidebarOpen(false)}
-                />
-            )} */}
         </div>
     );
 };
