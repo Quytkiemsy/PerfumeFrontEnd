@@ -209,7 +209,7 @@ const PerfumeAdminDashboard = ({ products, brands }: { products: IProduct[], bra
                                 <Input
                                     placeholder="Tìm kiếm sản phẩm..."
                                     value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
                                     className="pl-10"
                                 />
                             </div>

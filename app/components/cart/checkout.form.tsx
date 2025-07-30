@@ -25,7 +25,7 @@ interface FormData {
 const formSchema = z.object({
     fullName: z.string().min(2, 'Vui lòng nhập họ tên'),
     phone: z.string().min(9, 'Vui lòng nhập số điện thoại hợp lệ'),
-    email: z.string().email('Email không hợp lệ').optional().or(z.literal('')),
+    email: z.string().email('Email không hợp lệ'),
     address: z.string().min(5, 'Vui lòng nhập địa chỉ'),
     note: z.string().optional(),
     shippingMethod: z.enum(['standard', 'express'], { errorMap: () => ({ message: 'Chọn phương thức giao hàng' }) }),

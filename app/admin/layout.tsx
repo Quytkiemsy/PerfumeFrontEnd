@@ -1,8 +1,6 @@
-import NextAuthWrapper from "@/app/lib/next.auth.wrapper";
-import "../globals.css";
-import React, { ReactNode } from 'react';
-import SessionErrorHandler from "@/app/lib/session.error";
+import { ReactNode } from 'react';
 import SidebarAdmin from "../components/admin/sidebar.admin";
+import "../globals.css";
 
 interface AdminLayoutProps {
     children: ReactNode;

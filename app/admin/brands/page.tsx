@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Download, Menu, Plus, Upload } from "lucide-react";
+import { Menu } from "lucide-react";
 
 const AdminBrandsPage = () => {
     return (
