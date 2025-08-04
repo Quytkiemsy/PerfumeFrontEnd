@@ -35,6 +35,18 @@ declare global {
         paymentMethod: PaymentMethod;
     }
 
+    interface IOrder {
+        id: number;
+        createdAt: string;
+        createdBy: string;
+        status: string;
+        totalPrice: number;
+        user: IUser;
+        shippingInfo: ShippingInfo;
+        items: ICartItem[];
+        paymentMethod: string;
+    }
+
 
     // OrderStatus.ts
     export type OrderStatus = 'PENDING' | 'PAID' | 'SHIPPED' | 'CANCELLED';

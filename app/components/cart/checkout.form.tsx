@@ -10,6 +10,7 @@ import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { z } from 'zod';
 import toast from 'react-hot-toast';
+import { sendRequest } from '@/app/util/api';
 
 interface FormData {
     fullName: string;
@@ -28,22 +29,22 @@ const formSchema = z.object({
     email: z.string().email('Email không hợp lệ'),
     address: z.string().min(5, 'Vui lòng nhập địa chỉ'),
     note: z.string().optional(),
-    shippingMethod: z.enum(['standard', 'express'], { errorMap: () => ({ message: 'Chọn phương thức giao hàng' }) }),
-    paymentMethod: z.enum(['cod', 'bank', 'momo'], { errorMap: () => ({ message: 'Chọn hình thức thanh toán' }) }),
+    shippingMethod: z.enum(['STANDARD', 'EXPRESS'], { errorMap: () => ({ message: 'Chọn phương thức giao hàng' }) }),
+    paymentMethod: z.enum(['COD', 'BANK', 'MOMO'], { errorMap: () => ({ message: 'Chọn hình thức thanh toán' }) }),
     promoCode: z.string().optional(),
 });
 
 export default function CheckoutForm() {
-    const { items, hasHydrated, fetchCart } = useCartStore();
+    const { items, hasHydrated, fetchCart, clearCart } = useCartStore();
     const [formData, setFormData] = useState<FormData>({
         fullName: '',
         phone: '',
         email: '',
         address: '',
         note: '',
-        shippingMethod: 'standard',
-        paymentMethod: 'cod',
-        promoCode: ''
+        shippingMethod: 'STANDARD',
+        paymentMethod: 'COD',
+        promoCode: '',
     });
     const { data: session, status } = useSession();
     const [formErrors, setFormErrors] = useState<any>({});
@@ -61,7 +62,15 @@ export default function CheckoutForm() {
         setFormData((prev) => ({ ...prev, [name]: value }));
     };
 
-    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    const handleClearCart = () => {
+        if (session?.user?.username) {
+            clearCart(session.user.username);
+        } else {
+            clearCart(localStorage.getItem('guestId') || '');
+        }
+    }
+
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         const result = formSchema.safeParse(formData);
         if (!result.success) {
@@ -71,7 +80,50 @@ export default function CheckoutForm() {
         }
         setFormErrors({});
         // Xử lý submit đơn hàng
-        console.log('Order submitted:', formData);
+        const newOrder = {
+            status: 'PAID',
+            totalPrice: items.reduce((sum, item) => {
+                if (!item.product) return sum;
+                return sum + ((item.product.perfumeVariant?.price ?? 0) * item.quantity);
+            }, 0) + shippingFee,
+            user: {
+                username: session?.user?.username,
+            },
+            shippingInfo: {
+                fullName: formData.fullName,
+                phoneNumber: formData.phone,
+                email: formData.email,
+                address: formData.address,
+                note: formData.note,
+            },
+            items: items.map(item => ({
+                quantity: item.quantity,
+                totalPrice: (item.product?.perfumeVariant?.price ?? 0) * item.quantity,
+                productId: item.product?.id,
+                perfumeVariants: [
+                    { id: item.product?.perfumeVariant?.id }
+                ]
+
+            })),
+            shippingMethod: formData.shippingMethod,
+            paymentMethod: formData.paymentMethod,
+        };
+        console.log('Order submitted:', newOrder);
+
+        // call api to save the product
+        const res = await sendRequest<IBackendRes<IProduct>>({
+            url: `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/orders`,
+            method: 'POST',
+            body: newOrder
+        });
+        if (res.error) {
+            toast.error("Lỗi khi lưu đơn hàng");
+            return;
+        } else {
+            toast.success("Lưu đơn hàng thành công");
+        }
+        // Clear cart after successful order
+        handleClearCart();
     };
 
     const shippingFee = 30000;
@@ -197,8 +249,8 @@ export default function CheckoutForm() {
                                     onChange={handleChange}
                                     className="w-full border rounded p-2 mt-1"
                                 >
-                                    <option value="standard">Giao tiêu chuẩn</option>
-                                    <option value="express">Giao nhanh</option>
+                                    <option value="STANDARD">Giao tiêu chuẩn</option>
+                                    <option value="EXPRESS">Giao nhanh</option>
                                 </select>
                             </div>
                             <div>
@@ -209,9 +261,9 @@ export default function CheckoutForm() {
                                     onChange={handleChange}
                                     className="w-full border rounded p-2 mt-1"
                                 >
-                                    <option value="cod">Thanh toán khi nhận hàng (COD)</option>
-                                    <option value="bank">Chuyển khoản ngân hàng</option>
-                                    <option value="momo">Ví điện tử Momo</option>
+                                    <option value="COD">Thanh toán khi nhận hàng (COD)</option>
+                                    <option value="BANK">Chuyển khoản ngân hàng</option>
+                                    <option value="MOMO">Ví điện tử Momo</option>
                                 </select>
                             </div>
                         </div>

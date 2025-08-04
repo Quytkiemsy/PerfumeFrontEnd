@@ -53,8 +53,8 @@ export default async function Header({ brands }: { brands: IBrand[] }) {
                                     <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity">
                                         <ul className="py-1">
                                             <li>
-                                                <Link href="/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                                    Profile
+                                                <Link href="/my-orders" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                                    My Orders
                                                 </Link>
                                             </li>
                                             <li>

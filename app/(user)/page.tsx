@@ -94,7 +94,7 @@ export default async function Home() {
     method: 'GET',
     queryParams: {
       page: 0,
-      size: 4,
+      size: 6,
       sort: 'perfumeVariants.price,asc',
     },
   });
