@@ -16,6 +16,7 @@ import {
     XCircle
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 
 interface IOrderProps {
     order: IOrder;
@@ -148,7 +149,7 @@ const OrderDetailPage: React.FC<IOrderProps> = ({ order }: IOrderProps) => {
                             <User className="h-5 w-5 text-gray-400" />
                             <div>
                                 <p className="text-sm text-gray-600">Khách hàng</p>
-                                <p className="font-medium">{order.user.username}</p>
+                                <p className="font-medium">{order?.user?.username}</p>
                             </div>
                         </div>
                         <div className="flex items-center space-x-3">
@@ -177,11 +178,12 @@ const OrderDetailPage: React.FC<IOrderProps> = ({ order }: IOrderProps) => {
                                 {order.items.map((item) => (
                                     <div key={item.id} className="flex items-start space-x-4 p-4 bg-gray-50 rounded-lg">
                                         {item.product?.images && (
-                                            <img
-                                                src={item.product.images[0]}
+                                            <Image
+                                                src={`/api/image?filename=${item.product?.images?.[0]}`}
                                                 alt={item.product.name}
-                                                className="w-20 h-20 object-cover rounded-lg shadow-sm flex-shrink-0"
-                                            />
+                                                width={40}
+                                                height={40}
+                                                className="w-10 h-10 rounded-lg object-cover" />
                                         )}
                                         <div className="flex-1 min-w-0">
                                             <h4 className="font-semibold text-gray-900 mb-2">

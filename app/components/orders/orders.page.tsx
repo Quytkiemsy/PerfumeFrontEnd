@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { Package, Calendar, User, MapPin, Phone, Mail, CreditCard, ChevronDown, ChevronUp, Eye } from 'lucide-react';
+import Image from 'next/image';
 
 const statusList = [
     'PENDING',
@@ -233,11 +234,12 @@ const OrdersPage: React.FC<{ orders: IOrder[] }> = ({ orders }) => {
                                                 {order.items.map((item) => (
                                                     <div key={item.id} className="flex items-center space-x-4 p-3 bg-gray-50 rounded-lg">
                                                         {item.product?.images && (
-                                                            <img
-                                                                src={item.product.images[0]}
+                                                            <Image
+                                                                src={`/api/image?filename=${item.product?.images?.[0]}`}
                                                                 alt={item.product.name}
-                                                                className="w-16 h-16 object-cover rounded-lg shadow-sm"
-                                                            />
+                                                                width={40}
+                                                                height={40}
+                                                                className="w-10 h-10 rounded-lg object-cover" />
                                                         )}
                                                         <div className="flex-1 min-w-0">
                                                             <h5 className="font-medium text-gray-900 truncate">

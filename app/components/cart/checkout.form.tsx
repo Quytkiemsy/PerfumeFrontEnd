@@ -110,12 +110,19 @@ export default function CheckoutForm() {
         };
         console.log('Order submitted:', newOrder);
 
+
         // call api to save the product
-        const res = await sendRequest<IBackendRes<IProduct>>({
+        const requestOptions: any = {
             url: `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/orders`,
             method: 'POST',
-            body: newOrder
-        });
+            body: newOrder,
+        };
+        if (status === 'authenticated' && session?.accessToken) {
+            requestOptions.headers = {
+                'Authorization': `Bearer ${session.accessToken}`
+            };
+        }
+        const res = await sendRequest<IBackendRes<IProduct>>(requestOptions);
         if (res.error) {
             toast.error("Lỗi khi lưu đơn hàng");
             return;
