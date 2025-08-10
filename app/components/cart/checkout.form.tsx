@@ -100,9 +100,9 @@ export default function CheckoutForm() {
                 quantity: item.quantity,
                 totalPrice: (item.product?.perfumeVariant?.price ?? 0) * item.quantity,
                 productId: item.product?.id,
-                perfumeVariants: [
-                    { id: item.product?.perfumeVariant?.id }
-                ]
+                perfumeVariant: {
+                    id: item.product?.perfumeVariant?.id
+                }
 
             })),
             shippingMethod: formData.shippingMethod,
