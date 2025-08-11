@@ -1,15 +1,10 @@
-import { cartApi } from '@/app/util/cartApi'
-import { create } from 'zustand'
-import { devtools, persist, createJSONStorage } from 'zustand/middleware'
-import { toast } from "react-hot-toast";
+import { cartApi } from '@/app/util/cartApi';
+import { create } from 'zustand';
+import { createJSONStorage, devtools, persist } from 'zustand/middleware';
 
 
 type CartStore = ICartState & ICartActions
 
-const calculateTotals = (items: ICartItem[]) => ({
-  totalItems: items.reduce((sum, item) => sum + item.quantity, 0),
-  totalPrice: items.reduce((sum, item) => sum + (item?.product?.perfumeVariant?.price ?? 0) * item.quantity, 0),
-})
 
 export const useCartStore = create<CartStore>()(
   devtools(
@@ -39,12 +34,12 @@ export const useCartStore = create<CartStore>()(
           }
         },
 
-        addItem: async (product: IProductCart, userId: string, quantity = 1) => {
+        addItem: async (product: IProduct, userId: string, quantity = 1) => {
           set({ isLoading: true, error: null });
           try {
             const newItem: ICartItem = {
               id: Date.now(), // Simple ID generation
-              product,
+              perfumeVariants: product.perfumeVariants?.[0] || undefined,
               quantity,
               totalPrice: 0
             }
@@ -56,7 +51,7 @@ export const useCartStore = create<CartStore>()(
           }
         },
 
-        removeItem: async (product: IProductCart, userId: string, variantId: string) => {
+        removeItem: async (product: IProduct, userId: string, variantId: string) => {
           set({ isLoading: true, error: null });
           try {
             const updatedCart = await cartApi.removeItem(userId, String(product.id), variantId);
@@ -67,10 +62,10 @@ export const useCartStore = create<CartStore>()(
           }
         },
 
-        updateQuantity: async (product: IProductCart, quantity: number, userId: string) => {
+        updateQuantity: async (product: IProduct, quantity: number, userId: string, variant: IPerfumeVariant) => {
           set({ isLoading: true, error: null });
           try {
-            const updatedCart = await cartApi.updateQuantity(userId, String(product.id), quantity, String(product.perfumeVariant?.id) ?? '');
+            const updatedCart = await cartApi.updateQuantity(userId, String(product.id), quantity, String(variant.id));
             set({ ...updatedCart, isLoading: false });
           } catch (error) {
             const errorMessage = error instanceof Error ? error.message : 'Failed to add item';

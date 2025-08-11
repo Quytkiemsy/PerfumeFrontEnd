@@ -55,6 +55,7 @@ declare global {
         volume?: string;
         price?: number;
         stockQuantity?: number;
+        product?: IProduct;
     }
 
     interface IFragranceTypes {
@@ -82,15 +83,12 @@ declare global {
         }
     }
 
-    export interface IProductCart extends IProduct {
-        perfumeVariant?: IPerfumeVariant; // chỉ 1 variant, không phải mảng
-    }
 
     export interface IImageUpload {
         fileName: string;
         uploadedAt: string;
     }
 
-    
+
 
 }

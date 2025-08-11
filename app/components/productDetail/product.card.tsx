@@ -3,13 +3,13 @@
 import { formatPrice, getMinPrice } from "@/app/util/api";
 import Image from "next/image";
 import Link from "next/link";
-import { MdFiberNew } from "react-icons/md";
 
 interface ProductCardProps {
     product: IProduct;
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
+    console.log("ProductCard", product);
 
     return (
         <div className="h-100 relative bg-white border border-gray-200 rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-transform transform hover:-translate-y-1 hover:scale-105 group">

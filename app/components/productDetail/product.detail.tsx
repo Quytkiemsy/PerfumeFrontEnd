@@ -22,14 +22,14 @@ export default function ProductDetail({ product, sortedProductByPrice }: IProduc
             toast.error('Please select a variant and size before adding to cart.');
             return;
         }
-        const productCart: IProductCart = {
+        const productCart: IProduct = {
             id: product.id,
             name: product.name,
             brand: product.brand,
             images: product.images,
             description: product.description,
             details: product.details,
-            perfumeVariant: product.perfumeVariants?.find((variant) => variant.variantType === selectVar && variant.volume === selectedVolume),
+            perfumeVariants: product.perfumeVariants?.filter((variant) => variant.variantType === selectVar && variant.volume === selectedVolume),
         };
         if (session?.user?.username) {
             addItem(productCart, session.user.username);

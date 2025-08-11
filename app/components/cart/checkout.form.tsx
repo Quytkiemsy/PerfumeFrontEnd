@@ -83,8 +83,8 @@ export default function CheckoutForm() {
         const newOrder = {
             status: 'PAID',
             totalPrice: items.reduce((sum, item) => {
-                if (!item.product) return sum;
-                return sum + ((item.product.perfumeVariant?.price ?? 0) * item.quantity);
+                if (!item.perfumeVariants?.product) return sum;
+                return sum + ((item.perfumeVariants?.price ?? 0) * item.quantity);
             }, 0) + shippingFee,
             user: {
                 username: session?.user?.username,
@@ -98,10 +98,10 @@ export default function CheckoutForm() {
             },
             items: items.map(item => ({
                 quantity: item.quantity,
-                totalPrice: (item.product?.perfumeVariant?.price ?? 0) * item.quantity,
-                productId: item.product?.id,
+                totalPrice: (item.perfumeVariants?.price ?? 0) * item.quantity,
+                productId: item.perfumeVariants?.product?.id,
                 perfumeVariant: {
-                    id: item.product?.perfumeVariant?.id
+                    id: item.perfumeVariants?.id
                 }
 
             })),
@@ -135,8 +135,8 @@ export default function CheckoutForm() {
 
     const shippingFee = 30000;
     const total = items.reduce((sum, item) => {
-        if (!item.product) return sum;
-        return sum + ((item.product.perfumeVariant?.price ?? 0) * item.quantity);
+        if (!item.perfumeVariants?.product) return sum;
+        return sum + ((item.perfumeVariants?.price ?? 0) * item.quantity);
     }, 0) + shippingFee;
 
     return (
@@ -155,18 +155,18 @@ export default function CheckoutForm() {
                                 {items.map(item => (
                                     <li key={item.id} className="flex items-center gap-3 py-3">
                                         <Image
-                                            src={`/api/image?filename=${item?.product?.images?.[0]}`}
+                                            src={`/api/image?filename=${item?.perfumeVariants?.product?.images?.[0]}`}
                                             alt="Close up"
                                             height={20}
                                             width={20}
                                             className="w-14 h-14 rounded object-cover border" />
                                         <div className="flex-1">
-                                            <div className="font-semibold text-sm line-clamp-1">{item.product ? item.product.name : ''}</div>
-                                            <div className="text-xs text-gray-500">{item.product && item.product.perfumeVariant?.volume ? `Dung tích: ${item.product.perfumeVariant?.volume}ml` : ''}</div>
+                                            <div className="font-semibold text-sm line-clamp-1">{item.perfumeVariants?.product?.name}</div>
+                                            <div className="text-xs text-gray-500">{item.perfumeVariants?.volume ? `Dung tích: ${item.perfumeVariants?.volume}ml` : ''}</div>
                                             <div className="text-xs text-gray-500">Số lượng: {item.quantity}</div>
                                         </div>
                                         <div className="font-bold text-sm text-black whitespace-nowrap">
-                                            {item.product ? (item.product.perfumeVariant?.price ?? 0).toLocaleString('vi-VN') : '0'}₫
+                                            {item.perfumeVariants ? (item.perfumeVariants?.price ?? 0).toLocaleString('vi-VN') : '0'}₫
                                         </div>
                                     </li>
                                 ))}

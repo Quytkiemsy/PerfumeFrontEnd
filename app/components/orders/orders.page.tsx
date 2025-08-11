@@ -233,31 +233,31 @@ const OrdersPage: React.FC<{ orders: IOrder[] }> = ({ orders }) => {
                                             <div className="space-y-4">
                                                 {order.items.map((item) => (
                                                     <div key={item.id} className="flex items-center space-x-4 p-3 bg-gray-50 rounded-lg">
-                                                        {item.product?.images && (
+                                                        {item?.perfumeVariants && (
                                                             <Image
-                                                                src={`/api/image?filename=${item.product?.images?.[0]}`}
-                                                                alt={item.product.name}
+                                                                src={`/api/image?filename=${item?.perfumeVariants?.product?.images?.[0]}`}
+                                                                alt={item?.perfumeVariants?.product?.name ?? 'Sản phẩm không xác định'}
                                                                 width={40}
                                                                 height={40}
                                                                 className="w-10 h-10 rounded-lg object-cover" />
                                                         )}
                                                         <div className="flex-1 min-w-0">
                                                             <h5 className="font-medium text-gray-900 truncate">
-                                                                {item.product?.name || 'Sản phẩm không xác định'}
+                                                                {item?.perfumeVariants?.product?.name || 'Sản phẩm không xác định'}
                                                             </h5>
                                                             <div className="text-sm text-gray-600 mt-1">
-                                                                {item.perfumeVariants && item.perfumeVariants.map((variant, index) => (
-                                                                    <div key={variant.id}>
-                                                                        {variant.variantType} - {variant.volume}ml
+                                                                {item?.perfumeVariants &&
+                                                                    <div key={item?.perfumeVariants?.id}>
+                                                                        {item?.perfumeVariants?.variantType} - {item?.perfumeVariants?.volume}ml
                                                                     </div>
-                                                                ))}
+                                                                }
                                                             </div>
                                                             <div className="flex items-center justify-between mt-2">
                                                                 <span className="text-sm text-gray-600">
                                                                     Số lượng: {item.quantity}
                                                                 </span>
                                                                 <span className="font-semibold text-indigo-600">
-                                                                    {formatPrice(item.totalPrice)}
+                                                                    {formatPrice(item.perfumeVariants ? (item.perfumeVariants.price ?? 0) * item.quantity : 0)}
                                                                 </span>
                                                             </div>
                                                         </div>

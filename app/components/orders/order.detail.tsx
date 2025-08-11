@@ -177,34 +177,35 @@ const OrderDetailPage: React.FC<IOrderProps> = ({ order }: IOrderProps) => {
                             <div className="space-y-6">
                                 {order.items.map((item) => (
                                     <div key={item.id} className="flex items-start space-x-4 p-4 bg-gray-50 rounded-lg">
-                                        {item.product?.images && (
+                                        {item?.perfumeVariants?.product?.images && (
                                             <Image
-                                                src={`/api/image?filename=${item.product?.images?.[0]}`}
-                                                alt={item.product.name}
+                                                src={`/api/image?filename=${item?.perfumeVariants?.product?.images?.[0]}`}
+                                                alt={item?.perfumeVariants?.product?.name ?? 'Sản phẩm không xác định'}
                                                 width={40}
                                                 height={40}
                                                 className="w-10 h-10 rounded-lg object-cover" />
                                         )}
                                         <div className="flex-1 min-w-0">
                                             <h4 className="font-semibold text-gray-900 mb-2">
-                                                {item.product?.name || 'Sản phẩm không xác định'}
+                                                {item?.perfumeVariants?.product?.name || 'Sản phẩm không xác định'}
                                             </h4>
-                                            {item.product?.description && (
-                                                <p className="text-sm text-gray-600 mb-3">{item.product.description}</p>
+                                            {item?.perfumeVariants?.product?.description && (
+                                                <p className="text-sm text-gray-600 mb-3">{item?.perfumeVariants?.product?.description}</p>
                                             )}
 
                                             <div className="space-y-2">
-                                                {item.perfumeVariants && item.perfumeVariants.map((variant) => (
-                                                    <div key={variant.id} className="flex items-center justify-between text-sm">
+                                                {item?.perfumeVariants && (
+
+                                                    <div key={item?.perfumeVariants.id} className="flex items-center justify-between text-sm">
                                                         <div className="flex items-center space-x-2">
                                                             <span className="px-2 py-1 bg-white rounded text-xs font-medium">
-                                                                {variant.variantType}
+                                                                {item?.perfumeVariants?.variantType}
                                                             </span>
-                                                            <span className="text-gray-600">{variant.volume}ml</span>
+                                                            <span className="text-gray-600">{item?.perfumeVariants.volume}ml</span>
                                                         </div>
-                                                        <span className="font-medium">{formatPrice(variant.price as number)}</span>
+                                                        <span className="font-medium">{formatPrice(item?.perfumeVariants.price as number)}</span>
                                                     </div>
-                                                ))}
+                                                )}
                                             </div>
 
                                             <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-200">
@@ -212,7 +213,7 @@ const OrderDetailPage: React.FC<IOrderProps> = ({ order }: IOrderProps) => {
                                                     Số lượng: <span className="font-medium">{item.quantity}</span>
                                                 </span>
                                                 <span className="text-lg font-bold text-indigo-600">
-                                                    {formatPrice(item.totalPrice)}
+                                                    {formatPrice(item.perfumeVariants ? (item.perfumeVariants.price ?? 0) * item.quantity : 0)}
                                                 </span>
                                             </div>
                                         </div>

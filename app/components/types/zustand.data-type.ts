@@ -7,10 +7,9 @@ declare global {
 
     export interface ICartItem {
         id: number
-        product?: IProductCart
         quantity: number
         totalPrice: number
-        perfumeVariants?: IPerfumeVariant[];
+        perfumeVariants?: IPerfumeVariant;
         order?: Order;
     }
 
@@ -65,9 +64,9 @@ declare global {
     }
 
     export interface ICartActions {
-        addItem: (product: IProductCart, userId: string, quantity?: number) => void
-        removeItem: (product: IProductCart, userId: string, variantId: string) => void
-        updateQuantity: (product: IProductCart, quantity: number, userId: string) => void
+        addItem: (product: IProduct, userId: string, quantity?: number) => void
+        removeItem: (product: IProduct, userId: string, variantId: string) => void
+        updateQuantity: (product: IProduct, quantity: number, userId: string, variant: IPerfumeVariant) => void
         clearCart: (userId: string) => void
         syncWithServer?: () => void
         setHasHydrated: () => void
