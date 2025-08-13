@@ -100,7 +100,7 @@ export default function CheckoutForm() {
                 quantity: item.quantity,
                 totalPrice: (item.perfumeVariants?.price ?? 0) * item.quantity,
                 productId: item.perfumeVariants?.product?.id,
-                perfumeVariant: {
+                perfumeVariants: {
                     id: item.perfumeVariants?.id
                 }
 

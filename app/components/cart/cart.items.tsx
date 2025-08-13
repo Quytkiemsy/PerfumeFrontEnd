@@ -24,11 +24,11 @@ export function CartItem({ item }: CartItemProps) {
 
     const handleRemove = () => {
         if (session?.user?.username && item.perfumeVariants?.product) {
-            removeItem(item.perfumeVariants?.product, session?.user?.username ?? '', String(item?.perfumeVariants?.product?.id));
+            removeItem(item.perfumeVariants?.product, session?.user?.username ?? '', String(item?.perfumeVariants?.id));
         } else {
             const guestId = localStorage.getItem('guestId') || '';
             if (!item.perfumeVariants?.product) return; // Ensure product exists before updating
-            removeItem(item.perfumeVariants?.product, guestId, String(item?.perfumeVariants?.product?.id));
+            removeItem(item.perfumeVariants?.product, guestId, String(item?.perfumeVariants?.id));
         }
     }
 
