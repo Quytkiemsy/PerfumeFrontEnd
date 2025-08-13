@@ -38,7 +38,7 @@ declare global {
         id: number;
         createdAt: string;
         createdBy: string;
-        status: string;
+        status: OrderStatus;
         totalPrice: number;
         user: IUser;
         shippingInfo: ShippingInfo;
