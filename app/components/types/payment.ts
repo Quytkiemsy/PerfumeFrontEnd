@@ -1,5 +1,6 @@
 export interface QRPaymentRequest {
     amount: number;
+    orderId: number;
 }
 
 export interface QRPaymentResponse {

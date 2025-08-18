@@ -22,7 +22,7 @@ export const usePaymentWebSocket = ({
         if (!paymentId) return;
 
         // Connect to WebSocket
-        const wsUrl = `ws://localhost:8080/ws/payment/${paymentId}`;
+        const wsUrl = `${process.env.NEXT_PUBLIC_BACKEND_WS_URL}/ws/payment/${paymentId}`;
         ws.current = new WebSocket(wsUrl);
 
         ws.current.onopen = () => {
@@ -70,9 +70,14 @@ export const usePaymentWebSocket = ({
             }
         };
 
-        ws.current.onclose = () => {
+        ws.current.onclose = (event) => {
             setIsConnected(false);
-            console.log('WebSocket disconnected');
+            console.log(
+                'WebSocket disconnected',
+                'code:', event.code,
+                'reason:', event.reason,
+                'wasClean:', event.wasClean
+            );
         };
 
         ws.current.onerror = (error) => {

@@ -1,20 +1,17 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Package, Calendar, User, MapPin, Phone, Mail, CreditCard, ChevronDown, ChevronUp, Eye } from 'lucide-react';
-import Image from 'next/image';
+import { ArrowBigRightDash, Calendar, Captions, ChevronDown, ChevronUp, CreditCard, Eye, Mail, MapPin, Package, Phone, User } from 'lucide-react';
 
-const statusList = [
-    'PENDING',
-    'PAID',
-    'SHIPPED',
-    'DELIVERED',
-    'CANCELLED',
-];
+import Image from 'next/image';
+import { useRouter } from 'next/navigation';
+import React, { useState } from 'react';
+
+const statusList: OrderStatus[] = ['PENDING', 'PAID', 'SHIPPING', 'CANCELLED'];
 
 const OrdersPage: React.FC<{ orders: IOrder[] }> = ({ orders }) => {
     const [expandedOrders, setExpandedOrders] = useState<Set<number>>(new Set());
-    const [statusFilter, setStatusFilter] = useState<string>('all');
+    const [statusFilter, setStatusFilter] = useState<OrderStatus | 'all'>('all');
+    const router = useRouter();
 
     const toggleOrderExpansion = (orderId: number) => {
         const newExpanded = new Set(expandedOrders);
@@ -26,13 +23,13 @@ const OrdersPage: React.FC<{ orders: IOrder[] }> = ({ orders }) => {
         setExpandedOrders(newExpanded);
     };
 
-    const getStatusColor = (status: string) => {
+    const getStatusColor = (status: OrderStatus) => {
         switch (status) {
             case 'PENDING':
                 return 'bg-red-100 text-red-800 border-red-200';
             case 'PAID':
                 return 'bg-blue-100 text-blue-800 border-blue-200';
-            case 'SHIPPED':
+            case 'SHIPPING':
                 return 'bg-purple-100 text-purple-800 border-purple-200';
             case 'DELIVERED':
                 return 'bg-green-100 text-green-800 border-green-200';
@@ -43,13 +40,13 @@ const OrdersPage: React.FC<{ orders: IOrder[] }> = ({ orders }) => {
         }
     };
 
-    const getStatusText = (status: string) => {
+    const getStatusText = (status: OrderStatus) => {
         switch (status) {
             case 'PENDING':
                 return 'Chưa thanh toán';
             case 'PAID':
                 return 'Đã thanh toán';
-            case 'SHIPPED':
+            case 'SHIPPING':
                 return 'Đang giao hàng';
             case 'DELIVERED':
                 return 'Đã giao hàng';
@@ -155,6 +152,17 @@ const OrdersPage: React.FC<{ orders: IOrder[] }> = ({ orders }) => {
                                         <span className={`px-4 py-2 rounded-full text-sm font-medium border ${getStatusColor(order.status)}`}>
                                             {getStatusText(order.status)}
                                         </span>
+                                        {
+                                            order.paymentMethod === 'BANK' && order.status === 'PENDING' && (
+                                                <button
+                                                    onClick={() => router.push(`/qr/${order.id}`)}
+                                                    className="flex items-center gap-2 p-2 bg-gray-100 hover:bg-gray-200 transition-colors rounded-full"
+                                                >
+                                                    <ArrowBigRightDash className="w-5 h-5" />
+                                                    <span>Đi đến thanh toán</span>
+                                                </button>
+                                            )
+                                        }
                                         <button
                                             onClick={() => toggleOrderExpansion(order.id)}
                                             className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors duration-200"
@@ -168,7 +176,7 @@ const OrdersPage: React.FC<{ orders: IOrder[] }> = ({ orders }) => {
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
                                     <div className="flex items-center space-x-2">
                                         <User className="h-4 w-4 text-gray-400" />
                                         <span className="text-gray-600">Khách hàng:</span>
@@ -179,6 +187,15 @@ const OrdersPage: React.FC<{ orders: IOrder[] }> = ({ orders }) => {
                                         <span className="text-gray-600">Thanh toán:</span>
                                         <span className="font-medium">{getPaymentMethodText(order.paymentMethod)}</span>
                                     </div>
+                                    {
+                                        order?.transactionId && (
+                                            <div className="flex items-center space-x-2">
+                                                <Captions className="h-4 w-4 text-gray-400" />
+                                                <span className="text-gray-600">Mã thanh toán</span>
+                                                <span className="font-medium">{order?.transactionId}</span>
+                                            </div>
+                                        )
+                                    }
                                     <div className="flex items-center space-x-2">
                                         <span className="text-gray-600">Tổng tiền:</span>
                                         <span className="font-bold text-lg text-indigo-600">{formatPrice(order.totalPrice)}</span>

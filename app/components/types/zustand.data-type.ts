@@ -44,11 +44,12 @@ declare global {
         shippingInfo: ShippingInfo;
         items: ICartItem[];
         paymentMethod: string;
+        transactionId?: string;
     }
 
 
     // OrderStatus.ts
-    export type OrderStatus = 'PENDING' | 'PAID' | 'SHIPPED' | 'CANCELLED';
+    export type OrderStatus = 'PENDING' | 'PAID' | 'SHIPPING' | 'CANCELLED' | 'DELIVERED';
 
     // PaymentMethod.ts
     export type PaymentMethod = string; // Or enum if you have defined it

@@ -11,6 +11,8 @@ import { useEffect, useState } from 'react';
 import { z } from 'zod';
 import toast from 'react-hot-toast';
 import { sendRequest } from '@/app/util/api';
+import { useRouter } from 'next/navigation';
+
 
 interface FormData {
     fullName: string;
@@ -48,6 +50,7 @@ export default function CheckoutForm() {
     });
     const { data: session, status } = useSession();
     const [formErrors, setFormErrors] = useState<any>({});
+    const router = useRouter();
 
     useEffect(() => {
         if (status === "authenticated" && session?.user?.username) {
@@ -81,7 +84,7 @@ export default function CheckoutForm() {
         setFormErrors({});
         // Xử lý submit đơn hàng
         const newOrder = {
-            status: 'PAID',
+            status: 'PENDING',
             totalPrice: items.reduce((sum, item) => {
                 if (!item.perfumeVariants?.product) return sum;
                 return sum + ((item.perfumeVariants?.price ?? 0) * item.quantity);
@@ -122,12 +125,16 @@ export default function CheckoutForm() {
                 'Authorization': `Bearer ${session.accessToken}`
             };
         }
-        const res = await sendRequest<IBackendRes<IProduct>>(requestOptions);
+        const res = await sendRequest<IBackendRes<IOrder>>(requestOptions);
         if (res.error) {
             toast.error("Lỗi khi lưu đơn hàng");
             return;
         } else {
             toast.success("Lưu đơn hàng thành công");
+            // Redirect to order confirmation page
+            if (res.data && formData.paymentMethod === 'BANK') {
+                router.push(`/qr/${res.data.id}`);
+            }
         }
         // Clear cart after successful order
         handleClearCart();
@@ -270,7 +277,6 @@ export default function CheckoutForm() {
                                 >
                                     <option value="COD">Thanh toán khi nhận hàng (COD)</option>
                                     <option value="BANK">Chuyển khoản ngân hàng</option>
-                                    <option value="MOMO">Ví điện tử Momo</option>
                                 </select>
                             </div>
                         </div>

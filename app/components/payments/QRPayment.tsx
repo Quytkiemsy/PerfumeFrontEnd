@@ -1,15 +1,17 @@
 'use client'
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { usePaymentWebSocket } from '../hooks/usePaymentWebSocket';
 import { QRPaymentRequest } from '../types/payment';
 import { createQRPayment } from '@/app/util/paymentApi';
+import toast from 'react-hot-toast';
+import { useRouter } from 'next/navigation';
 
-const QRPayment: React.FC = () => {
-    const [amount, setAmount] = useState<string>('');
+const QRPayment: React.FC<{ order: IOrder }> = ({ order }) => {
     const [qrCode, setQrCode] = useState<string | null>(null);
     const [paymentId, setPaymentId] = useState<string | null>(null);
     const [status, setStatus] = useState<'idle' | 'loading' | 'waiting' | 'success' | 'timeout' | 'error'>('idle');
     const [paymentResult, setPaymentResult] = useState<{ amount: number; transactionId: string } | null>(null);
+    const router = useRouter();
 
     const { isConnected } = usePaymentWebSocket({
         paymentId,
@@ -25,11 +27,10 @@ const QRPayment: React.FC = () => {
         }
     });
 
-    const handleCreatePayment = async (e: React.FormEvent) => {
-        e.preventDefault();
+    const handleCreatePayment = async () => {
 
-        if (!amount) {
-            alert('Vui lòng nhập đủ thông tin');
+        if (!order.totalPrice) {
+            toast.error('Số tiền không chính xác vui lòng kiểm tra lại !!!');
             return;
         }
 
@@ -37,7 +38,8 @@ const QRPayment: React.FC = () => {
 
         try {
             const request: QRPaymentRequest = {
-                amount: parseInt(amount)
+                amount: parseInt(order.totalPrice.toString(), 10),
+                orderId: order.id
             };
 
             const response = await createQRPayment(request);
@@ -54,11 +56,16 @@ const QRPayment: React.FC = () => {
     };
 
     const handleReset = () => {
-        setAmount('');
         setQrCode(null);
         setPaymentId(null);
         setStatus('idle');
         setPaymentResult(null);
+    };
+
+    const handleRedirect = () => {
+        // Reset state and redirect to the orders page
+        handleReset();
+        router.push("/my-orders");
     };
 
     const formatCurrency = (amount: number) => {
@@ -68,36 +75,14 @@ const QRPayment: React.FC = () => {
         }).format(amount);
     };
 
+    useEffect(() => {
+        handleCreatePayment();
+    }, [order.totalPrice])
+
     return (
         <div className="max-w-md mx-auto mt-8 p-6 bg-white rounded-lg shadow-lg">
             <h2 className="text-2xl font-bold mb-6 text-center">Thanh toán QR</h2>
 
-            {status === 'idle' && (
-                <form onSubmit={handleCreatePayment} className="space-y-4">
-                    <div>
-                        <label htmlFor="amount" className="block text-sm font-medium text-gray-700 mb-1">
-                            Số tiền (VNĐ)
-                        </label>
-                        <input
-                            id="amount"
-                            type="number"
-                            value={amount}
-                            onChange={(e) => setAmount(e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            placeholder="Nhập số tiền"
-                            required
-                        />
-                    </div>
-
-
-                    <button
-                        type="submit"
-                        className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                        Tạo mã QR
-                    </button>
-                </form>
-            )}
 
             {status === 'loading' && (
                 <div className="text-center">
@@ -111,7 +96,7 @@ const QRPayment: React.FC = () => {
                     <h3 className="text-lg font-semibold">Quét mã QR để thanh toán</h3>
                     <img src={qrCode} alt="QR Code" className="mx-auto max-w-full h-auto" />
                     <p className="text-sm text-gray-600">
-                        Số tiền: <span className="font-semibold">{formatCurrency(parseFloat(amount))}</span>
+                        Số tiền: <span className="font-semibold">{formatCurrency(parseFloat(order.totalPrice.toString()))}</span>
                     </p>
                     <div className="flex items-center justify-center space-x-2">
                         <div className="animate-pulse w-2 h-2 bg-blue-600 rounded-full"></div>
@@ -138,10 +123,10 @@ const QRPayment: React.FC = () => {
                         <p>Mã giao dịch: <span className="font-semibold">{paymentResult.transactionId}</span></p>
                     </div>
                     <button
-                        onClick={handleReset}
+                        onClick={handleRedirect}
                         className="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700"
                     >
-                        Tạo thanh toán mới
+                        Về trang Orders
                     </button>
                 </div>
             )}
@@ -157,12 +142,6 @@ const QRPayment: React.FC = () => {
                     <p className="text-sm text-gray-600">
                         Thanh toán đã quá thời gian cho phép (5 phút)
                     </p>
-                    <button
-                        onClick={handleReset}
-                        className="w-full bg-yellow-600 text-white py-2 px-4 rounded-md hover:bg-yellow-700"
-                    >
-                        Thử lại
-                    </button>
                 </div>
             )}
 
@@ -177,12 +156,6 @@ const QRPayment: React.FC = () => {
                     <p className="text-sm text-gray-600">
                         Không thể tạo mã QR thanh toán
                     </p>
-                    <button
-                        onClick={handleReset}
-                        className="w-full bg-red-600 text-white py-2 px-4 rounded-md hover:bg-red-700"
-                    >
-                        Thử lại
-                    </button>
                 </div>
             )}
         </div>

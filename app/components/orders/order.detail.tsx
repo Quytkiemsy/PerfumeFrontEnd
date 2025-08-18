@@ -24,7 +24,7 @@ interface IOrderProps {
 
 const OrderDetailPage: React.FC<IOrderProps> = ({ order }: IOrderProps) => {
     const router = useRouter();
-    const getStatusConfig = (status: string) => {
+    const getStatusConfig = (status: OrderStatus) => {
         switch (status) {
             case 'PENDING':
                 return {
@@ -38,7 +38,7 @@ const OrderDetailPage: React.FC<IOrderProps> = ({ order }: IOrderProps) => {
                     icon: CheckCircle,
                     text: 'Đã thanh toán'
                 };
-            case 'SHIPPED':
+            case 'SHIPPING':
                 return {
                     color: 'bg-purple-100 text-purple-800 border-purple-200',
                     icon: Truck,

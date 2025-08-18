@@ -40,7 +40,7 @@ const OrderDashboard: React.FC<IStatisticalProps> = ({ orders }) => {
     const stats = useMemo(() => {
         const totalRevenue = filteredOrders.reduce((sum, order) => sum + order.totalPrice, 0);
         const totalOrders = filteredOrders.length;
-        const completedOrders = filteredOrders.filter(order => order.status === 'SHIPPED').length;
+        const completedOrders = filteredOrders.filter(order => order.status === 'SHIPPING').length;
         const averageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
 
         return {
@@ -102,7 +102,7 @@ const OrderDashboard: React.FC<IStatisticalProps> = ({ orders }) => {
 
     const getStatusBadgeVariant = (status: OrderStatus) => {
         switch (status) {
-            case 'SHIPPED':
+            case 'SHIPPING':
                 return 'default';
             case 'PENDING':
                 return 'secondary';
@@ -142,7 +142,7 @@ const OrderDashboard: React.FC<IStatisticalProps> = ({ orders }) => {
                         <SelectContent>
                             <SelectItem value="all">All Status</SelectItem>
                             <SelectItem value="PENDING">Pending</SelectItem>
-                            <SelectItem value="SHIPPED">Shipped</SelectItem>
+                            <SelectItem value="SHIPPING">Shipped</SelectItem>
                             <SelectItem value="PAID">Paid</SelectItem>
                             <SelectItem value="CANCELLED">Cancelled</SelectItem>
                         </SelectContent>

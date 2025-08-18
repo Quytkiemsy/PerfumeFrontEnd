@@ -11,7 +11,7 @@ const MyOrdersPage = async () => {
         method: 'GET',
         queryParams: {
             page: 0,
-            size: 4,
+            size: 10,
             sort: 'createdAt,asc',
         },
         headers: {
