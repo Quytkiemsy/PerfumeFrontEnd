@@ -48,10 +48,11 @@ const QRPayment: React.FC<{ order: IOrder }> = ({ order }) => {
             setPaymentId(response.paymentId);
             setStatus('waiting');
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error creating payment:', error);
             setStatus('error');
-            alert('Có lỗi xảy ra khi tạo thanh toán');
+            toast.error(error.message);
+            router.push("/my-orders");
         }
     };
 

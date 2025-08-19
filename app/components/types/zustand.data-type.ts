@@ -43,7 +43,7 @@ declare global {
         user: IUser;
         shippingInfo: ShippingInfo;
         items: ICartItem[];
-        paymentMethod: string;
+        paymentMethod: PaymentMethod;
         transactionId?: string;
     }
 
@@ -52,7 +52,7 @@ declare global {
     export type OrderStatus = 'PENDING' | 'PAID' | 'SHIPPING' | 'CANCELLED' | 'DELIVERED';
 
     // PaymentMethod.ts
-    export type PaymentMethod = string; // Or enum if you have defined it
+    export type PaymentMethod = 'BANK' | 'COD'; // Or enum if you have defined it
 
     export interface ICartState {
         userId: string,

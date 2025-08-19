@@ -1,7 +1,9 @@
 'use client';
 
+import { sendRequest } from '@/app/util/api';
 import {
     AlertCircle,
+    ArrowBigRightDash,
     ArrowLeft,
     Calendar,
     CheckCircle,
@@ -11,12 +13,18 @@ import {
     MapPin,
     Package,
     Phone,
+    Replace,
     Truck,
     User,
     XCircle
 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import toast from 'react-hot-toast';
+// shadcn/ui components
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 interface IOrderProps {
     order: IOrder;
@@ -24,6 +32,10 @@ interface IOrderProps {
 
 const OrderDetailPage: React.FC<IOrderProps> = ({ order }: IOrderProps) => {
     const router = useRouter();
+    const [showDialog, setShowDialog] = useState(false);
+    const [showCancelDialog, setShowCancelDialog] = useState(false);
+    const [orderId, setOrderId] = useState<number | null>(null);
+    const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | null>(null);
     const getStatusConfig = (status: OrderStatus) => {
         switch (status) {
             case 'PENDING':
@@ -99,6 +111,75 @@ const OrderDetailPage: React.FC<IOrderProps> = ({ order }: IOrderProps) => {
     const statusConfig = getStatusConfig(order.status);
     const StatusIcon = statusConfig.icon;
 
+
+    const handleChangePayment = (order: IOrder) => {
+        setOrderId(order.id);
+        setPaymentMethod(order.paymentMethod);
+        setShowDialog(true);
+    };
+
+    const confirmChangePayment = async () => {
+        if (orderId != null) {
+
+            // call api to save the product
+            const res = await sendRequest<IBackendRes<IOrder>>({
+                url: `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/orders`,
+                method: 'PUT',
+                body: {
+                    id: orderId,
+                    paymentMethod: paymentMethod === 'BANK' ? 'COD' : 'BANK'
+                }
+            });
+            setShowDialog(false);
+            setOrderId(null);
+            if (res.error as any) {
+                toast.error(res.message);
+                return;
+            } else {
+                toast.success("Change phương thức thanh toán sản phẩm thành công");
+                // refresh list data
+                router.refresh()
+            }
+        }
+    };
+
+    const cancelChangePayment = () => {
+        setShowDialog(false);
+        setOrderId(null);
+    };
+
+
+    const handleCancelOrder = (order: IOrder) => {
+        setOrderId(order.id);
+        setShowCancelDialog(true);
+    };
+
+    const confirmCancelOrder = async () => {
+        if (orderId != null) {
+
+            // call api to save the product
+            const res = await sendRequest<IBackendRes<IOrder>>({
+                url: `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/orders/${orderId}`,
+                method: 'DELETE',
+            });
+            setShowCancelDialog(false);
+            setOrderId(null);
+            if (res.error as any) {
+                toast.error(res.message);
+                return;
+            } else {
+                toast.success("Hủy đơn hàng thành công");
+                // refresh list data
+                router.refresh()
+            }
+        }
+    };
+
+    const cancelDialog = () => {
+        setShowCancelDialog(false);
+        setOrderId(null);
+    };
+
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 py-8 px-4">
             <div className="max-w-6xl mx-auto">
@@ -144,7 +225,7 @@ const OrderDetailPage: React.FC<IOrderProps> = ({ order }: IOrderProps) => {
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6 border-t border-gray-100">
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6 pt-6 border-t border-gray-100">
                         <div className="flex items-center space-x-3">
                             <User className="h-5 w-5 text-gray-400" />
                             <div>
@@ -152,12 +233,28 @@ const OrderDetailPage: React.FC<IOrderProps> = ({ order }: IOrderProps) => {
                                 <p className="font-medium">{order?.user?.username}</p>
                             </div>
                         </div>
-                        <div className="flex items-center space-x-3">
+                        <div className="flex items-center space-x-3 col-span-2">
                             <CreditCard className="h-5 w-5 text-gray-400" />
-                            <div>
-                                <p className="text-sm text-gray-600">Phương thức thanh toán</p>
-                                <p className="font-medium">{getPaymentMethodText(order.paymentMethod)}</p>
-                            </div>
+                            <p className="text-sm text-gray-600">Phương thức thanh toán</p>
+                            <p className="font-medium">{getPaymentMethodText(order.paymentMethod)}</p>
+                            <button
+                                onClick={() => handleChangePayment(order)}
+                                className="flex items-center gap-2 p-2 bg-gray-100 hover:bg-gray-200 transition-colors rounded-full"
+                            >
+                                <Replace className="w-5 h-5" />
+                                <span>{order.paymentMethod === 'BANK' ? 'COD' : 'BANK'}</span>
+                            </button>
+                            {
+                                order.paymentMethod === 'BANK' && order.status === 'PENDING' && (
+                                    <button
+                                        onClick={() => router.push(`/qr/${order.id}`)}
+                                        className="flex items-center gap-2 p-2 bg-gray-100 hover:bg-gray-200 transition-colors rounded-full"
+                                    >
+                                        <ArrowBigRightDash className="w-5 h-5" />
+                                        <span>Đi đến thanh toán</span>
+                                    </button>
+                                )
+                            }
                         </div>
                         <div className="flex items-center space-x-3">
                             <Package className="h-5 w-5 text-gray-400" />
@@ -221,6 +318,20 @@ const OrderDetailPage: React.FC<IOrderProps> = ({ order }: IOrderProps) => {
                                 ))}
                             </div>
                         </div>
+                        {
+                            order?.status === 'PENDING' && (
+                                <div className='flex justify-center'>
+                                    <Button
+                                        variant="destructive"
+                                        size="sm"
+                                        className="m-3 "
+                                        onClick={() => handleCancelOrder(order)}
+                                    >
+                                        Hủy đơn hàng
+                                    </Button>
+                                </div>
+                            )
+                        }
                     </div>
 
                     {/* Shipping Info */}
@@ -294,6 +405,37 @@ const OrderDetailPage: React.FC<IOrderProps> = ({ order }: IOrderProps) => {
                     </div>
                 </div>
             </div>
+            {/*  Confirm Dialog */}
+            <Dialog open={showDialog} onOpenChange={cancelChangePayment}>
+                <DialogContent className="max-w-sm">
+                    <DialogHeader>
+                        <DialogTitle>Xác nhận THAY ĐỔI phương thức thanh toán</DialogTitle>
+                        <DialogDescription>
+                            Bạn có chắc chắn muốn thay đổi phương thức thanh toán không?
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="flex justify-end gap-2 pt-4">
+                        <Button variant="outline" onClick={cancelChangePayment}>Hủy</Button>
+                        <Button variant="destructive" onClick={confirmChangePayment}>Xác nhận</Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
+
+            {/*  Cancel Dialog */}
+            <Dialog open={showCancelDialog} onOpenChange={cancelDialog}>
+                <DialogContent className="max-w-sm">
+                    <DialogHeader>
+                        <DialogTitle>Xác nhận HỦY đơn hàng</DialogTitle>
+                        <DialogDescription>
+                            Bạn có chắc chắn muốn hủy đơn hàng này không?
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="flex justify-end gap-2 pt-4">
+                        <Button variant="outline" onClick={cancelDialog}>Hủy</Button>
+                        <Button variant="destructive" onClick={confirmCancelOrder}>Xác nhận</Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 };

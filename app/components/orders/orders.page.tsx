@@ -1,10 +1,17 @@
 'use client';
 
-import { ArrowBigRightDash, Calendar, Captions, ChevronDown, ChevronUp, CreditCard, Eye, Mail, MapPin, Package, Phone, User } from 'lucide-react';
+import { ArrowBigRightDash, Calendar, Captions, ChevronDown, ChevronUp, CreditCard, Eye, Mail, MapPin, Package, Phone, Replace, User } from 'lucide-react';
 
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import React, { useState } from 'react';
+
+// shadcn/ui components
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { sendRequest } from '@/app/util/api';
+import toast from 'react-hot-toast';
+import { useSession } from 'next-auth/react';
 
 const statusList: OrderStatus[] = ['PENDING', 'PAID', 'SHIPPING', 'CANCELLED'];
 
@@ -12,6 +19,12 @@ const OrdersPage: React.FC<{ orders: IOrder[] }> = ({ orders }) => {
     const [expandedOrders, setExpandedOrders] = useState<Set<number>>(new Set());
     const [statusFilter, setStatusFilter] = useState<OrderStatus | 'all'>('all');
     const router = useRouter();
+    const [showDialog, setShowDialog] = useState(false);
+    const [showCancelDialog, setShowCancelDialog] = useState(false);
+    const [orderId, setOrderId] = useState<number | null>(null);
+    const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | null>(null);
+    const { data: session } = useSession();
+
 
     const toggleOrderExpansion = (orderId: number) => {
         const newExpanded = new Set(expandedOrders);
@@ -87,9 +100,83 @@ const OrdersPage: React.FC<{ orders: IOrder[] }> = ({ orders }) => {
         });
     };
 
+    const handleChangePayment = (order: IOrder) => {
+        setOrderId(order.id);
+        setPaymentMethod(order.paymentMethod);
+        setShowDialog(true);
+    };
+
+    const confirmChangePayment = async () => {
+        if (orderId != null) {
+
+            // call api to save the product
+            const res = await sendRequest<IBackendRes<IOrder>>({
+                url: `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/orders`,
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${session?.accessToken}`
+                },
+                body: {
+                    id: orderId,
+                    paymentMethod: paymentMethod === 'BANK' ? 'COD' : 'BANK'
+                }
+            });
+            setShowDialog(false);
+            setOrderId(null);
+            if (res.error as any) {
+                toast.error(res.message);
+                return;
+            } else {
+                toast.success("Change phương thức thanh toán sản phẩm thành công");
+                // refresh list data
+                router.refresh()
+            }
+        }
+    };
+
+    const cancelChangePayment = () => {
+        setShowDialog(false);
+        setOrderId(null);
+    };
+
+
+    const handleCancelOrder = (order: IOrder) => {
+        setOrderId(order.id);
+        setShowCancelDialog(true);
+    };
+
+    const confirmCancelOrder = async () => {
+        if (orderId != null) {
+
+            // call api to save the product
+            const res = await sendRequest<IBackendRes<IOrder>>({
+                url: `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/orders/${orderId}`,
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${session?.accessToken}`
+                },
+            });
+            setShowCancelDialog(false);
+            setOrderId(null);
+            if (res.error as any) {
+                toast.error(res.message);
+                return;
+            } else {
+                toast.success("Hủy đơn hàng thành công");
+                // refresh list data
+                router.refresh()
+            }
+        }
+    };
+
+    const cancelDialog = () => {
+        setShowCancelDialog(false);
+        setOrderId(null);
+    };
+
     const filteredOrders = statusFilter === 'all'
         ? orders
-        : orders.filter(order => order.status === statusFilter);
+        : orders?.filter(order => order.status === statusFilter);
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 py-8 px-4">
@@ -182,11 +269,22 @@ const OrdersPage: React.FC<{ orders: IOrder[] }> = ({ orders }) => {
                                         <span className="text-gray-600">Khách hàng:</span>
                                         <span className="font-medium">{order?.shippingInfo?.fullName}</span>
                                     </div>
-                                    <div className="flex items-center space-x-2">
-                                        <CreditCard className="h-4 w-4 text-gray-400" />
-                                        <span className="text-gray-600">Thanh toán:</span>
-                                        <span className="font-medium">{getPaymentMethodText(order.paymentMethod)}</span>
-                                    </div>
+                                    {
+                                        order?.status === 'PENDING' && (
+                                            <div className="flex items-center space-x-2">
+                                                <CreditCard className="h-4 w-4 text-gray-400" />
+                                                <span className="text-gray-600">Thanh toán:</span>
+                                                <span className="font-medium">{getPaymentMethodText(order.paymentMethod)}</span>
+                                                <button
+                                                    onClick={() => handleChangePayment(order)}
+                                                    className="flex items-center gap-2 p-2 bg-gray-100 hover:bg-gray-200 transition-colors rounded-full"
+                                                >
+                                                    <Replace className="w-5 h-5" />
+                                                    <span>{order.paymentMethod === 'BANK' ? 'COD' : 'BANK'}</span>
+                                                </button>
+                                            </div>
+                                        )
+                                    }
                                     {
                                         order?.transactionId && (
                                             <div className="flex items-center space-x-2">
@@ -278,9 +376,24 @@ const OrdersPage: React.FC<{ orders: IOrder[] }> = ({ orders }) => {
                                                                 </span>
                                                             </div>
                                                         </div>
+
                                                     </div>
                                                 ))}
                                             </div>
+                                            {
+                                                order?.status === 'PENDING' && (
+                                                    <div className='flex justify-center'>
+                                                        <Button
+                                                            variant="destructive"
+                                                            size="sm"
+                                                            className="m-3 "
+                                                            onClick={() => handleCancelOrder(order)}
+                                                        >
+                                                            Hủy đơn hàng
+                                                        </Button>
+                                                    </div>
+                                                )
+                                            }
                                         </div>
                                     </div>
                                 </div>
@@ -297,6 +410,37 @@ const OrdersPage: React.FC<{ orders: IOrder[] }> = ({ orders }) => {
                     </div>
                 )}
             </div>
+            {/*  Confirm Dialog */}
+            <Dialog open={showDialog} onOpenChange={cancelChangePayment}>
+                <DialogContent className="max-w-sm">
+                    <DialogHeader>
+                        <DialogTitle>Xác nhận THAY ĐỔI phương thức thanh toán</DialogTitle>
+                        <DialogDescription>
+                            Bạn có chắc chắn muốn thay đổi phương thức thanh toán không?
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="flex justify-end gap-2 pt-4">
+                        <Button variant="outline" onClick={cancelChangePayment}>Hủy</Button>
+                        <Button variant="destructive" onClick={confirmChangePayment}>Xác nhận</Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
+
+            {/*  Cancel Dialog */}
+            <Dialog open={showCancelDialog} onOpenChange={cancelDialog}>
+                <DialogContent className="max-w-sm">
+                    <DialogHeader>
+                        <DialogTitle>Xác nhận HỦY đơn hàng</DialogTitle>
+                        <DialogDescription>
+                            Bạn có chắc chắn muốn hủy đơn hàng này không?
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="flex justify-end gap-2 pt-4">
+                        <Button variant="outline" onClick={cancelDialog}>Hủy</Button>
+                        <Button variant="destructive" onClick={confirmCancelOrder}>Xác nhận</Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 };

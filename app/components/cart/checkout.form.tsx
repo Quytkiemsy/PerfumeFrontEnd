@@ -134,6 +134,12 @@ export default function CheckoutForm() {
             // Redirect to order confirmation page
             if (res.data && formData.paymentMethod === 'BANK') {
                 router.push(`/qr/${res.data.id}`);
+            } else {
+                if (session?.accessToken) {
+                    router.push(`/my-orders`);
+                } else if (res.data && res.data.id) {
+                    router.push(`/my-orders/${res?.data.id}`);
+                }
             }
         }
         // Clear cart after successful order

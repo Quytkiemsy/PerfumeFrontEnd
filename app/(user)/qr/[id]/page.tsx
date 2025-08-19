@@ -13,16 +13,21 @@ const PaymentPage: React.FC<IPaymentProps> = async ({ params }: IPaymentProps) =
         method: 'GET',
     });
 
-    if (orderById.data) {
-        if (orderById.data.status === 'PENDING' && orderById.data.paymentMethod === 'BANK') {
-            return (
-                <div>
-                    <QRPayment order={orderById.data as IOrder} />
-                </div>
-            );
-        }
-    }
-    redirect("/my-orders"); // Điều hướng server-side
+    return (
+        <div>
+            <QRPayment order={orderById.data as IOrder} />
+        </div>
+    );
+    // if (orderById.data) {
+    //     if (orderById.data.status === 'PENDING' && orderById.data.paymentMethod === 'BANK') {
+    //         return (
+    //             <div>
+    //                 <QRPayment order={orderById.data as IOrder} />
+    //             </div>
+    //         );
+    //     }
+    // }
+    // redirect("/my-orders"); // Điều hướng server-side
 
 
 }
