@@ -5,7 +5,7 @@ import React from 'react';
 const DashboardPage = async () => {
 
     const resProducts = await sendRequest<IBackendRes<IModelPaginate<IOrder>>>({
-        url: `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/orders`,
+        url: `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/orders/all`,
         method: 'GET'
     });
     const orders = resProducts.data?.result || [] as IOrder[];
