@@ -133,6 +133,7 @@ export default function CheckoutForm() {
             toast.success("Lưu đơn hàng thành công");
             // Redirect to order confirmation page
             if (res.data && formData.paymentMethod === 'BANK') {
+                startLoading();
                 router.push(`/qr/${res.data.id}`);
             } else {
                 if (session?.accessToken) {
@@ -300,3 +301,7 @@ export default function CheckoutForm() {
         </div>
     );
 }
+function startLoading() {
+    throw new Error('Function not implemented.');
+}
+

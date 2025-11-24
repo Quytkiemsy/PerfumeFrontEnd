@@ -7,11 +7,32 @@ import {
     X
 } from 'lucide-react';
 import { useState } from 'react';
+import { useRouter } from "next/navigation";
+
+interface NavItem {
+    key: string;
+    label: string;
+    icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
+    url? : string;
+}
+
+const navItems: NavItem[] = [
+    { key: 'stats', label: 'Thống kê', icon: BarChart3, url: '/admin/dashboard' },
+  { key: 'products', label: 'Sản phẩm', icon: Package, url: '/admin/product' },
+  { key: 'brands', label: 'Thương hiệu', icon: Users, url: '/admin/brands' },
+  { key: 'settings', label: 'Cài đặt', icon: Settings, url: '/admin/settings' },
+];
 
 // shadcn/ui components
 import { Button } from '@/components/ui/button';
 const SidebarAdmin = () => {
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [selected, setSelected] = useState<string>('products');
+      const router = useRouter();
+
+  const handleClick = (url: string) => {
+    router.push(url);
+  };
     return (
         /*  Sidebar  */
         <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform transition-transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}>
@@ -21,7 +42,7 @@ const SidebarAdmin = () => {
                     <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => setSidebarOpen(false)}
+                        onClick={() => { setSidebarOpen(false)}}
                         className="lg:hidden"
                     >
                         <X size={20} />
@@ -29,22 +50,22 @@ const SidebarAdmin = () => {
                 </div>
 
                 <nav className="space-y-2">
-                    <Button variant="secondary" className="w-full justify-start">
-                        <Package className="mr-2 h-4 w-4" />
-                        Sản phẩm
-                    </Button>
-                    <Button variant="ghost" className="w-full justify-start">
-                        <Users className="mr-2 h-4 w-4" />
-                        Thương hiệu
-                    </Button>
-                    <Button variant="ghost" className="w-full justify-start">
-                        <BarChart3 className="mr-2 h-4 w-4" />
-                        Thống kê
-                    </Button>
-                    <Button variant="ghost" className="w-full justify-start">
-                        <Settings className="mr-2 h-4 w-4" />
-                        Cài đặt
-                    </Button>
+                    {navItems.map((item) => {
+                        const Icon = item.icon;
+                        const isActive = selected === item.key;
+                        return (
+                            <Button
+                                key={item.key}
+                                variant={isActive ? 'secondary' : 'ghost'}
+                                className={`w-full justify-start ${isActive ? 'shadow-sm' : ''}`}
+                                onClick={() => { setSelected(item.key); handleClick(item.url || '/admin/dashboard'); }}
+                                aria-pressed={isActive}
+                            >
+                                <Icon className="mr-2 h-4 w-4" />
+                                {item.label}
+                            </Button>
+                        );
+                    })}
                 </nav>
             </div>
         </div >

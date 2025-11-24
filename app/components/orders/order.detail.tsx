@@ -25,6 +25,7 @@ import toast from 'react-hot-toast';
 // shadcn/ui components
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { useLoading } from '@/app/components/hooks/LoadingProvider';
 
 interface IOrderProps {
     order: IOrder;
@@ -36,6 +37,7 @@ const OrderDetailPage: React.FC<IOrderProps> = ({ order }: IOrderProps) => {
     const [showCancelDialog, setShowCancelDialog] = useState(false);
     const [orderId, setOrderId] = useState<number | null>(null);
     const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | null>(null);
+    const { startLoading } = useLoading();
     const getStatusConfig = (status: OrderStatus) => {
         switch (status) {
             case 'PENDING':
@@ -247,7 +249,13 @@ const OrderDetailPage: React.FC<IOrderProps> = ({ order }: IOrderProps) => {
                             {
                                 order.paymentMethod === 'BANK' && order.status === 'PENDING' && (
                                     <button
-                                        onClick={() => router.push(`/qr/${order.id}`)}
+                                        onClick={() => {
+                                            // đợi 3 giây trước khi chuyển hướng
+                                            startLoading();
+                                            setTimeout(() => {
+                                                router.push(`/qr/${order.id}`)
+                                            }, 3000);
+                                        }}
                                         className="flex items-center gap-2 p-2 bg-gray-100 hover:bg-gray-200 transition-colors rounded-full"
                                     >
                                         <ArrowBigRightDash className="w-5 h-5" />
