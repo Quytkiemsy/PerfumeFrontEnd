@@ -54,8 +54,7 @@ const QRPayment: React.FC<{ order: IOrder }> = ({ order }) => {
             console.error('Error creating payment:', error);
             setStatus('error');
             toast.error(error.message);
-
-            // router.push("/my-orders");
+            router.push("/my-orders");
         }
     };
 
