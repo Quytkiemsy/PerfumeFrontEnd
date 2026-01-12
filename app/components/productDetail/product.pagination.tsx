@@ -35,10 +35,10 @@ export default function Pagination({ currentPage, totalPages }: Props) {
                 <button
                     key={i}
                     onClick={() => goToPage(i)}
-                    className={`w-9 h-9 flex items-center justify-center rounded-full border transition-all duration-150 font-semibold text-base
+                    className={`w-10 h-10 flex items-center justify-center rounded-xl font-bold text-sm transition-all duration-300 transform
                         ${i === currentPage
-                            ? "bg-indigo-600 text-white border-indigo-600 shadow-md scale-110"
-                            : "bg-white text-gray-700 border-gray-200 hover:bg-indigo-50 hover:text-indigo-600"}
+                            ? "bg-gradient-to-r from-gray-800 to-gray-900 text-white shadow-lg scale-110 ring-2 ring-gray-400"
+                            : "bg-white text-gray-700 border border-gray-200 hover:bg-gradient-to-r hover:from-gray-100 hover:to-gray-200 hover:scale-105 hover:shadow-md"}
                     `}
                     aria-current={i === currentPage ? "page" : undefined}
                 >
@@ -50,40 +50,79 @@ export default function Pagination({ currentPage, totalPages }: Props) {
     };
 
     return (
-        <nav className="mt-8 flex items-center justify-center gap-2 select-none" aria-label="Pagination">
-            <button
-                onClick={() => goToPage(currentPage - 1)}
-                disabled={currentPage === 1}
-                className="w-9 h-9 flex items-center justify-center rounded-full border border-gray-200 bg-white text-gray-500 hover:bg-indigo-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                aria-label="Trang trước"
-            >
-                <ChevronLeft className="w-5 h-5" />
-            </button>
+        <nav className="flex flex-col items-center gap-4 select-none" aria-label="Pagination">
+            {/* Pagination info */}
+            <div className="text-sm text-gray-600 font-medium">
+                Page <span className="font-bold text-gray-900">{currentPage}</span> of{" "}
+                <span className="font-bold text-gray-900">{totalPages}</span>
+            </div>
 
-            {currentPage > 3 && totalPages > 5 && (
-                <>
-                    <button onClick={() => goToPage(1)} className="w-9 h-9 flex items-center justify-center rounded-full border border-gray-200 bg-white text-gray-700 font-semibold hover:bg-indigo-50">1</button>
-                    <span className="px-1 text-gray-400">...</span>
-                </>
+            {/* Pagination controls */}
+            <div className="flex items-center gap-2 bg-white rounded-2xl shadow-lg px-4 py-3 border border-gray-100">
+                <button
+                    onClick={() => goToPage(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    className="w-10 h-10 flex items-center justify-center rounded-xl border border-gray-200 bg-gradient-to-br from-white to-gray-50 text-gray-600 hover:from-gray-100 hover:to-gray-200 hover:shadow-md transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:shadow-none transform hover:scale-105 active:scale-95"
+                    aria-label="Previous page"
+                >
+                    <ChevronLeft className="w-5 h-5" />
+                </button>
+
+                {currentPage > 3 && totalPages > 5 && (
+                    <>
+                        <button 
+                            onClick={() => goToPage(1)} 
+                            className="w-10 h-10 flex items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-700 font-bold text-sm hover:bg-gradient-to-r hover:from-gray-100 hover:to-gray-200 hover:scale-105 hover:shadow-md transition-all duration-300"
+                        >
+                            1
+                        </button>
+                        <span className="px-2 text-gray-400 font-bold">•••</span>
+                    </>
+                )}
+
+                {renderPages()}
+
+                {currentPage < totalPages - 2 && totalPages > 5 && (
+                    <>
+                        <span className="px-2 text-gray-400 font-bold">•••</span>
+                        <button 
+                            onClick={() => goToPage(totalPages)} 
+                            className="w-10 h-10 flex items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-700 font-bold text-sm hover:bg-gradient-to-r hover:from-gray-100 hover:to-gray-200 hover:scale-105 hover:shadow-md transition-all duration-300"
+                        >
+                            {totalPages}
+                        </button>
+                    </>
+                )}
+
+                <button
+                    onClick={() => goToPage(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                    className="w-10 h-10 flex items-center justify-center rounded-xl border border-gray-200 bg-gradient-to-br from-white to-gray-50 text-gray-600 hover:from-gray-100 hover:to-gray-200 hover:shadow-md transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:shadow-none transform hover:scale-105 active:scale-95"
+                    aria-label="Next page"
+                >
+                    <ChevronRight className="w-5 h-5" />
+                </button>
+            </div>
+
+            {/* Quick jump buttons */}
+            {totalPages > 5 && (
+                <div className="flex items-center gap-2">
+                    <button
+                        onClick={() => goToPage(1)}
+                        disabled={currentPage === 1}
+                        className="px-4 py-2 text-xs font-semibold text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                        ⏮️ First
+                    </button>
+                    <button
+                        onClick={() => goToPage(totalPages)}
+                        disabled={currentPage === totalPages}
+                        className="px-4 py-2 text-xs font-semibold text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                        Last ⏭️
+                    </button>
+                </div>
             )}
-
-            {renderPages()}
-
-            {currentPage < totalPages - 2 && totalPages > 5 && (
-                <>
-                    <span className="px-1 text-gray-400">...</span>
-                    <button onClick={() => goToPage(totalPages)} className="w-9 h-9 flex items-center justify-center rounded-full border border-gray-200 bg-white text-gray-700 font-semibold hover:bg-indigo-50">{totalPages}</button>
-                </>
-            )}
-
-            <button
-                onClick={() => goToPage(currentPage + 1)}
-                disabled={currentPage === totalPages}
-                className="w-9 h-9 flex items-center justify-center rounded-full border border-gray-200 bg-white text-gray-500 hover:bg-indigo-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                aria-label="Trang sau"
-            >
-                <ChevronRight className="w-5 h-5" />
-            </button>
         </nav>
     );
 }

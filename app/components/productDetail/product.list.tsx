@@ -52,20 +52,69 @@ export default async function ListProduct({ searchParams, brands }: { searchPara
     const products = res.data?.result || [] as IProduct[];
 
     return (
-        <div className="lg:container mx-auto p-4">
-            <div className="flex flex-col md:flex-row">
-                {/* Bộ lọc bên trái */}
-                <FilterProduct brands={brands} />
+        <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
+            <div className="lg:container mx-auto px-4 py-8">
+                {/* Header Section */}
+                <div className="mb-8 text-center">
+                    <h1 className="text-2xl md:text-2xl font-bold bg-gradient-to-r from-gray-700 to-gray-900 bg-clip-text text-transparent mb-3">
+                        ✨ Explore Our Collection
+                    </h1>
+                    <p className="text-gray-600 text-md">
+                        Discover your signature scent from our curated selection
+                    </p>
+                </div>
 
-                {/* Danh sách sản phẩm */}
-                <div className="w-full h-auto lg:h-185 md:w-4/5 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                    {products.map((product) => (
-                        <ProductCard key={product.id} product={product} />
-                    ))}
+                <div className="flex flex-col md:flex-row gap-8">
+                    {/* Sidebar Filter */}
+                    <div className="md:w-1/5 shrink-0">
+                        <div className="sticky top-4">
+                            <FilterProduct brands={brands} />
+                        </div>
+                    </div>
+
+                    {/* Products Grid */}
+                    <div className="flex-1">
+                        {products.length > 0 ? (
+                            <>
+                                <div className="mb-6 flex items-center justify-between">
+                                    <p className="text-sm text-gray-600">
+                                        Showing <span className="font-semibold text-gray-900">{products.length}</span> products
+                                    </p>
+                                </div>
+                                
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                                    {products.map((product) => (
+                                        <div 
+                                            key={product.id}
+                                            className="transform transition-all duration-300 hover:-translate-y-1"
+                                        >
+                                            <ProductCard product={product} />
+                                        </div>
+                                    ))}
+                                </div>
+                            </>
+                        ) : (
+                            <div className="flex flex-col items-center justify-center py-20 px-4">
+                                <div className="text-8xl mb-6">🔍</div>
+                                <h3 className="text-2xl font-bold text-gray-800 mb-2">No products found</h3>
+                                <p className="text-gray-600 text-center max-w-md">
+                                    Try adjusting your filters or search criteria to find what you're looking for
+                                </p>
+                            </div>
+                        )}
+                        
+                        {/* Pagination */}
+                        {products.length > 0 && (
+                            <div className="mt-12">
+                                <Pagination 
+                                    currentPage={res.data?.meta?.page as number} 
+                                    totalPages={res.data?.meta?.pages as number} 
+                                />
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
-            {/* Phân trang có thể thêm vào đây nếu cần */}
-            <Pagination currentPage={res.data?.meta?.page as number} totalPages={res.data?.meta?.pages as number} />
         </div>
     );
 }

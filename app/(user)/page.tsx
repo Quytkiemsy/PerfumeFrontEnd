@@ -43,13 +43,13 @@ export default async function Home() {
     },
   });
 
-  const vintageVibeProduct = await sendRequest<IBackendRes<IModelPaginate<IProduct>>>({
+  const calvinKleinProduct = await sendRequest<IBackendRes<IModelPaginate<IProduct>>>({
     url: `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/products`,
     method: 'GET',
     queryParams: {
       page: 0,
       size: 1,
-      filter: "brand.name='Vintage Vibe'",
+      filter: "brand.name='Calvin Klein'",
     },
   });
   const chanelProduct = await sendRequest<IBackendRes<IModelPaginate<IProduct>>>({
@@ -70,13 +70,13 @@ export default async function Home() {
       filter: "brand.name='Dior'",
     },
   });
-  const byredoProduct = await sendRequest<IBackendRes<IModelPaginate<IProduct>>>({
+  const versaceProduct = await sendRequest<IBackendRes<IModelPaginate<IProduct>>>({
     url: `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/products`,
     method: 'GET',
     queryParams: {
       page: 0,
       size: 1,
-      filter: "brand.name='Byredo'",
+      filter: "brand.name='Versace'",
     },
   });
   const tomFordProduct = await sendRequest<IBackendRes<IModelPaginate<IProduct>>>({
@@ -107,10 +107,10 @@ export default async function Home() {
         menProduct={menProduct.data?.result[0] as IProduct}
         womenProduct={womenProduct.data?.result[0] as IProduct}
         unisexProduct={unisexProduct.data?.result[0] as IProduct}
-        vintageVibeProduct={vintageVibeProduct.data?.result[0] as IProduct}
+        calvinKleinProduct={calvinKleinProduct.data?.result[0] as IProduct}
         chanelProduct={chanelProduct.data?.result[0] as IProduct}
         diorProduct={diorProduct.data?.result[0] as IProduct}
-        byredoProduct={byredoProduct.data?.result[0] as IProduct}
+        versaceProduct={versaceProduct.data?.result[0] as IProduct}
         tomFordProduct={tomFordProduct.data?.result[0] as IProduct}
         sortedProductByPrice={sortedProductByPrice.data?.result || [] as IProduct[]}
       />
