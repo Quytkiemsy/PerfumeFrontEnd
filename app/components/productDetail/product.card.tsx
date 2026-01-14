@@ -3,12 +3,101 @@
 import { formatPrice, getMinPrice } from "@/app/util/api";
 import Image from "next/image";
 import Link from "next/link";
+import { useState, useEffect } from "react";
+import { useLikedProductsStore } from "@/app/store/likedProductsStore";
+import { useCartStore } from "@/app/store/cartStore";
+import { useSession } from "next-auth/react";
+import toast from "react-hot-toast";
+import { Heart, ShoppingCart } from "lucide-react";
+import { sendRequest } from "@/app/util/api";
 
 interface ProductCardProps {
     product: IProduct;
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
+    const [isLiked, setIsLiked] = useState(false);
+    const [isLiking, setIsLiking] = useState(false);
+    const addItem = useCartStore(state => state.addItem);
+    const { data: session } = useSession();
+    const likedProducts = useLikedProductsStore(state => state.likedProducts);
+
+    // Set isLiked if product.id is in zustand likedProducts
+    useEffect(() => {
+        if (Array.isArray(likedProducts)) {
+            setIsLiked(likedProducts.some((p) => p.id == product.id));
+        } else {
+            setIsLiked(false);
+        }
+    }, [likedProducts, product.id]);
+
+    const handleAddToCart = async (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        if (!product || !product.perfumeVariants || product.perfumeVariants.length === 0) {
+            toast.error('No variants available for this product.');
+            return;
+        }
+
+        // Get the first available variant
+        const availableVariant = product.perfumeVariants.find(v => (v.stockQuantity ?? 0) > 0);
+        
+        if (!availableVariant) {
+            toast.error('Product is out of stock.');
+            return;
+        }
+
+        const productCart: IProduct = {
+            id: product.id,
+            name: product.name,
+            brand: product.brand,
+            images: product.images,
+            description: product.description,
+            details: product.details,
+            perfumeVariants: [availableVariant],
+        };
+
+        if (session?.user?.username) {
+            addItem(productCart, session.user.username);
+        } else {
+            addItem(productCart, localStorage.getItem('guestId') || '', 1);
+        }
+        toast.success('Added to cart successfully!');
+    };
+
+    const handleLike = async (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        if (!session?.user?.username) {
+            toast.error('Please login to like products.');
+            return;
+        }
+
+        setIsLiking(true);
+        try {
+            const url = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/users/${session.user.username}/like/${product.id}`;
+            await sendRequest<void>({
+                url,
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(session?.accessToken ? { 'Authorization': `Bearer ${session.accessToken}` } : {})
+                }
+            });
+            setIsLiked(!isLiked);
+            toast.success(isLiked ? 'Removed from favorites!' : 'Added to favorites!');
+            // Trigger a custom event to update the header count
+            window.dispatchEvent(new Event('likeCountUpdated'));
+        } catch (error) {
+            console.error('Error liking product:', error);
+            toast.error('An error occurred. Please try again.');
+        } finally {
+            setIsLiking(false);
+        }
+    };
+
     return (
         <Link href={`/product/${product.id}`}>
             <div className="h-full relative bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 group">
@@ -25,6 +114,19 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                         </span>
                     )}
                 </div>
+
+                {/* Like Button */}
+                <button
+                    onClick={handleLike}
+                    disabled={isLiking}
+                    className="absolute top-3 right-3 z-20 p-2.5 bg-white/90 backdrop-blur-sm rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-110 disabled:opacity-50"
+                >
+                    <Heart
+                        className={`w-5 h-5 transition-colors ${
+                            isLiked ? 'fill-red-500 text-red-500' : 'text-gray-600 hover:text-red-500'
+                        }`}
+                    />
+                </button>
 
                 {/* Product Image */}
                 <div className="relative w-full h-64 overflow-hidden bg-gradient-to-br from-gray-100 to-gray-50">
@@ -121,9 +223,18 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                     </div>
 
                     {/* CTA Button */}
-                    <button className="w-full mt-3 py-3 bg-gradient-to-r from-gray-800 to-gray-900 text-white font-bold rounded-xl opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300 hover:from-gray-900 hover:to-black shadow-lg">
-                        View Details →
-                    </button>
+                    <div className="flex gap-2 mt-3">
+                        <button
+                            onClick={handleAddToCart}
+                            className="flex-1 py-3 bg-gradient-to-r from-gray-800 to-gray-900 text-white font-bold rounded-xl opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300 hover:from-gray-900 hover:to-black shadow-lg flex items-center justify-center gap-2"
+                        >
+                            <ShoppingCart className="w-4 h-4" />
+                            Add to Cart
+                        </button>
+                        <button className="py-3 px-4 bg-white border-2 border-gray-800 text-gray-800 font-bold rounded-xl opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300 hover:bg-gray-50 shadow-lg">
+                            →
+                        </button>
+                    </div>
                 </div>
             </div>
         </Link>

@@ -1,10 +1,11 @@
 // components/Header.tsx
 import CounterShoppingBar from "@/app/components/header/counter.shoppingbar";
+import CounterLikeBar from "@/app/components/header/counter.likebar";
 import LoginPopup from "@/app/components/login/login.modal";
 import MobileMenu, { ButtonLogout } from "@/app/components/moblieMenu/mobile.menu";
 import { authOptions } from "@/app/lib/auth/authOptions";
 import { SEX_OPTIONS, TIERS_OPTIONS } from "@/app/util/api";
-import { Heart, Search } from "lucide-react";
+import { Search } from "lucide-react";
 import { getServerSession } from "next-auth";
 import Link from "next/link";
 
@@ -81,12 +82,9 @@ export default async function Header({ brands }: { brands: IBrand[] }) {
                         </button>
 
                         {/* Wishlist (Desktop only) */}
-                        <button className="hidden lg:block p-2 rounded-full hover:bg-gray-100 transition-all duration-300 group relative">
-                            <Heart className="w-5 h-5 text-gray-600 group-hover:text-red-500 transition-colors" />
-                            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-4 h-4 rounded-full flex items-center justify-center">
-                                0
-                            </span>
-                        </button>
+                        <div className="hidden lg:block">
+                            <CounterLikeBar />
+                        </div>
 
                         {/* Shopping Cart */}
                         <div className="relative">

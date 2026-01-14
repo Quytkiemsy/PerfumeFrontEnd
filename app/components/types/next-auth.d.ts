@@ -9,6 +9,7 @@ export interface IUser {
     type: string;
     role: string;
     image?: string;
+    likedProducts?: IProduct[];
 }
 
 
