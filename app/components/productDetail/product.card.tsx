@@ -21,6 +21,8 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     const addItem = useCartStore(state => state.addItem);
     const { data: session } = useSession();
     const likedProducts = useLikedProductsStore(state => state.likedProducts);
+    const addLikedProduct = useLikedProductsStore(state => state.addLikedProduct);
+    const removeLikedProduct = useLikedProductsStore(state => state.removeLikedProduct);
 
     // Set isLiked if product.id is in zustand likedProducts
     useEffect(() => {
@@ -77,21 +79,40 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
 
         setIsLiking(true);
         try {
-            const url = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/users/${session.user.username}/like/${product.id}`;
-            await sendRequest<void>({
-                url,
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    ...(session?.accessToken ? { 'Authorization': `Bearer ${session.accessToken}` } : {})
-                }
-            });
-            setIsLiked(!isLiked);
-            toast.success(isLiked ? 'Removed from favorites!' : 'Added to favorites!');
+            if (isLiked) {
+                // Dislike: remove from favorites
+                const url = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/users/${session.user.username}/dislike/${product.id}`;
+                await sendRequest<void>({
+                    url,
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...(session?.accessToken ? { 'Authorization': `Bearer ${session.accessToken}` } : {})
+                    }
+                });
+                removeLikedProduct(product.id);
+                setIsLiked(false);
+                toast.success('Removed from favorites!');
+            } else {
+                // Like: add to favorites
+                const url = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/users/${session.user.username}/like/${product.id}`;
+                await sendRequest<void>({
+                    url,
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...(session?.accessToken ? { 'Authorization': `Bearer ${session.accessToken}` } : {})
+                    }
+                });
+                addLikedProduct(product);
+                setIsLiked(true);
+                toast.success('Added to favorites!');
+            }
+            
             // Trigger a custom event to update the header count
             window.dispatchEvent(new Event('likeCountUpdated'));
         } catch (error) {
-            console.error('Error liking product:', error);
+            console.error('Error updating favorites:', error);
             toast.error('An error occurred. Please try again.');
         } finally {
             setIsLiking(false);

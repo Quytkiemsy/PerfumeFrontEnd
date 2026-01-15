@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { sendRequest } from "@/app/util/api";
 import { IUser } from "../types/next-auth";
 import { useLikedProductsStore } from "@/app/store/likedProductsStore";
+import Link from "next/link";
 
 export default function CounterLikeBar() {
     const [likeCount, setLikeCount] = useState<number>(0);
@@ -52,13 +53,13 @@ export default function CounterLikeBar() {
     }, [session]);
 
     return (
-        <button className="p-2 rounded-full hover:bg-gray-100 transition-all duration-300 group relative">
+        <Link href="/like" className="inline-block p-2 rounded-full hover:bg-gray-100 transition-all duration-300 group relative">
             <Heart className="w-5 h-5 text-gray-600 group-hover:text-red-500 transition-colors" />
             {likeCount > 0 && (
                 <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-4 h-4 rounded-full flex items-center justify-center">
                     {likeCount > 9 ? '9+' : likeCount}
                 </span>
             )}
-        </button>
+        </Link>
     );
 }
