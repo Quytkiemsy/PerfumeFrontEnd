@@ -5,9 +5,9 @@ import LoginPopup from "@/app/components/login/login.modal";
 import MobileMenu, { ButtonLogout } from "@/app/components/moblieMenu/mobile.menu";
 import { authOptions } from "@/app/lib/auth/authOptions";
 import { SEX_OPTIONS, TIERS_OPTIONS } from "@/app/util/api";
-import { Search } from "lucide-react";
 import { getServerSession } from "next-auth";
 import Link from "next/link";
+import SearchForm from "@/app/components/header/search.form";
 
 
 export default async function Header({ brands }: { brands: IBrand[] }) {
@@ -77,9 +77,7 @@ export default async function Header({ brands }: { brands: IBrand[] }) {
                     {/* Right: Icons + Auth */}
                     <div className="flex items-center gap-3 lg:gap-5 flex-1 justify-end">
                         {/* Search Icon */}
-                        <button className="p-2 rounded-full hover:bg-gray-100 transition-all duration-300 group">
-                            <Search className="w-5 h-5 text-gray-600 group-hover:text-gray-900 transition-colors" />
-                        </button>
+                        <SearchForm />
 
                         {/* Wishlist (Desktop only) */}
                         <div className="hidden lg:block">

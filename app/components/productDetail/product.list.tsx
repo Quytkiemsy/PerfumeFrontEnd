@@ -13,39 +13,79 @@ export default async function ListProduct({ searchParams, brands }: { searchPara
     let filterArr: string[] = [];
 
     const params = await searchParams;
+    
+    // Determine if this is a search request
+    const isSearchMode = !!params.keyword;
+    
     if (params.page) {
         queryParams.page = parseInt(params.page as string, 10) - 1;
     }
-    if (params.brand) {
-        filterArr.push(`brand.name='${params.brand}'`);
-    }
-    if (params.volume && params.volume !== 'all') {
-        if (params.volume !== '100+') {
-            filterArr.push(`perfumeVariants.volume<='${params.volume}'`);
-        } else {
-            filterArr.push(`perfumeVariants.volume>='${params.volume}'`);
+
+    // For search mode, use different API and params
+    if (isSearchMode) {
+        queryParams.keyword = params.keyword;
+        
+        // Add other search params
+        if (params.brandId) {
+            queryParams.brandId = params.brandId;
+        }
+        if (params.fragranceTypeId) {
+            queryParams.fragranceTypeId = params.fragranceTypeId;
+        }
+        if (params.tier) {
+            queryParams.tier = params.tier;
+        }
+        if (params.sex) {
+            queryParams.sex = params.sex;
+        }
+        if (params.isNew) {
+            queryParams.isNew = params.isNew;
+        }
+        if (params.minPrice) {
+            queryParams.minPrice = params.minPrice;
+        }
+        if (params.maxPrice) {
+            queryParams.maxPrice = params.maxPrice;
+        }
+    } else {
+        // Original filter logic for non-search mode
+        if (params.brand) {
+            filterArr.push(`brand.name='${params.brand}'`);
+        }
+        if (params.volume && params.volume !== 'all') {
+            if (params.volume !== '100+') {
+                filterArr.push(`perfumeVariants.volume<='${params.volume}'`);
+            } else {
+                filterArr.push(`perfumeVariants.volume>='${params.volume}'`);
+            }
+        }
+        if (params.priceFrom) {
+            filterArr.push(`perfumeVariants.price>='${params.priceFrom}'`);
+        }
+        if (params.priceTo) {
+            filterArr.push(`perfumeVariants.price<='${params.priceTo}'`);
+        }
+        if (params.sex) {
+            filterArr.push(`sex='${params.sex}'`);
+        }
+        if (params.tier) {
+            filterArr.push(`tier='${params.tier}'`);
+        }
+        if (params.isNew) {
+            filterArr.push(`isNew=true`);
+        }
+        if (filterArr.length > 0) {
+            queryParams.filter = filterArr.join(' and ');
         }
     }
-    if (params.priceFrom) {
-        filterArr.push(`perfumeVariants.price>='${params.priceFrom}'`);
-    }
-    if (params.priceTo) {
-        filterArr.push(`perfumeVariants.price<='${params.priceTo}'`);
-    }
-    if (params.sex) {
-        filterArr.push(`sex='${params.sex}'`);
-    }
-    if (params.tier) {
-        filterArr.push(`tier='${params.tier}'`);
-    }
-    if (params.isNew) {
-        filterArr.push(`isNew=true`);
-    }
-    if (filterArr.length > 0) {
-        queryParams.filter = filterArr.join(' and ');
-    }
+
+    // Call appropriate API based on mode
+    const apiUrl = isSearchMode 
+        ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/products/search`
+        : `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/products`;
+
     const res = await sendRequest<IBackendRes<IModelPaginate<IProduct>>>({
-        url: `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/products`,
+        url: apiUrl,
         method: 'GET',
         queryParams: queryParams
     });
@@ -57,10 +97,10 @@ export default async function ListProduct({ searchParams, brands }: { searchPara
                 {/* Header Section */}
                 <div className="mb-8 text-center">
                     <h1 className="text-2xl md:text-2xl font-bold bg-gradient-to-r from-gray-700 to-gray-900 bg-clip-text text-transparent mb-3">
-                        ✨ Explore Our Collection
+                        {isSearchMode ? `🔍 Search Results for "${params.keyword}"` : '✨ Explore Our Collection'}
                     </h1>
                     <p className="text-gray-600 text-md">
-                        Discover your signature scent from our curated selection
+                        {isSearchMode ? `Found ${products.length} product${products.length !== 1 ? 's' : ''}` : 'Discover your signature scent from our curated selection'}
                     </p>
                 </div>
 
