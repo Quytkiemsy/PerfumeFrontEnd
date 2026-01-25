@@ -34,7 +34,7 @@ export default function CartPage() {
         }
     }, [session?.user?.username, fetchCart]);
 
-    // Check stock availability when items change
+    // Check stock availability every 10 seconds
     useEffect(() => {
         const checkStock = async () => {
             if (!items || items.length === 0) return;
@@ -49,7 +49,7 @@ export default function CartPage() {
                 }));
 
                 const res = await sendRequest<IBackendRes<StockAvailabilityResponse>>({
-                    url: `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/check-stock`,
+                    url: `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/orders/check-stock`,
                     method: 'POST',
                     body: cartItems,
                 });
@@ -68,9 +68,15 @@ export default function CartPage() {
         };
 
         if (hasHydrated && items.length > 0) {
+            // Check immediately on mount/items change
             checkStock();
+            
+            // Then check every 10 seconds
+            const intervalId = setInterval(checkStock, 10000);
+            
+            return () => clearInterval(intervalId);
         }
-    }, [items, hasHydrated, session?.accessToken, status]);
+    }, [items, hasHydrated]);
 
     // Helper function to get stock status for a variant
     const getStockStatus = (variantId: number | undefined) => {

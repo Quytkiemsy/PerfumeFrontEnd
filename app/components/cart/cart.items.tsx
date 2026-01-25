@@ -157,7 +157,7 @@ export function CartItem({ item, stockStatus }: CartItemProps) {
                 </span>
                 <button
                     onClick={() => handleQuantityChange(item.quantity + 1)}
-                    disabled={isOutOfStock || (stockStatus && item.quantity >= stockStatus.availableStock)}
+                    disabled={isOutOfStock || !!(stockStatus && item.quantity >= stockStatus.availableStock)}
                     className={`w-8 h-8 flex items-center justify-center border rounded text-lg transition-colors
                         ${isOutOfStock || (stockStatus && item.quantity >= stockStatus.availableStock)
                             ? 'border-gray-200 text-gray-300 cursor-not-allowed'

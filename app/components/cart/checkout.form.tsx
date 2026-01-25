@@ -2,17 +2,17 @@
 'use client';
 
 import { useCartStore } from '@/app/store/cartStore';
+import { orderApi } from '@/app/util/orderApi';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { AlertTriangle, ArrowLeft, CheckCircle2, Clock, CreditCard, FileText, Mail, MapPin, Package, Phone, Shield, ShoppingBag, Tag, Truck, User } from 'lucide-react';
 import { useSession } from "next-auth/react";
 import Image from 'next/image';
-import { useEffect, useState, useRef, useCallback } from 'react';
-import { z } from 'zod';
-import toast from 'react-hot-toast';
-import { sendRequest } from '@/app/util/api';
 import { useRouter } from 'next/navigation';
-import { ShoppingBag, Truck, CreditCard, Tag, Shield, CheckCircle2, User, Phone, Mail, MapPin, FileText, Package, Clock, AlertTriangle } from 'lucide-react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import toast from 'react-hot-toast';
+import { z } from 'zod';
 
 interface ProductStockInfo {
     variantId: number;
@@ -72,7 +72,9 @@ export default function CheckoutForm() {
     const [countdown, setCountdown] = useState(15 * 60); // 15 minutes in seconds
     const [isReserving, setIsReserving] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isReleasingReservation, setIsReleasingReservation] = useState(false);
     const countdownRef = useRef<NodeJS.Timeout | null>(null);
+    const isReservedRef = useRef(false); // Track reservation state for cleanup
 
     // Get userId helper
     const getUserId = useCallback(() => {
@@ -104,21 +106,16 @@ export default function CheckoutForm() {
                     }
                 }));
 
-
-                // let url = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/reserve?userId=${userId}`;
-                let url = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/reserve`;
-                const res = await sendRequest<IBackendRes<any>>({
-                    url: url,
-                    method: 'POST',
-                    body: cartItems,
-                    queryParams: {
-                        userId: userId
-                    },
-                });
+                // Use orderApi for reserve stock
+                const res = await orderApi.reserveStock(
+                    userId,
+                    cartItems,
+                );
 
                 if (res.statusCode === 200) {
                     setIsReserved(true);
-                    setCountdown(15 * 60); // Reset countdown to 15 minutes
+                    isReservedRef.current = true;
+                    setCountdown(30); // Reset countdown to 15 minutes
                     toast.success("Đã giữ hàng thành công! Bạn có 15 phút để hoàn tất đơn hàng.");
                 } else if (res.statusCode === 409) {
                     setReservationError("Sản phẩm vừa hết, quay lại giỏ hàng");
@@ -138,7 +135,8 @@ export default function CheckoutForm() {
         if (hasHydrated && items.length > 0 && !isReserved && !isReserving) {
             reserveStock();
         }
-    }, [items, hasHydrated, session?.accessToken, status, isReserved, isReserving, getUserId]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [hasHydrated, items.length]);
 
     // Countdown timer
     useEffect(() => {
@@ -148,7 +146,15 @@ export default function CheckoutForm() {
                     if (prev <= 1) {
                         // Time's up - release reservation
                         clearInterval(countdownRef.current!);
+                        
+                        // Release reservation immediately when countdown expires
+                        const userId = getUserId();
+                        orderApi.releaseReservation(userId)
+                            .then(() => console.log('Reservation released due to timeout'))
+                            .catch(console.error);
+                        
                         setIsReserved(false);
+                        isReservedRef.current = false;
                         setReservationError("Thời gian giữ hàng đã hết, vui lòng thử lại");
                         toast.error("Thời gian giữ hàng đã hết!");
                         return 0;
@@ -163,21 +169,61 @@ export default function CheckoutForm() {
                 clearInterval(countdownRef.current);
             }
         };
-    }, [isReserved, countdown]);
+    }, [isReserved, countdown, getUserId]);
 
     // Release reservation on unmount
     useEffect(() => {
+        const userId = getUserId();
+        
         return () => {
-            if (isReserved) {
-                const userId = getUserId();
-                // Fire and forget - release reservation
-                fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/reserve/${encodeURIComponent(userId)}`, {
-                    method: 'DELETE',
-                    headers: session?.accessToken ? { 'Authorization': `Bearer ${session.accessToken}` } : {}
-                }).catch(console.error);
+            // Use ref to check if reservation is active (more reliable than state)
+            if (isReservedRef.current) {
+                // Fire and forget - release reservation using orderApi
+                orderApi.releaseReservation(userId)
+                    .then(() => console.log('Reservation released on unmount'))
+                    .catch(console.error);
             }
         };
-    }, [isReserved, getUserId, session?.accessToken]);
+    }, [getUserId]);
+
+    // Manual release reservation function
+    const handleReleaseReservation = async () => {
+        if (!isReserved) return;
+        
+        setIsReleasingReservation(true);
+        try {
+            const userId = getUserId();
+            const res = await orderApi.releaseReservation(userId);
+            
+            if (res.statusCode === 200 || !res.error) {
+                // Stop countdown timer
+                if (countdownRef.current) {
+                    clearInterval(countdownRef.current);
+                }
+                setIsReserved(false);
+                isReservedRef.current = false;
+                setCountdown(0);
+                toast.success("Đã hủy giữ hàng thành công!");
+                router.push('/cart');
+            } else {
+                toast.error("Có lỗi xảy ra khi hủy giữ hàng!");
+            }
+        } catch (error) {
+            console.error('Error releasing reservation:', error);
+            toast.error("Có lỗi xảy ra khi hủy giữ hàng!");
+        } finally {
+            setIsReleasingReservation(false);
+        }
+    };
+
+    // Handle back to cart (with reservation release)
+    const handleBackToCart = async () => {
+        if (isReserved) {
+            await handleReleaseReservation();
+        } else {
+            router.push('/cart');
+        }
+    };
 
     // Format countdown display
     const formatCountdown = (seconds: number) => {
@@ -254,23 +300,17 @@ export default function CheckoutForm() {
         console.log('Order submitted:', newOrder);
 
         try {
-            // Call API /orders/create-new with double-check + pessimistic lock
-            const requestOptions: any = {
-                url: `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/orders/create-new`,
-                method: 'POST',
-                body: newOrder,
-            };
-            if (status === 'authenticated' && session?.accessToken) {
-                requestOptions.headers = {
-                    'Authorization': `Bearer ${session.accessToken}`
-                };
-            }
-            const res = await sendRequest<IBackendRes<IOrder>>(requestOptions);
+            // Use orderApi for creating order with double-check + pessimistic lock
+            const res = await orderApi.createOrderNew(
+                newOrder,
+                session?.accessToken || null
+            );
 
             if (res.statusCode === 409) {
                 // Out of stock - conflict
                 toast.error("Sản phẩm đã hết hàng, vui lòng quay lại giỏ hàng!");
                 setIsReserved(false);
+                isReservedRef.current = false;
                 router.push('/cart');
                 return;
             }
@@ -285,6 +325,7 @@ export default function CheckoutForm() {
                 clearInterval(countdownRef.current);
             }
             setIsReserved(false); // Prevent cleanup from releasing reservation (already handled by backend)
+            isReservedRef.current = false;
 
             toast.success("Đặt hàng thành công!");
 
@@ -318,6 +359,28 @@ export default function CheckoutForm() {
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 py-8">
             <div className="max-w-7xl mx-auto px-4">
+                {/* Back Button */}
+                <div className="mb-4">
+                    <Button
+                        variant="ghost"
+                        onClick={handleBackToCart}
+                        disabled={isReleasingReservation}
+                        className="flex items-center gap-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+                    >
+                        {isReleasingReservation ? (
+                            <>
+                                <div className="animate-spin w-4 h-4 border-2 border-gray-600 border-t-transparent rounded-full"></div>
+                                <span>Đang hủy giữ hàng...</span>
+                            </>
+                        ) : (
+                            <>
+                                <ArrowLeft className="w-4 h-4" />
+                                <span>Quay lại giỏ hàng</span>
+                            </>
+                        )}
+                    </Button>
+                </div>
+
                 {/* Header */}
                 <div className="mb-8">
                     <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">

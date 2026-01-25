@@ -1,6 +1,7 @@
 'use client';
 
 import { sendRequest } from '@/app/util/api';
+import { orderApi } from '@/app/util/orderApi';
 import {
     AlertCircle,
     ArrowBigRightDash,
@@ -158,21 +159,26 @@ const OrderDetailPage: React.FC<IOrderProps> = ({ order }: IOrderProps) => {
 
     const confirmCancelOrder = async () => {
         if (orderId != null) {
-
-            // call api to save the product
-            const res = await sendRequest<IBackendRes<IOrder>>({
-                url: `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/orders/${orderId}`,
-                method: 'DELETE',
-            });
-            setShowCancelDialog(false);
-            setOrderId(null);
-            if (res.error as any) {
-                toast.error(res.message);
-                return;
-            } else {
-                toast.success("Hủy đơn hàng thành công");
+            try {
+                // Use cancelOrderNew API - restores stock automatically
+                const res = await orderApi.cancelOrderNew(orderId);
+                
+                setShowCancelDialog(false);
+                setOrderId(null);
+                
+                if (res.error) {
+                    toast.error(res.message || "Có lỗi xảy ra khi hủy đơn hàng");
+                    return;
+                }
+                
+                toast.success("Hủy đơn hàng thành công! Số lượng sản phẩm đã được hoàn lại.");
                 // refresh list data
-                router.refresh()
+                router.refresh();
+            } catch (error) {
+                console.error('Error cancelling order:', error);
+                toast.error("Có lỗi xảy ra khi hủy đơn hàng");
+                setShowCancelDialog(false);
+                setOrderId(null);
             }
         }
     };
