@@ -1,13 +1,31 @@
 "use client"
 import { CartItem } from "@/app/components/cart/cart.items"
 import { useCartStore } from "@/app/store/cartStore"
+import { sendRequest } from "@/app/util/api"
 import { useSession } from "next-auth/react"
 import Link from "next/link"
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
+import toast from "react-hot-toast"
+
+interface ProductStockInfo {
+    variantId: number;
+    requestedQuantity: number;
+    availableStock: number;
+    available: boolean;
+    message?: string;
+}
+
+interface StockAvailabilityResponse {
+    allAvailable: boolean;
+    products: ProductStockInfo[];
+}
 
 export default function CartPage() {
     const { items, totalItems, totalPrice, hasHydrated, clearCart, fetchCart } = useCartStore();
     const { data: session, status } = useSession();
+    const [stockInfo, setStockInfo] = useState<StockAvailabilityResponse | null>(null);
+    const [isCheckingStock, setIsCheckingStock] = useState(false);
+
     useEffect(() => {
         if (status === "authenticated" && session?.user?.username) {
             fetchCart(session.user.username);
@@ -15,6 +33,50 @@ export default function CartPage() {
             fetchCart(localStorage.getItem('guestId') || '');
         }
     }, [session?.user?.username, fetchCart]);
+
+    // Check stock availability when items change
+    useEffect(() => {
+        const checkStock = async () => {
+            if (!items || items.length === 0) return;
+
+            setIsCheckingStock(true);
+            try {
+                const cartItems = items.map(item => ({
+                    quantity: item.quantity,
+                    perfumeVariants: {
+                        id: item.perfumeVariants?.id
+                    }
+                }));
+
+                const res = await sendRequest<IBackendRes<StockAvailabilityResponse>>({
+                    url: `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/check-stock`,
+                    method: 'POST',
+                    body: cartItems,
+                });
+
+                if (res && res.statusCode === 200) {
+                    setStockInfo(res.data || null);
+                    if (!res.data?.allAvailable) {
+                        toast.error("Một số sản phẩm trong giỏ hàng đã hết hoặc không đủ số lượng!");
+                    }
+                }
+            } catch (error) {
+                console.error('Error checking stock:', error);
+            } finally {
+                setIsCheckingStock(false);
+            }
+        };
+
+        if (hasHydrated && items.length > 0) {
+            checkStock();
+        }
+    }, [items, hasHydrated, session?.accessToken, status]);
+
+    // Helper function to get stock status for a variant
+    const getStockStatus = (variantId: number | undefined) => {
+        if (!stockInfo || !variantId) return null;
+        return stockInfo.products.find(p => p.variantId === variantId);
+    };
 
     const handleClearCart = () => {
         if (session?.user?.username) {
@@ -154,10 +216,40 @@ export default function CartPage() {
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     {/* Cart Items */}
                     <div className="lg:col-span-2">
+                        {/* Inline Stock Checking Indicator */}
+                        <div className="relative mb-2">
+                            {isCheckingStock && (
+                                <div className="absolute left-0 top-0 w-full flex items-center justify-center z-10">
+                                    <div className="flex items-center gap-2 bg-blue-50 border border-blue-200 rounded-full px-3 py-1 shadow-sm">
+                                        <div className="animate-spin w-3 h-3 border-2 border-blue-600 border-t-transparent rounded-full"></div>
+                                        <span className="text-xs text-blue-700">Đang kiểm tra tồn kho...</span>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                        {/* Stock Warning Banner (giữ lại, nhưng thu nhỏ margin) */}
+                        {stockInfo && !stockInfo.allAvailable && (
+                            <div className="mb-2 p-3 bg-yellow-50 border border-yellow-200 rounded-xl flex items-start gap-2">
+                                <svg className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                                </svg>
+                                <div>
+                                    <p className="font-semibold text-yellow-800 text-sm">Một số sản phẩm không đủ số lượng</p>
+                                    <p className="text-xs text-yellow-700 mt-0.5">
+                                        Vui lòng điều chỉnh số lượng hoặc xóa sản phẩm hết hàng để tiếp tục thanh toán.
+                                    </p>
+                                </div>
+                            </div>
+                        )}
+
                         <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
                             <div className="divide-y divide-gray-100">
                                 {items && items?.map(item => (
-                                    <CartItem key={item.id} item={item} />
+                                    <CartItem
+                                        key={item.id}
+                                        item={item}
+                                        stockStatus={getStockStatus(item.perfumeVariants?.id)}
+                                    />
                                 ))}
                             </div>
                         </div>
@@ -208,14 +300,28 @@ export default function CartPage() {
                                 </div>
 
                                 {/* Checkout Button */}
-                                <Link href="/checkout">
-                                    <button className="w-full bg-gradient-to-r from-gray-800 to-gray-900 text-white py-4 px-6 rounded-xl text-lg font-bold hover:from-gray-900 hover:to-black transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95 mt-4">
-                                        Proceed to Checkout
-                                        <svg className="w-5 h-5 inline-block ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                                        </svg>
-                                    </button>
-                                </Link>
+                                {stockInfo && !stockInfo.allAvailable ? (
+                                    <div className="mt-4">
+                                        <button
+                                            disabled
+                                            className="w-full bg-gray-400 text-white py-4 px-6 rounded-xl text-lg font-bold cursor-not-allowed opacity-70"
+                                        >
+                                            Không thể thanh toán
+                                        </button>
+                                        <p className="text-center text-sm text-red-600 mt-2">
+                                            Vui lòng điều chỉnh giỏ hàng trước khi thanh toán
+                                        </p>
+                                    </div>
+                                ) : (
+                                    <Link href="/checkout">
+                                        <button className="w-full bg-gradient-to-r from-gray-800 to-gray-900 text-white py-4 px-6 rounded-xl text-lg font-bold hover:from-gray-900 hover:to-black transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95 mt-4">
+                                            Proceed to Checkout
+                                            <svg className="w-5 h-5 inline-block ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                                            </svg>
+                                        </button>
+                                    </Link>
+                                )}
 
                                 {/* Security Badge */}
                                 <div className="flex items-center justify-center gap-2 text-sm text-gray-500 pt-4">

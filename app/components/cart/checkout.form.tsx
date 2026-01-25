@@ -7,12 +7,25 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { useSession } from "next-auth/react";
 import Image from 'next/image';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { z } from 'zod';
 import toast from 'react-hot-toast';
 import { sendRequest } from '@/app/util/api';
 import { useRouter } from 'next/navigation';
-import { ShoppingBag, Truck, CreditCard, Tag, Shield, CheckCircle2, User, Phone, Mail, MapPin, FileText, Package } from 'lucide-react';
+import { ShoppingBag, Truck, CreditCard, Tag, Shield, CheckCircle2, User, Phone, Mail, MapPin, FileText, Package, Clock, AlertTriangle } from 'lucide-react';
+
+interface ProductStockInfo {
+    variantId: number;
+    requestedQuantity: number;
+    availableStock: number;
+    available: boolean;
+    message?: string;
+}
+
+interface StockAvailabilityResponse {
+    allAvailable: boolean;
+    products: ProductStockInfo[];
+}
 
 
 interface FormData {
@@ -53,6 +66,19 @@ export default function CheckoutForm() {
     const [formErrors, setFormErrors] = useState<any>({});
     const router = useRouter();
 
+    // Stock reservation states
+    const [isReserved, setIsReserved] = useState(false);
+    const [reservationError, setReservationError] = useState<string | null>(null);
+    const [countdown, setCountdown] = useState(15 * 60); // 15 minutes in seconds
+    const [isReserving, setIsReserving] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const countdownRef = useRef<NodeJS.Timeout | null>(null);
+
+    // Get userId helper
+    const getUserId = useCallback(() => {
+        return session?.user?.username || localStorage.getItem('guestId') || '';
+    }, [session?.user?.username]);
+
     useEffect(() => {
         if (status === "authenticated" && session?.user?.username) {
             fetchCart(session.user.username);
@@ -60,6 +86,105 @@ export default function CheckoutForm() {
             fetchCart(localStorage.getItem('guestId') || '');
         }
     }, [session?.user?.username, fetchCart]);
+
+    // Reserve stock when entering checkout page
+    useEffect(() => {
+        const reserveStock = async () => {
+            if (!items || items.length === 0 || isReserved || isReserving) return;
+
+            setIsReserving(true);
+            setReservationError(null);
+
+            try {
+                const userId = getUserId();
+                const cartItems = items.map(item => ({
+                    quantity: item.quantity,
+                    perfumeVariants: {
+                        id: item.perfumeVariants?.id
+                    }
+                }));
+
+
+                // let url = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/reserve?userId=${userId}`;
+                let url = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/reserve`;
+                const res = await sendRequest<IBackendRes<any>>({
+                    url: url,
+                    method: 'POST',
+                    body: cartItems,
+                    queryParams: {
+                        userId: userId
+                    },
+                });
+
+                if (res.statusCode === 200) {
+                    setIsReserved(true);
+                    setCountdown(15 * 60); // Reset countdown to 15 minutes
+                    toast.success("Đã giữ hàng thành công! Bạn có 15 phút để hoàn tất đơn hàng.");
+                } else if (res.statusCode === 409) {
+                    setReservationError("Sản phẩm vừa hết, quay lại giỏ hàng");
+                    toast.error("Sản phẩm vừa hết, vui lòng quay lại giỏ hàng!");
+                } else {
+                    throw new Error('Failed to reserve stock');
+                }
+            } catch (error) {
+                console.error('Error reserving stock:', error);
+                setReservationError("Có lỗi xảy ra khi giữ hàng");
+                toast.error("Có lỗi xảy ra khi giữ hàng!");
+            } finally {
+                setIsReserving(false);
+            }
+        };
+
+        if (hasHydrated && items.length > 0 && !isReserved && !isReserving) {
+            reserveStock();
+        }
+    }, [items, hasHydrated, session?.accessToken, status, isReserved, isReserving, getUserId]);
+
+    // Countdown timer
+    useEffect(() => {
+        if (isReserved && countdown > 0) {
+            countdownRef.current = setInterval(() => {
+                setCountdown(prev => {
+                    if (prev <= 1) {
+                        // Time's up - release reservation
+                        clearInterval(countdownRef.current!);
+                        setIsReserved(false);
+                        setReservationError("Thời gian giữ hàng đã hết, vui lòng thử lại");
+                        toast.error("Thời gian giữ hàng đã hết!");
+                        return 0;
+                    }
+                    return prev - 1;
+                });
+            }, 1000);
+        }
+
+        return () => {
+            if (countdownRef.current) {
+                clearInterval(countdownRef.current);
+            }
+        };
+    }, [isReserved, countdown]);
+
+    // Release reservation on unmount
+    useEffect(() => {
+        return () => {
+            if (isReserved) {
+                const userId = getUserId();
+                // Fire and forget - release reservation
+                fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/reserve/${encodeURIComponent(userId)}`, {
+                    method: 'DELETE',
+                    headers: session?.accessToken ? { 'Authorization': `Bearer ${session.accessToken}` } : {}
+                }).catch(console.error);
+            }
+        };
+    }, [isReserved, getUserId, session?.accessToken]);
+
+    // Format countdown display
+    const formatCountdown = (seconds: number) => {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    };
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
@@ -76,6 +201,19 @@ export default function CheckoutForm() {
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+
+        // Check if reservation is valid
+        if (!isReserved) {
+            toast.error("Vui lòng đợi hệ thống giữ hàng!");
+            return;
+        }
+
+        if (countdown <= 0) {
+            toast.error("Thời gian giữ hàng đã hết, vui lòng thử lại!");
+            router.push('/cart');
+            return;
+        }
+
         const result = formSchema.safeParse(formData);
         if (!result.success) {
             setFormErrors(result.error.format());
@@ -83,7 +221,9 @@ export default function CheckoutForm() {
             return;
         }
         setFormErrors({});
-        // Xử lý submit đơn hàng
+        setIsSubmitting(true);
+
+        // Xử lý submit đơn hàng với double-check và pessimistic lock
         const newOrder = {
             status: 'PENDING',
             totalPrice: items.reduce((sum, item) => {
@@ -107,34 +247,52 @@ export default function CheckoutForm() {
                 perfumeVariants: {
                     id: item.perfumeVariants?.id
                 }
-
             })),
             shippingMethod: formData.shippingMethod,
             paymentMethod: formData.paymentMethod,
         };
         console.log('Order submitted:', newOrder);
 
-
-        // call api to save the product
-        const requestOptions: any = {
-            url: `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/orders`,
-            method: 'POST',
-            body: newOrder,
-        };
-        if (status === 'authenticated' && session?.accessToken) {
-            requestOptions.headers = {
-                'Authorization': `Bearer ${session.accessToken}`
+        try {
+            // Call API /orders/create-new with double-check + pessimistic lock
+            const requestOptions: any = {
+                url: `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/orders/create-new`,
+                method: 'POST',
+                body: newOrder,
             };
-        }
-        const res = await sendRequest<IBackendRes<IOrder>>(requestOptions);
-        if (res.error) {
-            toast.error("Lỗi khi lưu đơn hàng");
-            return;
-        } else {
-            toast.success("Lưu đơn hàng thành công");
+            if (status === 'authenticated' && session?.accessToken) {
+                requestOptions.headers = {
+                    'Authorization': `Bearer ${session.accessToken}`
+                };
+            }
+            const res = await sendRequest<IBackendRes<IOrder>>(requestOptions);
+
+            if (res.statusCode === 409) {
+                // Out of stock - conflict
+                toast.error("Sản phẩm đã hết hàng, vui lòng quay lại giỏ hàng!");
+                setIsReserved(false);
+                router.push('/cart');
+                return;
+            }
+
+            if (res.error) {
+                toast.error(res.message || "Lỗi khi lưu đơn hàng");
+                return;
+            }
+
+            // Success - stop countdown timer
+            if (countdownRef.current) {
+                clearInterval(countdownRef.current);
+            }
+            setIsReserved(false); // Prevent cleanup from releasing reservation (already handled by backend)
+
+            toast.success("Đặt hàng thành công!");
+
+            // Clear cart after successful order
+            handleClearCart();
+
             // Redirect to order confirmation page
             if (res.data && formData.paymentMethod === 'BANK') {
-                startLoading();
                 router.push(`/qr/${res.data.id}`);
             } else {
                 if (session?.accessToken) {
@@ -143,9 +301,12 @@ export default function CheckoutForm() {
                     router.push(`/my-orders/${res?.data.id}`);
                 }
             }
+        } catch (error) {
+            console.error('Error creating order:', error);
+            toast.error("Có lỗi xảy ra khi đặt hàng!");
+        } finally {
+            setIsSubmitting(false);
         }
-        // Clear cart after successful order
-        handleClearCart();
     };
 
     const shippingFee = 30000;
@@ -159,8 +320,47 @@ export default function CheckoutForm() {
             <div className="max-w-7xl mx-auto px-4">
                 {/* Header */}
                 <div className="mb-8">
-                    <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent mb-2">Thanh toán</h1>
-                    <p className="text-gray-600">Hoàn tất đơn hàng của bạn</p>
+                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                        <div>
+                            <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent mb-2">Thanh toán</h1>
+                            <p className="text-gray-600">Hoàn tất đơn hàng của bạn</p>
+                        </div>
+
+                        {/* Reservation Status */}
+                        {isReserving && (
+                            <div className="flex items-center gap-2 bg-blue-50 text-blue-700 px-4 py-2 rounded-xl">
+                                <div className="animate-spin w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full"></div>
+                                <span className="font-medium">Đang giữ hàng...</span>
+                            </div>
+                        )}
+
+                        {isReserved && countdown > 0 && (
+                            <div className={`flex items-center gap-2 px-4 py-3 rounded-xl font-semibold ${countdown <= 60
+                                ? 'bg-red-50 text-red-700 animate-pulse'
+                                : countdown <= 180
+                                    ? 'bg-yellow-50 text-yellow-700'
+                                    : 'bg-green-50 text-green-700'
+                                }`}>
+                                <Clock className="w-5 h-5" />
+                                <span>Giữ hàng: {formatCountdown(countdown)}</span>
+                            </div>
+                        )}
+
+                        {reservationError && (
+                            <div className="flex items-center gap-2 bg-red-50 text-red-700 px-4 py-3 rounded-xl">
+                                <AlertTriangle className="w-5 h-5" />
+                                <span className="font-medium">{reservationError}</span>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => router.push('/cart')}
+                                    className="ml-2 border-red-300 text-red-700 hover:bg-red-100"
+                                >
+                                    Quay lại giỏ hàng
+                                </Button>
+                            </div>
+                        )}
+                    </div>
                 </div>
 
                 <div className="flex flex-col lg:flex-row gap-6">
@@ -227,7 +427,7 @@ export default function CheckoutForm() {
                                             ))}
                                         </div>
                                     )}
-                                    
+
                                     {/* Summary */}
                                     <div className="border-t-2 border-gray-100 pt-4 mt-6 space-y-3">
                                         <div className="flex justify-between items-center text-gray-600">
@@ -429,12 +629,22 @@ export default function CheckoutForm() {
                         </Card>
 
                         {/* Submit Button */}
-                        <Button 
-                            type="submit" 
-                            className="w-full h-14 text-lg font-bold rounded-2xl bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-xl hover:shadow-2xl transform hover:scale-[1.02] transition-all duration-300"
+                        <Button
+                            type="submit"
+                            disabled={!isReserved || isSubmitting || countdown <= 0 || !!reservationError}
+                            className="w-full h-14 text-lg font-bold rounded-2xl bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-xl hover:shadow-2xl transform hover:scale-[1.02] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                         >
-                            <CheckCircle2 className="w-5 h-5 mr-2" />
-                            Xác nhận đơn hàng
+                            {isSubmitting ? (
+                                <>
+                                    <div className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full mr-2"></div>
+                                    Đang xử lý...
+                                </>
+                            ) : (
+                                <>
+                                    <CheckCircle2 className="w-5 h-5 mr-2" />
+                                    Xác nhận đơn hàng
+                                </>
+                            )}
                         </Button>
 
                         {/* Security Notice */}
@@ -447,8 +657,5 @@ export default function CheckoutForm() {
             </div>
         </div>
     );
-}
-function startLoading() {
-    throw new Error('Function not implemented.');
 }
 
