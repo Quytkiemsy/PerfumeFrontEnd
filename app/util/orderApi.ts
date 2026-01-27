@@ -164,6 +164,53 @@ export const orderApi = {
         });
         return response;
     },
+
+    // ========== ADMIN APIS ==========
+
+    /**
+     * Get all orders (Admin)
+     * API: GET /api/v1/orders/admin
+     */
+    getAllOrdersAdmin: async (
+        queryParams?: Record<string, any>,
+        accessToken?: string
+    ): Promise<IBackendRes<IModelPaginate<IOrder>>> => {
+        const headers: Record<string, string> = {};
+        if (accessToken) {
+            headers['Authorization'] = `Bearer ${accessToken}`;
+        }
+
+        const response = await sendRequest<IBackendRes<IModelPaginate<IOrder>>>({
+            url: `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/orders/admin`,
+            method: 'GET',
+            headers,
+            queryParams,
+        });
+        return response;
+    },
+
+    /**
+     * Update order status (Admin)
+     * API: PUT /api/v1/orders/{id}/status
+     */
+    updateOrderStatus: async (
+        orderId: number,
+        status: OrderStatus,
+        accessToken?: string
+    ): Promise<IBackendRes<IOrder>> => {
+        const headers: Record<string, string> = {};
+        if (accessToken) {
+            headers['Authorization'] = `Bearer ${accessToken}`;
+        }
+
+        const response = await sendRequest<IBackendRes<IOrder>>({
+            url: `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/orders/${orderId}/status`,
+            method: 'PUT',
+            body: { status },
+            headers,
+        });
+        return response;
+    },
 };
 
 export default orderApi;

@@ -75,7 +75,7 @@ export default async function Header({ brands }: { brands: IBrand[] }) {
                     </Link>
 
                     {/* Right: Icons + Auth */}
-                    <div className="flex items-center gap-3 lg:gap-5 flex-1 justify-end">
+                    <div className="flex items-center gap-3 lg:gap-6 flex-1 justify-end">
                         {/* Search Icon */}
                         <SearchForm />
 
@@ -90,7 +90,7 @@ export default async function Header({ brands }: { brands: IBrand[] }) {
                         </div>
 
                         {/* Auth Section (Desktop) */}
-                        <div className="hidden lg:block">
+                        <div className="hidden lg:block ml-2">
                             {session?.user ? (
                                 <div className="relative group">
                                     <button className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-gray-100 to-gray-200 rounded-full font-semibold text-sm text-gray-800 hover:from-gray-200 hover:to-gray-300 transition-all duration-300 shadow-sm">
@@ -104,12 +104,30 @@ export default async function Header({ brands }: { brands: IBrand[] }) {
                                     </button>
                                     
                                     {/* Dropdown Menu */}
-                                    <div className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform group-hover:translate-y-0 translate-y-2 border border-gray-100">
+                                    <div className="absolute right-0 mt-3 w-64 bg-white rounded-2xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform group-hover:translate-y-0 translate-y-2 border border-gray-100 z-[100]">
                                         <div className="p-4 border-b border-gray-100">
                                             <p className="font-bold text-gray-900">{session.user.username}</p>
                                             <p className="text-xs text-gray-500">{session.user.email}</p>
                                         </div>
                                         <ul className="py-2">
+                                            <li>
+                                                <Link 
+                                                    href="/profile" 
+                                                    className="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gradient-to-r hover:from-gray-50 hover:to-gray-100 transition-all"
+                                                >
+                                                    <span>👤</span>
+                                                    <span className="font-medium">My Profile</span>
+                                                </Link>
+                                            </li>
+                                            <li>
+                                                <Link 
+                                                    href="/profile/addresses" 
+                                                    className="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gradient-to-r hover:from-gray-50 hover:to-gray-100 transition-all"
+                                                >
+                                                    <span>📍</span>
+                                                    <span className="font-medium">My Addresses</span>
+                                                </Link>
+                                            </li>
                                             <li>
                                                 <Link 
                                                     href="/my-orders" 

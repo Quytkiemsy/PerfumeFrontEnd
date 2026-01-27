@@ -4,10 +4,12 @@ import {
     Package,
     Settings,
     Users,
-    X
+    X,
+    ShoppingCart,
+    MessageSquare
 } from 'lucide-react';
 import { useState } from 'react';
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 
 interface NavItem {
     key: string;
@@ -18,17 +20,30 @@ interface NavItem {
 
 const navItems: NavItem[] = [
     { key: 'stats', label: 'Thống kê', icon: BarChart3, url: '/admin/dashboard' },
-  { key: 'products', label: 'Sản phẩm', icon: Package, url: '/admin/product' },
-  { key: 'brands', label: 'Thương hiệu', icon: Users, url: '/admin/brands' },
-  { key: 'settings', label: 'Cài đặt', icon: Settings, url: '/admin/settings' },
+    { key: 'orders', label: 'Đơn hàng', icon: ShoppingCart, url: '/admin/orders' },
+    { key: 'products', label: 'Sản phẩm', icon: Package, url: '/admin/product' },
+    { key: 'users', label: 'Người dùng', icon: Users, url: '/admin/users' },
+    { key: 'brands', label: 'Thương hiệu', icon: MessageSquare, url: '/admin/brands' },
+    { key: 'settings', label: 'Cài đặt', icon: Settings, url: '/admin/settings' },
 ];
 
 // shadcn/ui components
 import { Button } from '@/components/ui/button';
 const SidebarAdmin = () => {
     const [sidebarOpen, setSidebarOpen] = useState(false);
-    const [selected, setSelected] = useState<string>('products');
-      const router = useRouter();
+    const pathname = usePathname();
+    const router = useRouter();
+
+    const getSelectedKey = () => {
+        if (pathname?.includes('/admin/orders')) return 'orders';
+        if (pathname?.includes('/admin/product')) return 'products';
+        if (pathname?.includes('/admin/users')) return 'users';
+        if (pathname?.includes('/admin/brands')) return 'brands';
+        if (pathname?.includes('/admin/settings')) return 'settings';
+        return 'stats';
+    };
+
+    const selected = getSelectedKey();
 
   const handleClick = (url: string) => {
     router.push(url);
@@ -58,7 +73,7 @@ const SidebarAdmin = () => {
                                 key={item.key}
                                 variant={isActive ? 'secondary' : 'ghost'}
                                 className={`w-full justify-start ${isActive ? 'shadow-sm' : ''}`}
-                                onClick={() => { setSelected(item.key); handleClick(item.url || '/admin/dashboard'); }}
+                                onClick={() => { handleClick(item.url || '/admin/dashboard'); }}
                                 aria-pressed={isActive}
                             >
                                 <Icon className="mr-2 h-4 w-4" />

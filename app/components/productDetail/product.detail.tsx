@@ -5,6 +5,8 @@ import ProductGrid from '../home/product.home';
 import { useCartStore } from '@/app/store/cartStore';
 import toast from 'react-hot-toast';
 import { useSession } from 'next-auth/react';
+import ProductStats from './product.stats';
+import ProductReviews from './product.reviews';
 
 interface IProductDetailProps {
     product: IProduct;
@@ -100,6 +102,17 @@ export default function ProductDetail({ product, sortedProductByPrice }: IProduc
                                 <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4 leading-tight">
                                     {product?.name}
                                 </h1>
+                                
+                                {/* Product Stats - Visit Count & Rating */}
+                                <div className="mb-4">
+                                    <ProductStats 
+                                        productId={product?.id}
+                                        initialVisitCount={product?.visitCount}
+                                        initialRating={product?.averageRating}
+                                        initialReviewCount={product?.totalReviews}
+                                    />
+                                </div>
+
                                 <div className="flex items-baseline gap-3">
                                     <p className="text-4xl font-bold bg-gradient-to-r from-gray-700 to-gray-900 bg-clip-text text-transparent">
                                         ₫{selectedVariant?.price?.toLocaleString('en-US') || '0'}
@@ -265,6 +278,11 @@ export default function ProductDetail({ product, sortedProductByPrice }: IProduc
                 <div className="max-w-7xl mx-auto px-4 md:px-8 py-12">
                     <h2 className="text-3xl font-bold text-gray-900 mb-8">You May Also Like</h2>
                     <ProductGrid sortedProductByPrice={sortedProductByPrice} />
+                </div>
+
+                {/* Reviews Section */}
+                <div className="max-w-7xl mx-auto px-4 md:px-8 pb-12">
+                    <ProductReviews productId={product?.id} />
                 </div>
             </div>
         </>

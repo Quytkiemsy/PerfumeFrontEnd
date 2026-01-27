@@ -3,10 +3,11 @@
 
 import { useCartStore } from '@/app/store/cartStore';
 import { orderApi } from '@/app/util/orderApi';
+import { sendRequest } from '@/app/util/api';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { AlertTriangle, ArrowLeft, CheckCircle2, Clock, CreditCard, FileText, Mail, MapPin, Package, Phone, Shield, ShoppingBag, Tag, Truck, User } from 'lucide-react';
+import { AlertTriangle, ArrowLeft, CheckCircle2, Clock, CreditCard, FileText, Mail, MapPin, Package, Phone, Shield, ShoppingBag, Tag, Truck, User, ChevronDown, Home, Plus } from 'lucide-react';
 import { useSession } from "next-auth/react";
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
@@ -66,6 +67,12 @@ export default function CheckoutForm() {
     const [formErrors, setFormErrors] = useState<any>({});
     const router = useRouter();
 
+    // Saved addresses state
+    const [savedAddresses, setSavedAddresses] = useState<IAddress[]>([]);
+    const [selectedAddressId, setSelectedAddressId] = useState<number | null>(null);
+    const [showAddressSelector, setShowAddressSelector] = useState(false);
+    const [isLoadingAddresses, setIsLoadingAddresses] = useState(false);
+
     // Stock reservation states
     const [isReserved, setIsReserved] = useState(false);
     const [reservationError, setReservationError] = useState<string | null>(null);
@@ -88,6 +95,65 @@ export default function CheckoutForm() {
             fetchCart(localStorage.getItem('guestId') || '');
         }
     }, [session?.user?.username, fetchCart]);
+
+    // Fetch saved addresses for logged-in users
+    useEffect(() => {
+        const fetchAddresses = async () => {
+            if (status === "authenticated" && session?.accessToken) {
+                setIsLoadingAddresses(true);
+                try {
+                    const res = await sendRequest<IBackendRes<IAddress[]>>({
+                        url: `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/addresses`,
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Bearer ${session.accessToken}`
+                        }
+                    });
+                    
+                    if (res.data && Array.isArray(res.data)) {
+                        setSavedAddresses(res.data);
+                        
+                        // Auto-select default address if exists
+                        const defaultAddress = res.data.find(addr => addr.isDefault);
+                        if (defaultAddress) {
+                            handleSelectAddress(defaultAddress);
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error fetching addresses:', error);
+                } finally {
+                    setIsLoadingAddresses(false);
+                }
+            }
+        };
+
+        fetchAddresses();
+    }, [status, session?.accessToken]);
+
+    // Handle selecting a saved address
+    const handleSelectAddress = (address: IAddress) => {
+        setSelectedAddressId(address.id);
+        setFormData(prev => ({
+            ...prev,
+            fullName: address.fullName,
+            phone: address.phone,
+            email: address.email || '',
+            address: `${address.addressDetail}${address.ward ? ', ' + address.ward : ''}${address.district ? ', ' + address.district : ''}${address.province ? ', ' + address.province : ''}`,
+        }));
+        setShowAddressSelector(false);
+        toast.success('Đã chọn địa chỉ giao hàng');
+    };
+
+    // Clear selected address and form
+    const handleClearAddress = () => {
+        setSelectedAddressId(null);
+        setFormData(prev => ({
+            ...prev,
+            fullName: '',
+            phone: '',
+            address: '',
+        }));
+    };
 
     // Reserve stock when entering checkout page
     useEffect(() => {
@@ -538,6 +604,140 @@ export default function CheckoutForm() {
                                 </div>
                             </div>
                             <CardContent className="p-6 space-y-5">
+                                {/* Saved Addresses Selector */}
+                                {status === "authenticated" && (
+                                    <div className="space-y-3">
+                                        <div className="flex items-center justify-between">
+                                            <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                                                <Home className="w-4 h-4" />
+                                                Địa chỉ đã lưu
+                                            </label>
+                                            {selectedAddressId && (
+                                                <button
+                                                    type="button"
+                                                    onClick={handleClearAddress}
+                                                    className="text-xs text-blue-600 hover:text-blue-800 underline"
+                                                >
+                                                    Nhập địa chỉ mới
+                                                </button>
+                                            )}
+                                        </div>
+                                        
+                                        {isLoadingAddresses ? (
+                                            <div className="flex items-center gap-2 text-sm text-gray-500">
+                                                <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                                                Đang tải địa chỉ...
+                                            </div>
+                                        ) : savedAddresses.length > 0 ? (
+                                            <div className="space-y-2">
+                                                {/* Collapsed View - Show selected or prompt */}
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setShowAddressSelector(!showAddressSelector)}
+                                                    className="w-full flex items-center justify-between p-3 border border-gray-200 rounded-xl hover:border-blue-400 hover:bg-blue-50/50 transition-all"
+                                                >
+                                                    <div className="flex items-center gap-3">
+                                                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${selectedAddressId ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-500'}`}>
+                                                            <MapPin className="w-5 h-5" />
+                                                        </div>
+                                                        <div className="text-left">
+                                                            {selectedAddressId ? (
+                                                                <>
+                                                                    <p className="text-sm font-medium text-gray-900">
+                                                                        {savedAddresses.find(a => a.id === selectedAddressId)?.fullName}
+                                                                    </p>
+                                                                    <p className="text-xs text-gray-500 line-clamp-1">
+                                                                        {savedAddresses.find(a => a.id === selectedAddressId)?.addressDetail}
+                                                                    </p>
+                                                                </>
+                                                            ) : (
+                                                                <>
+                                                                    <p className="text-sm font-medium text-gray-700">Chọn địa chỉ giao hàng</p>
+                                                                    <p className="text-xs text-gray-500">Bạn có {savedAddresses.length} địa chỉ đã lưu</p>
+                                                                </>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                    <ChevronDown className={`w-5 h-5 text-gray-400 transition-transform ${showAddressSelector ? 'rotate-180' : ''}`} />
+                                                </button>
+
+                                                {/* Expanded View - Address List */}
+                                                {showAddressSelector && (
+                                                    <div className="border border-gray-200 rounded-xl overflow-hidden divide-y divide-gray-100">
+                                                        {savedAddresses.map((address) => (
+                                                            <button
+                                                                key={address.id}
+                                                                type="button"
+                                                                onClick={() => handleSelectAddress(address)}
+                                                                className={`w-full p-4 text-left hover:bg-blue-50 transition-colors ${
+                                                                    selectedAddressId === address.id ? 'bg-blue-50 border-l-4 border-l-blue-500' : ''
+                                                                }`}
+                                                            >
+                                                                <div className="flex items-start justify-between gap-3">
+                                                                    <div className="flex-1 min-w-0">
+                                                                        <div className="flex items-center gap-2">
+                                                                            <p className="text-sm font-semibold text-gray-900">{address.fullName}</p>
+                                                                            {address.isDefault && (
+                                                                                <span className="px-2 py-0.5 text-xs font-medium bg-green-100 text-green-700 rounded-full">
+                                                                                    Mặc định
+                                                                                </span>
+                                                                            )}
+                                                                        </div>
+                                                                        <p className="text-sm text-gray-600 mt-1">{address.phone}</p>
+                                                                        <p className="text-sm text-gray-500 mt-1 line-clamp-2">
+                                                                            {address.addressDetail}
+                                                                            {address.ward && `, ${address.ward}`}
+                                                                            {address.district && `, ${address.district}`}
+                                                                            {address.province && `, ${address.province}`}
+                                                                        </p>
+                                                                    </div>
+                                                                    {selectedAddressId === address.id && (
+                                                                        <CheckCircle2 className="w-5 h-5 text-blue-600 flex-shrink-0" />
+                                                                    )}
+                                                                </div>
+                                                            </button>
+                                                        ))}
+                                                        
+                                                        {/* Add new address button */}
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                router.push('/profile/addresses');
+                                                            }}
+                                                            className="w-full p-4 text-left hover:bg-gray-50 transition-colors flex items-center gap-3 text-blue-600"
+                                                        >
+                                                            <Plus className="w-5 h-5" />
+                                                            <span className="text-sm font-medium">Thêm địa chỉ mới</span>
+                                                        </button>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ) : (
+                                            <div className="p-4 bg-gray-50 rounded-xl text-center">
+                                                <p className="text-sm text-gray-500 mb-2">Bạn chưa có địa chỉ nào được lưu</p>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => router.push('/profile/addresses')}
+                                                    className="text-sm text-blue-600 hover:text-blue-800 font-medium inline-flex items-center gap-1"
+                                                >
+                                                    <Plus className="w-4 h-4" />
+                                                    Thêm địa chỉ mới
+                                                </button>
+                                            </div>
+                                        )}
+                                        
+                                        {/* Divider */}
+                                        <div className="relative py-2">
+                                            <div className="absolute inset-0 flex items-center">
+                                                <div className="w-full border-t border-gray-200"></div>
+                                            </div>
+                                            <div className="relative flex justify-center text-xs">
+                                                <span className="px-2 bg-white text-gray-500">hoặc nhập thông tin bên dưới</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                     <div className="space-y-2">
                                         <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
@@ -547,7 +747,7 @@ export default function CheckoutForm() {
                                         <Input
                                             placeholder="Nhập họ và tên"
                                             name="fullName"
-                                            value={formData.fullName}
+                                            value={formData.fullName || ''}
                                             onChange={handleChange}
                                             className="h-12 rounded-xl border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                                         />
@@ -565,7 +765,7 @@ export default function CheckoutForm() {
                                         <Input
                                             placeholder="Nhập số điện thoại"
                                             name="phone"
-                                            value={formData.phone}
+                                            value={formData.phone || ''}
                                             onChange={handleChange}
                                             className="h-12 rounded-xl border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                                         />
@@ -584,7 +784,7 @@ export default function CheckoutForm() {
                                     <Input
                                         placeholder="your@email.com"
                                         name="email"
-                                        value={formData.email}
+                                        value={formData.email || ''}
                                         onChange={handleChange}
                                         type="email"
                                         className="h-12 rounded-xl border-gray-300 focus:border-blue-500 focus:ring-blue-500"
@@ -603,7 +803,7 @@ export default function CheckoutForm() {
                                     <Input
                                         placeholder="Số nhà, đường, phường, quận, thành phố"
                                         name="address"
-                                        value={formData.address}
+                                        value={formData.address || ''}
                                         onChange={handleChange}
                                         className="h-12 rounded-xl border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                                     />
@@ -621,7 +821,7 @@ export default function CheckoutForm() {
                                     <Input
                                         placeholder="Ví dụ: Giao giờ hành chính, gọi trước khi giao..."
                                         name="note"
-                                        value={formData.note}
+                                        value={formData.note || ''}
                                         onChange={handleChange}
                                         className="h-12 rounded-xl border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                                     />
@@ -679,7 +879,7 @@ export default function CheckoutForm() {
                                         <Input
                                             placeholder="Nhập mã giảm giá"
                                             name="promoCode"
-                                            value={formData.promoCode}
+                                            value={formData.promoCode || ''}
                                             onChange={handleChange}
                                             className="h-12 rounded-xl border-gray-300 focus:border-purple-500 focus:ring-purple-500"
                                         />
