@@ -256,11 +256,7 @@ const OrderDetailPage: React.FC<IOrderProps> = ({ order }: IOrderProps) => {
                                 order.paymentMethod === 'BANK' && order.status === 'PENDING' && (
                                     <button
                                         onClick={() => {
-                                            // đợi 3 giây trước khi chuyển hướng
-                                            startLoading();
-                                            setTimeout(() => {
-                                                router.push(`/qr/${order.id}`)
-                                            }, 3000);
+                                            router.push(`/qr/${order.id}`)
                                         }}
                                         className="flex items-center gap-2 p-2 bg-gray-100 hover:bg-gray-200 transition-colors rounded-full"
                                     >

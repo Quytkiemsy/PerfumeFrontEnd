@@ -80,6 +80,7 @@ export default function CheckoutForm() {
     const [isReserving, setIsReserving] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isReleasingReservation, setIsReleasingReservation] = useState(false);
+    const [isCheckoutSuccess, setIsCheckoutSuccess] = useState(false);
     const countdownRef = useRef<NodeJS.Timeout | null>(null);
     const isReservedRef = useRef(false); // Track reservation state for cleanup
 
@@ -95,6 +96,17 @@ export default function CheckoutForm() {
             fetchCart(localStorage.getItem('guestId') || '');
         }
     }, [session?.user?.username, fetchCart]);
+
+    // Redirect to home if cart is empty
+    useEffect(() => {
+        // Skip redirect if checkout was successful
+        if (isCheckoutSuccess) return;
+        
+        if (hasHydrated && items.length === 0) {
+            toast.error('Giỏ hàng trống! Vui lòng thêm sản phẩm.');
+            router.push('/');
+        }
+    }, [hasHydrated, items.length, router, isCheckoutSuccess]);
 
     // Fetch saved addresses for logged-in users
     useEffect(() => {
@@ -116,7 +128,15 @@ export default function CheckoutForm() {
                         // Auto-select default address if exists
                         const defaultAddress = res.data.find(addr => addr.isDefault);
                         if (defaultAddress) {
-                            handleSelectAddress(defaultAddress);
+                            // Set state directly instead of calling handleSelectAddress to avoid toast during initial load
+                            setSelectedAddressId(defaultAddress.id);
+                            setFormData(prev => ({
+                                ...prev,
+                                fullName: defaultAddress.fullName,
+                                phone: defaultAddress.phone,
+                                email: defaultAddress.email || '',
+                                address: `${defaultAddress.addressDetail}${defaultAddress.ward ? ', ' + defaultAddress.ward : ''}${defaultAddress.district ? ', ' + defaultAddress.district : ''}${defaultAddress.province ? ', ' + defaultAddress.province : ''}`,
+                            }));
                         }
                     }
                 } catch (error) {
@@ -208,25 +228,7 @@ export default function CheckoutForm() {
     useEffect(() => {
         if (isReserved && countdown > 0) {
             countdownRef.current = setInterval(() => {
-                setCountdown(prev => {
-                    if (prev <= 1) {
-                        // Time's up - release reservation
-                        clearInterval(countdownRef.current!);
-                        
-                        // Release reservation immediately when countdown expires
-                        const userId = getUserId();
-                        orderApi.releaseReservation(userId)
-                            .then(() => console.log('Reservation released due to timeout'))
-                            .catch(console.error);
-                        
-                        setIsReserved(false);
-                        isReservedRef.current = false;
-                        setReservationError("Thời gian giữ hàng đã hết, vui lòng thử lại");
-                        toast.error("Thời gian giữ hàng đã hết!");
-                        return 0;
-                    }
-                    return prev - 1;
-                });
+                setCountdown(prev => prev - 1);
             }, 1000);
         }
 
@@ -235,7 +237,27 @@ export default function CheckoutForm() {
                 clearInterval(countdownRef.current);
             }
         };
-    }, [isReserved, countdown, getUserId]);
+    }, [isReserved]);
+
+    // Handle countdown expiration
+    useEffect(() => {
+        if (isReserved && countdown === 0) {
+            // Time's up - release reservation
+            if (countdownRef.current) {
+                clearInterval(countdownRef.current);
+            }
+            
+            const userId = getUserId();
+            orderApi.releaseReservation(userId)
+                .then(() => console.log('Reservation released due to timeout'))
+                .catch(console.error);
+            
+            setIsReserved(false);
+            isReservedRef.current = false;
+            setReservationError("Thời gian giữ hàng đã hết, vui lòng thử lại");
+            toast.error("Thời gian giữ hàng đã hết!");
+        }
+    }, [countdown, isReserved, getUserId]);
 
     // Release reservation on unmount
     useEffect(() => {
@@ -392,13 +414,9 @@ export default function CheckoutForm() {
             }
             setIsReserved(false); // Prevent cleanup from releasing reservation (already handled by backend)
             isReservedRef.current = false;
+            setIsCheckoutSuccess(true);
 
-            toast.success("Đặt hàng thành công!");
-
-            // Clear cart after successful order
-            handleClearCart();
-
-            // Redirect to order confirmation page
+            // Redirect to order confirmation page first
             if (res.data && formData.paymentMethod === 'BANK') {
                 router.push(`/qr/${res.data.id}`);
             } else {
@@ -408,6 +426,9 @@ export default function CheckoutForm() {
                     router.push(`/my-orders/${res?.data.id}`);
                 }
             }
+            
+            // Clear cart after redirect (with slight delay to ensure navigation starts)
+             handleClearCart();
         } catch (error) {
             console.error('Error creating order:', error);
             toast.error("Có lỗi xảy ra khi đặt hàng!");

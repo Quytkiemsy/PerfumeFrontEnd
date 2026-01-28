@@ -12,13 +12,13 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { sendRequest } from '@/app/util/api';
+import { revalidateAddresses } from '@/app/actions/revalidate';
 
 interface AddressesPageProps {
     addresses: IAddress[];
 }
 
-const AddressesPage: React.FC<AddressesPageProps> = ({ addresses: initialAddresses }) => {
-    const [addresses, setAddresses] = useState<IAddress[]>(initialAddresses);
+const AddressesPage: React.FC<AddressesPageProps> = ({ addresses }) => {
     const [showAddDialog, setShowAddDialog] = useState(false);
     const [showEditDialog, setShowEditDialog] = useState(false);
     const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -73,6 +73,7 @@ const AddressesPage: React.FC<AddressesPageProps> = ({ addresses: initialAddress
             toast.success('Thêm địa chỉ thành công');
             setShowAddDialog(false);
             resetForm();
+            await revalidateAddresses();
             router.refresh();
         } catch (error) {
             toast.error('Có lỗi xảy ra');
@@ -101,6 +102,7 @@ const AddressesPage: React.FC<AddressesPageProps> = ({ addresses: initialAddress
             setShowEditDialog(false);
             setSelectedAddress(null);
             resetForm();
+            await revalidateAddresses();
             router.refresh();
         } catch (error) {
             toast.error('Có lỗi xảy ra');
@@ -127,6 +129,7 @@ const AddressesPage: React.FC<AddressesPageProps> = ({ addresses: initialAddress
             toast.success('Xóa địa chỉ thành công');
             setShowDeleteDialog(false);
             setSelectedAddress(null);
+            await revalidateAddresses();
             router.refresh();
         } catch (error) {
             toast.error('Có lỗi xảy ra');
@@ -149,6 +152,7 @@ const AddressesPage: React.FC<AddressesPageProps> = ({ addresses: initialAddress
             }
 
             toast.success('Đã đặt làm địa chỉ mặc định');
+            await revalidateAddresses();
             router.refresh();
         } catch (error) {
             toast.error('Có lỗi xảy ra');
@@ -169,7 +173,7 @@ const AddressesPage: React.FC<AddressesPageProps> = ({ addresses: initialAddress
         });
         setShowEditDialog(true);
     };
-
+     console.log('AddressesPage addresses: click');
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 py-8 px-4">
             <div className="max-w-4xl mx-auto">

@@ -152,7 +152,7 @@ const QRPayment: React.FC<{ order: IOrder }> = ({ order }) => {
                 <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-pink-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
             </div>
 
-            <div className="relative max-w-md w-full">
+            <div className="relative max-w-4xl w-full">
                 {/* Glass Card */}
                 <div className="backdrop-blur-xl bg-white/10 rounded-3xl shadow-2xl border border-white/20 overflow-hidden">
                     {/* Header */}
@@ -170,6 +170,10 @@ const QRPayment: React.FC<{ order: IOrder }> = ({ order }) => {
                         </div>
                         <p className="relative text-center text-white/70 text-sm mt-2">
                             Quét mã để hoàn tất giao dịch
+                        </p>
+                        <p className="relative text-center text-white/50 text-s mt-1 font-light">
+                        Trong trường hợp không bạn đã chuyển khoản nhưng không hiển thị thông tin chuyển khoản thành công (Sau 5 phút)
+                        , hãy kiểm tra lại tại <a href={`/my-orders/${order.id}`} className="text-purple-300 hover:text-purple-200 underline underline-offset-2 transition-colors">ĐƠN HÀNG CỦA TÔI</a> hoặc liên hệ bộ phận hỗ trợ.
                         </p>
                     </div>
 
@@ -190,96 +194,102 @@ const QRPayment: React.FC<{ order: IOrder }> = ({ order }) => {
 
                         {/* Waiting State */}
                         {status === 'waiting' && qrCode && (
-                            <div className="text-center space-y-6">
-                                {/* QR Code Container */}
-                                <div className="relative inline-block group">
-                                    <div className="absolute -inset-4 bg-gradient-to-r from-violet-600 to-purple-600 rounded-2xl blur-xl opacity-40 group-hover:opacity-60 transition-opacity duration-300"></div>
-                                    <div className="relative bg-white p-4 rounded-2xl shadow-2xl">
-                                        <img
-                                            src={qrCode}
-                                            alt="QR Code"
-                                            className="w-56 h-56 mx-auto rounded-lg"
-                                        />
-                                    </div>
-                                </div>
-
-                                {/* Amount Info */}
-                                <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-5 border border-white/10">
-                                    <p className="text-white/60 text-sm mb-1">Số tiền thanh toán</p>
-                                    <p className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-400">
-                                        {formatCurrency(parseFloat(order.totalPrice.toString()))}
-                                    </p>
-                                </div>
-
-                                {/* Bank Info */}
-                                {bankInfo && (
-                                    <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-5 border border-white/10 space-y-3">
-                                        <div className="flex items-center gap-2 mb-3">
-                                            <svg className="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                                            </svg>
-                                            <span className="text-white font-semibold">Thông tin chuyển khoản</span>
+                            <div className="space-y-6">
+                                {/* QR Code + Bank Info Row */}
+                                <div className="flex flex-col md:flex-row gap-6 items-stretch">
+                                    {/* Left: QR Code */}
+                                    <div className="flex flex-col items-center space-y-4 md:w-1/2">
+                                        {/* QR Code Container */}
+                                        <div className="relative inline-block group">
+                                            <div className="absolute -inset-4 bg-gradient-to-r from-violet-600 to-purple-600 rounded-2xl blur-xl opacity-40 group-hover:opacity-60 transition-opacity duration-300"></div>
+                                            <div className="relative bg-white p-4 rounded-2xl shadow-2xl">
+                                                <img
+                                                    src={qrCode}
+                                                    alt="QR Code"
+                                                    className="w-48 h-48 mx-auto rounded-lg"
+                                                />
+                                            </div>
                                         </div>
-                                        
-                                        {bankInfo.bankName && (
-                                            <div className="flex justify-between items-center py-2 border-b border-white/10">
-                                                <span className="text-white/60 text-sm">Ngân hàng</span>
-                                                <span className="text-white font-medium">{bankInfo.bankName}</span>
-                                            </div>
-                                        )}
-                                        
-                                        {bankInfo.accountName && (
-                                            <div className="flex justify-between items-center py-2 border-b border-white/10">
-                                                <span className="text-white/60 text-sm">Chủ tài khoản</span>
-                                                <span className="text-white font-medium">{bankInfo.accountName}</span>
-                                            </div>
-                                        )}
-                                        
-                                        {bankInfo.accountNo && (
-                                            <div className="flex justify-between items-center py-2 border-b border-white/10">
-                                                <span className="text-white/60 text-sm">Số tài khoản</span>
-                                                <div className="flex items-center gap-2">
-                                                    <span className="text-white font-mono font-semibold bg-white/10 px-3 py-1 rounded-lg">
-                                                        {bankInfo.accountNo}
-                                                    </span>
-                                                    <button
-                                                        onClick={() => {
-                                                            navigator.clipboard.writeText(bankInfo.accountNo || '');
-                                                            toast.success('Đã sao chép số tài khoản!');
-                                                        }}
-                                                        className="p-1.5 hover:bg-white/10 rounded-lg transition-colors"
-                                                        title="Sao chép"
-                                                    >
-                                                        <svg className="w-4 h-4 text-white/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                                                        </svg>
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        )}
-                                        
-                                        {bankInfo.message && (
-                                            <div className="flex justify-between items-center py-2">
-                                                <span className="text-white/60 text-sm">Nội dung CK</span>
-                                                <div className="flex items-center gap-2">
-                                                    <span className="text-yellow-400 font-medium text-sm">{bankInfo.message}</span>
-                                                    <button
-                                                        onClick={() => {
-                                                            navigator.clipboard.writeText(bankInfo.message || '');
-                                                            toast.success('Đã sao chép nội dung!');
-                                                        }}
-                                                        className="p-1.5 hover:bg-white/10 rounded-lg transition-colors"
-                                                        title="Sao chép"
-                                                    >
-                                                        <svg className="w-4 h-4 text-white/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                                                        </svg>
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        )}
+
+                                        {/* Amount Info */}
+                                        <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-4 border border-white/10 w-full text-center">
+                                            <p className="text-white/60 text-sm mb-1">Số tiền thanh toán</p>
+                                            <p className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-400">
+                                                {formatCurrency(parseFloat(order.totalPrice.toString()))}
+                                            </p>
+                                        </div>
                                     </div>
-                                )}
+
+                                    {/* Right: Bank Info */}
+                                    {bankInfo && (
+                                        <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-5 border border-white/10 space-y-3 md:w-1/2 flex flex-col justify-center">
+                                            <div className="flex items-center gap-2 mb-3">
+                                                <svg className="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                                                </svg>
+                                                <span className="text-white font-semibold">Thông tin chuyển khoản</span>
+                                            </div>
+                                            
+                                            {bankInfo.bankName && (
+                                                <div className="flex justify-between items-center py-2 border-b border-white/10">
+                                                    <span className="text-white/60 text-sm">Ngân hàng</span>
+                                                    <span className="text-white font-medium">{bankInfo.bankName}</span>
+                                                </div>
+                                            )}
+                                            
+                                            {bankInfo.accountName && (
+                                                <div className="flex justify-between items-center py-2 border-b border-white/10">
+                                                    <span className="text-white/60 text-sm">Chủ tài khoản</span>
+                                                    <span className="text-white font-medium">{bankInfo.accountName}</span>
+                                                </div>
+                                            )}
+                                            
+                                            {bankInfo.accountNo && (
+                                                <div className="flex justify-between items-center py-2 border-b border-white/10">
+                                                    <span className="text-white/60 text-sm">Số tài khoản</span>
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-white font-mono font-semibold bg-white/10 px-3 py-1 rounded-lg">
+                                                            {bankInfo.accountNo}
+                                                        </span>
+                                                        <button
+                                                            onClick={() => {
+                                                                navigator.clipboard.writeText(bankInfo.accountNo || '');
+                                                                toast.success('Đã sao chép số tài khoản!');
+                                                            }}
+                                                            className="p-1.5 hover:bg-white/10 rounded-lg transition-colors"
+                                                            title="Sao chép"
+                                                        >
+                                                            <svg className="w-4 h-4 text-white/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                                            </svg>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            )}
+                                            
+                                            {bankInfo.message && (
+                                                <div className="flex justify-between items-center py-2">
+                                                    <span className="text-white/60 text-sm">Nội dung CK</span>
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-yellow-400 font-medium text-sm break-all">{bankInfo.message}</span>
+                                                        <button
+                                                            onClick={() => {
+                                                                navigator.clipboard.writeText(bankInfo.message || '');
+                                                                toast.success('Đã sao chép nội dung!');
+                                                            }}
+                                                            className="p-1.5 hover:bg-white/10 rounded-lg transition-colors flex-shrink-0"
+                                                            title="Sao chép"
+                                                        >
+                                                            <svg className="w-4 h-4 text-white/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                                            </svg>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
 
                                 {/* Timer */}
                                 <div className="flex items-center justify-center gap-4">

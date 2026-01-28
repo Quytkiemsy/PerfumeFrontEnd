@@ -274,16 +274,16 @@ export default function ProductDetail({ product, sortedProductByPrice }: IProduc
                     </div>
                 </div>
 
+                {/* Reviews Section */}
+                <div className="max-w-7xl mx-auto px-4 md:px-8 pb-12">
+                    <ProductReviews productId={product?.id} />
+                </div>
                 {/* Related Products */}
                 <div className="max-w-7xl mx-auto px-4 md:px-8 py-12">
                     <h2 className="text-3xl font-bold text-gray-900 mb-8">You May Also Like</h2>
                     <ProductGrid sortedProductByPrice={sortedProductByPrice} />
                 </div>
 
-                {/* Reviews Section */}
-                <div className="max-w-7xl mx-auto px-4 md:px-8 pb-12">
-                    <ProductReviews productId={product?.id} />
-                </div>
             </div>
         </>
     );

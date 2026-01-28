@@ -18,15 +18,11 @@ const ProductStats: React.FC<ProductStatsProps> = ({
     initialReviewCount = 0
 }) => {
     const [visitCount, setVisitCount] = useState(initialVisitCount);
-    const [hasTracked, setHasTracked] = useState(false);
 
     useEffect(() => {
         // Track visit only once per session
-        if (!hasTracked) {
             trackVisit();
-            setHasTracked(true);
-        }
-    }, [productId, hasTracked]);
+    }, [productId]);
 
     const trackVisit = async () => {
         try {
