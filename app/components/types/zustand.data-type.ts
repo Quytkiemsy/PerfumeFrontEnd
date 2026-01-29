@@ -6,7 +6,7 @@ declare global {
 
 
     export interface ICartItem {
-        id: number
+        id?: string;
         quantity: number
         totalPrice: number
         perfumeVariants?: IPerfumeVariant;
@@ -49,10 +49,10 @@ declare global {
 
 
     // OrderStatus.ts
-    export type OrderStatus = 'PENDING' | 'PAID' | 'SHIPPING' | 'CANCELLED' | 'DELIVERED';
+    // export type OrderStatus = 'PENDING' | 'PAID' | 'SHIPPING' | 'CANCELLED' | 'DELIVERED';
 
     // PaymentMethod.ts
-    export type PaymentMethod = 'BANK' | 'COD'; // Or enum if you have defined it
+    // export type PaymentMethod = 'BANK' | 'COD'; // Or enum if you have defined it
 
     export interface ICartState {
         userId: string,

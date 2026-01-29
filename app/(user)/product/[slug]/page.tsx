@@ -19,7 +19,6 @@ const Product = async ({ params }: { params: Promise<{ slug: string }> }) => {
         },
     });
 
-    console.log('res.data', res.data);
 
     return (
         <ProductDetail product={res.data as IProduct} sortedProductByPrice={sortedProductByPrice.data?.result as IProduct[]} />

@@ -4,7 +4,7 @@ import { Menu } from "lucide-react";
 const AdminBrandsPage = () => {
     return (
         <div className="min-h-screen bg-gray-50">
-            <div className="lg:ml-64">
+            <div>
 
                 {/* Header */}
                 <header className="bg-white shadow-sm border-b">

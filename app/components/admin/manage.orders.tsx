@@ -2,7 +2,7 @@
 
 import { Calendar, ChevronDown, ChevronUp, CreditCard, Eye, Mail, MapPin, Package, Phone, Search, Truck, User, X, Check, Ban, RefreshCw } from 'lucide-react';
 import Image from 'next/image';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -40,6 +40,10 @@ const ManageOrders: React.FC<ManageOrdersProps> = ({ orders: initialOrders }) =>
     const [newStatus, setNewStatus] = useState<OrderStatus | ''>('');
     const { data: session } = useSession();
     const router = useRouter();
+
+    useEffect(() => {
+        setOrders(initialOrders);
+    }, [initialOrders]);
 
     const toggleOrderExpansion = (orderId: number) => {
         const newExpanded = new Set(expandedOrders);
@@ -131,13 +135,9 @@ const ManageOrders: React.FC<ManageOrdersProps> = ({ orders: initialOrders }) =>
     };
 
     const filteredOrders = orders.filter(order => {
-        const matchesSearch =
-            order.orderCode?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            order.customerName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            order.customerEmail?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            order.customerPhone?.includes(searchTerm);
+
         const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
-        return matchesSearch && matchesStatus;
+        return matchesStatus;
     });
 
     // Statistics
@@ -148,7 +148,7 @@ const ManageOrders: React.FC<ManageOrdersProps> = ({ orders: initialOrders }) =>
         shipping: orders.filter(o => o.status === 'SHIPPING').length,
         delivered: orders.filter(o => o.status === 'DELIVERED').length,
         cancelled: orders.filter(o => o.status === 'CANCELLED').length,
-        totalRevenue: orders.filter(o => o.status === 'DELIVERED').reduce((sum, o) => sum + o.totalAmount, 0),
+        totalRevenue: orders.filter(o => o.status === 'DELIVERED').reduce((sum, o) => sum + o.totalPrice, 0),
     };
 
     return (
@@ -275,17 +275,17 @@ const ManageOrders: React.FC<ManageOrdersProps> = ({ orders: initialOrders }) =>
                                             </Button>
                                         </TableCell>
                                         <TableCell className="font-medium">
-                                            #{order.orderCode || order.id}
+                                            #{order.transactionId || order.id}
                                         </TableCell>
                                         <TableCell>
                                             <div>
-                                                <p className="font-medium">{order.customerName}</p>
-                                                <p className="text-sm text-gray-500">{order.customerPhone}</p>
+                                                <p className="font-medium">{order.shippingInfo.fullName}</p>
+                                                <p className="text-sm text-gray-500">{order.shippingInfo.phoneNumber}</p>
                                             </div>
                                         </TableCell>
                                         <TableCell>{formatDate(order.createdAt)}</TableCell>
                                         <TableCell className="font-medium text-green-600">
-                                            {formatPrice(order.totalAmount)}
+                                            {formatPrice(order.totalPrice)}
                                         </TableCell>
                                         <TableCell>
                                             <Badge variant="outline">
@@ -329,33 +329,33 @@ const ManageOrders: React.FC<ManageOrdersProps> = ({ orders: initialOrders }) =>
                                             <TableCell colSpan={8} className="bg-gray-50 p-4">
                                                 <div className="space-y-3">
                                                     <p className="font-medium text-gray-700">Chi tiết sản phẩm:</p>
-                                                    {order.orderItems?.map((item, index) => (
+                                                    {order.items?.map((item, index) => (
                                                         <div key={index} className="flex items-center gap-4 bg-white p-3 rounded-lg">
-                                                            {item.product?.images?.[0] && (
+                                                            {item.perfumeVariants?.product?.images?.[0] && (
                                                                 <Image
-                                                                    src={`/api/image?filename=${item.product.images[0]}`}
-                                                                    alt={item.product?.name || ''}
+                                                                    src={`/api/image?filename=${item.perfumeVariants.product.images[0]}`}
+                                                                    alt={item.perfumeVariants?.product?.name || ''}
                                                                     width={50}
                                                                     height={50}
                                                                     className="rounded-md object-cover"
                                                                 />
                                                             )}
                                                             <div className="flex-1">
-                                                                <p className="font-medium">{item.product?.name}</p>
+                                                                <p className="font-medium">{item.perfumeVariants?.product?.name}</p>
                                                                 <p className="text-sm text-gray-500">
-                                                                    {item.perfumeVariant?.variantType} - {item.perfumeVariant?.volume}
+                                                                    {item.perfumeVariants?.variantType} - {item.perfumeVariants?.volume}
                                                                 </p>
                                                             </div>
                                                             <div className="text-right">
-                                                                <p className="font-medium">{formatPrice(item.price)} x {item.quantity}</p>
-                                                                <p className="text-sm text-green-600">{formatPrice(item.price * item.quantity)}</p>
+                                                                <p className="font-medium">{item?.perfumeVariants?.price ? formatPrice(item?.perfumeVariants?.price) : ''} x {item.quantity}</p>
+                                                                <p className="text-sm text-green-600">{item?.perfumeVariants?.price ? formatPrice(item.perfumeVariants.price * item.quantity) : ''}</p>
                                                             </div>
                                                         </div>
                                                     ))}
                                                     <div className="flex justify-between pt-3 border-t">
                                                         <div className="flex items-center gap-2 text-gray-600">
                                                             <MapPin className="w-4 h-4" />
-                                                            <span className="text-sm">{order.shippingAddress}</span>
+                                                            <span className="text-sm">{order.shippingInfo?.address}</span>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -380,7 +380,7 @@ const ManageOrders: React.FC<ManageOrdersProps> = ({ orders: initialOrders }) =>
             <Dialog open={showDetailDialog} onOpenChange={setShowDetailDialog}>
                 <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
-                        <DialogTitle>Chi tiết đơn hàng #{selectedOrder?.orderCode || selectedOrder?.id}</DialogTitle>
+                        <DialogTitle>Chi tiết đơn hàng #{selectedOrder?.id || selectedOrder?.id}</DialogTitle>
                         <DialogDescription>Thông tin chi tiết đơn hàng</DialogDescription>
                     </DialogHeader>
 
@@ -392,21 +392,21 @@ const ManageOrders: React.FC<ManageOrdersProps> = ({ orders: initialOrders }) =>
                                     <p className="text-sm text-gray-500">Khách hàng</p>
                                     <div className="flex items-center gap-2">
                                         <User className="w-4 h-4 text-gray-400" />
-                                        <span>{selectedOrder.customerName}</span>
+                                        <span>{selectedOrder.shippingInfo?.fullName}</span>
                                     </div>
                                 </div>
                                 <div className="space-y-2">
                                     <p className="text-sm text-gray-500">Số điện thoại</p>
                                     <div className="flex items-center gap-2">
                                         <Phone className="w-4 h-4 text-gray-400" />
-                                        <span>{selectedOrder.customerPhone}</span>
+                                        <span>{selectedOrder.shippingInfo?.phoneNumber}</span>
                                     </div>
                                 </div>
                                 <div className="space-y-2">
                                     <p className="text-sm text-gray-500">Email</p>
                                     <div className="flex items-center gap-2">
                                         <Mail className="w-4 h-4 text-gray-400" />
-                                        <span>{selectedOrder.customerEmail}</span>
+                                        <span>{selectedOrder.shippingInfo?.email}</span>
                                     </div>
                                 </div>
                                 <div className="space-y-2">
@@ -423,33 +423,33 @@ const ManageOrders: React.FC<ManageOrdersProps> = ({ orders: initialOrders }) =>
                                 <p className="text-sm text-gray-500">Địa chỉ giao hàng</p>
                                 <div className="flex items-start gap-2 p-3 bg-gray-50 rounded-lg">
                                     <MapPin className="w-4 h-4 text-gray-400 mt-1" />
-                                    <span>{selectedOrder.shippingAddress}</span>
+                                    <span>{selectedOrder.shippingInfo?.address}</span>
                                 </div>
                             </div>
 
                             {/* Order Items */}
                             <div className="space-y-3">
                                 <p className="font-medium">Sản phẩm</p>
-                                {selectedOrder.orderItems?.map((item, index) => (
+                                {selectedOrder.items?.map((item, index) => (
                                     <div key={index} className="flex items-center gap-4 p-3 border rounded-lg">
-                                        {item.product?.images?.[0] && (
+                                        {item.perfumeVariants?.product?.images?.[0] && (
                                             <Image
-                                                src={`/api/image?filename=${item.product.images[0]}`}
-                                                alt={item.product?.name || ''}
+                                                src={`/api/image?filename=${item.perfumeVariants.product.images[0]}`}
+                                                alt={item.perfumeVariants?.product?.name || ''}
                                                 width={60}
                                                 height={60}
                                                 className="rounded-md object-cover"
                                             />
                                         )}
                                         <div className="flex-1">
-                                            <p className="font-medium">{item.product?.name}</p>
+                                            <p className="font-medium">{item.perfumeVariants?.product?.name}</p>
                                             <p className="text-sm text-gray-500">
-                                                {item.perfumeVariant?.variantType} - {item.perfumeVariant?.volume}
+                                                {item.perfumeVariants?.variantType} - {item.perfumeVariants?.volume}
                                             </p>
                                             <p className="text-sm">Số lượng: {item.quantity}</p>
                                         </div>
                                         <div className="text-right">
-                                            <p className="font-medium text-green-600">{formatPrice(item.price * item.quantity)}</p>
+                                            <p className="font-medium text-green-600">{item?.perfumeVariants?.price && formatPrice(item?.perfumeVariants?.price * item.quantity)}</p>
                                         </div>
                                     </div>
                                 ))}
@@ -464,15 +464,15 @@ const ManageOrders: React.FC<ManageOrdersProps> = ({ orders: initialOrders }) =>
                                 </div>
                                 <div className="text-right">
                                     <p className="text-sm text-gray-500">Tổng cộng</p>
-                                    <p className="text-2xl font-bold text-green-600">{formatPrice(selectedOrder.totalAmount)}</p>
+                                    <p className="text-2xl font-bold text-green-600">{formatPrice(selectedOrder.totalPrice)}</p>
                                 </div>
                             </div>
 
                             {/* Notes */}
-                            {selectedOrder.notes && (
+                            {selectedOrder.shippingInfo && (
                                 <div className="p-3 bg-yellow-50 rounded-lg">
                                     <p className="text-sm font-medium text-yellow-800">Ghi chú:</p>
-                                    <p className="text-sm text-yellow-700">{selectedOrder.notes}</p>
+                                    <p className="text-sm text-yellow-700">{selectedOrder.shippingInfo.note}</p>
                                 </div>
                             )}
                         </div>
@@ -486,7 +486,7 @@ const ManageOrders: React.FC<ManageOrdersProps> = ({ orders: initialOrders }) =>
                     <DialogHeader>
                         <DialogTitle>Cập nhật trạng thái đơn hàng</DialogTitle>
                         <DialogDescription>
-                            Đơn hàng #{selectedOrder?.orderCode || selectedOrder?.id}
+                            Đơn hàng #{selectedOrder?.id || selectedOrder?.id}
                         </DialogDescription>
                     </DialogHeader>
 

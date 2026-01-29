@@ -124,24 +124,24 @@ declare global {
     }
 
     // Order Types
-    interface IOrder {
-        id: number;
-        orderCode?: string;
-        user?: IUser;
-        userId?: string;
-        customerName?: string;
-        customerEmail?: string;
-        customerPhone?: string;
-        shippingAddress?: string;
-        orderItems: IOrderItem[];
-        totalAmount: number;
-        status: OrderStatus;
-        paymentMethod: PaymentMethod;
-        paymentStatus?: PaymentStatus;
-        notes?: string;
-        createdAt: string;
-        updatedAt?: string;
-    }
+    // interface IOrder {
+    //     id: number;
+    //     orderCode?: string;
+    //     user?: IUser;
+    //     userId?: string;
+    //     customerName?: string;
+    //     customerEmail?: string;
+    //     customerPhone?: string;
+    //     shippingAddress?: string;
+    //     orderItems: IOrderItem[];
+    //     totalAmount: number;
+    //     status: OrderStatus;
+    //     paymentMethod: PaymentMethod;
+    //     paymentStatus?: PaymentStatus;
+    //     notes?: string;
+    //     createdAt: string;
+    //     updatedAt?: string;
+    // }
 
     interface IOrderItem {
         id: number;
@@ -191,21 +191,21 @@ declare global {
     }
 
     // Cart Types
-    interface ICartState {
-        id?: string;
-        userId?: string;
-        items: ICartItem[];
-        totalItems: number;
-        totalPrice: number;
-    }
+    // interface ICartState {
+    //     id?: string;
+    //     userId?: string;
+    //     items: ICartItem[];
+    //     totalItems: number;
+    //     totalPrice: number;
+    // }
 
-    interface ICartItem {
-        id?: string;
-        product: IProduct;
-        perfumeVariant?: IPerfumeVariant;
-        quantity: number;
-        price?: number;
-    }
+    // interface ICartItem {
+    //     id?: string;
+    //     product: IProduct;
+    //     perfumeVariant?: IPerfumeVariant;
+    //     quantity: number;
+    //     price?: number;
+    // }
 
     // Notification Types
     interface INotification {

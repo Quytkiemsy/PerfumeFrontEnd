@@ -123,7 +123,7 @@ const OrderDashboard: React.FC<IStatisticalProps> = ({ orders }) => {
 
     return (
         <div className="min-h-screen bg-gray-50">
-            <div className="lg:ml-64 space-y-6">
+            <div className="space-y-6">
                 {/* Header */}
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight">Order Dashboard</h1>

@@ -22,6 +22,8 @@ const AdminOrdersPage = async () => {
 
     const orders = res?.data?.result || [];
 
+    console.log('Admin Orders:', orders);
+
     return <ManageOrders orders={orders} />;
 };
 

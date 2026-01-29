@@ -65,7 +65,7 @@ const PerfumeAdminDashboard = ({ products, brands }: { products: IProduct[], bra
     });
 
     const [currentPage, setCurrentPage] = useState(1);
-    const pageSize = 3; // Số sản phẩm mỗi trang
+    const pageSize = 10; // Số sản phẩm mỗi trang
     const totalPages = Math.ceil(filteredProducts.length / pageSize);
 
     const paginatedProducts = filteredProducts.slice((currentPage - 1) * pageSize, currentPage * pageSize);
@@ -166,9 +166,9 @@ const PerfumeAdminDashboard = ({ products, brands }: { products: IProduct[], bra
     const expandedRows = getExpandedRows(paginatedProducts);
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen">
             {/* Main Content */}
-            <div className="lg:ml-64">
+            <div>
                 {/* Header */}
                 <header className="bg-white shadow-sm border-b">
                     <div className="flex items-center justify-between px-6 py-4">
