@@ -170,7 +170,7 @@ declare global {
         product?: IProduct;
         productId?: number;
         variant?: IPerfumeVariant;
-        helpful?: number;
+        helpfulCount?: number;
         verified?: boolean;
         status?: 'PENDING' | 'APPROVED' | 'REJECTED';
         adminReply?: string;

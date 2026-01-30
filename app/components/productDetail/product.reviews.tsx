@@ -68,7 +68,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({
             const res = await sendRequest<IBackendRes<IModelPaginate<IReview>>>({
                 url: `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/reviews/product/${productId}`,
                 method: 'GET',
-                queryParams: { page: 1, pageSize: 10 }
+                queryParams: { page: 0, size: 10 }
             });
             setReviews(res.data?.result || []);
         } catch (error) {
@@ -131,8 +131,12 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({
         try {
             await sendRequest<IBackendRes<void>>({
                 url: `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/reviews/${reviewId}/helpful`,
-                method: 'POST'
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${session?.accessToken}`
+                },
             });
+            
             fetchReviews();
         } catch (error) {
             console.error('Error marking helpful:', error);
@@ -318,15 +322,16 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({
                                     )}
 
                                     {/* Helpful */}
+                                    {session && (
                                     <div className="flex items-center gap-4 mt-4 pt-4 border-t">
                                         <button
                                             onClick={() => handleHelpful(review.id)}
                                             className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition-colors"
                                         >
                                             <ThumbsUp className="w-4 h-4" />
-                                            Hữu ích ({review.helpful || 0})
+                                            Hữu ích ({review.helpfulCount || 0})
                                         </button>
-                                    </div>
+                                    </div> )}
                                 </div>
                             ))}
                         </div>
