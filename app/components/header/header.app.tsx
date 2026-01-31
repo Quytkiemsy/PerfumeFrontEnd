@@ -137,6 +137,17 @@ export default async function Header({ brands }: { brands: IBrand[] }) {
                                                     <span className="font-medium">My Orders</span>
                                                 </Link>
                                             </li>
+                                            {session.user.role === 'ADMIN' && (
+                                                <li>
+                                                    <Link 
+                                                        href="/admin/dashboard" 
+                                                        className="flex items-center gap-3 px-4 py-3 text-sm text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 transition-all"
+                                                    >
+                                                        <span>⚙️</span>
+                                                        <span className="font-medium">Admin Dashboard</span>
+                                                    </Link>
+                                                </li>
+                                            )}
                                             <li className="border-t border-gray-100 mt-2 pt-2">
                                                 <ButtonLogout />
                                             </li>

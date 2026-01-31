@@ -2,6 +2,8 @@
 import {
     Download,
     Edit,
+    FileDown,
+    FileUp,
     Grid, List,
     Menu,
     MoreHorizontal,
@@ -9,10 +11,11 @@ import {
     Trash2,
     Upload
 } from 'lucide-react';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 
 // shadcn/ui components
 import { sendRequest, TIERS_OPTIONS } from '@/app/util/api';
+import { productApi } from '@/app/util/productApi';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -21,6 +24,7 @@ import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
+    DropdownMenuSeparator,
     DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
@@ -51,10 +55,122 @@ const PerfumeAdminDashboard = ({ products, brands }: { products: IProduct[], bra
     const [updatedProduct, setUpdatedProduct] = useState<IProduct>();
     const [showDeleteDialog, setShowDeleteDialog] = useState(false);
     const [deleteProductId, setDeleteProductId] = useState<number | null>(null);
+    const [showImportDialog, setShowImportDialog] = useState(false);
+    const [importMessages, setImportMessages] = useState<string[]>([]);
+    const [isExporting, setIsExporting] = useState(false);
+    const [isImporting, setIsImporting] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
     const { data: session, status } = useSession();
     const router = useRouter();
 
     const tiers = TIERS_OPTIONS;
+
+    // CSV Export function
+    const handleExportCSV = async () => {
+        if (!session?.accessToken) {
+            toast.error('Vui lòng đăng nhập để xuất CSV');
+            return;
+        }
+
+        setIsExporting(true);
+        try {
+            const blob = await productApi.exportProductsCSV(session.accessToken);
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `products_${new Date().toISOString().split('T')[0]}.csv`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(url);
+            toast.success('Xuất CSV thành công!');
+        } catch (error) {
+            console.error('Export error:', error);
+            toast.error('Lỗi khi xuất CSV');
+        } finally {
+            setIsExporting(false);
+        }
+    };
+
+    // Download CSV Template
+    const handleDownloadTemplate = async () => {
+        if (!session?.accessToken) {
+            toast.error('Vui lòng đăng nhập để tải template');
+            return;
+        }
+
+        try {
+            const blob = await productApi.downloadCSVTemplate(session.accessToken);
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'products_template.csv';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(url);
+            toast.success('Tải template thành công!');
+        } catch (error) {
+            console.error('Download template error:', error);
+            toast.error('Lỗi khi tải template');
+        }
+    };
+
+    // CSV Import function
+    const handleImportCSV = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+
+        if (!session?.accessToken) {
+            toast.error('Vui lòng đăng nhập để nhập CSV');
+            return;
+        }
+
+        // Validate file type
+        if (!file.name.endsWith('.csv')) {
+            toast.error('Vui lòng chọn file CSV');
+            return;
+        }
+
+        setIsImporting(true);
+        try {
+            const result = await productApi.importProductsCSV(file, session.accessToken);
+            
+            if (result.error) {
+                toast.error(result.message || 'Lỗi khi nhập CSV');
+                return;
+            }
+
+            // Show import results
+            setImportMessages(result.data?.messages || []);
+            setShowImportDialog(true);
+            
+            // Refresh products list
+            router.refresh();
+            
+            const successCount = result.data?.messages?.filter(m => m.includes('successfully')).length || 0;
+            const errorCount = result.data?.messages?.filter(m => m.includes('ERROR')).length || 0;
+            
+            if (errorCount === 0) {
+                toast.success(`Import thành công ${successCount} sản phẩm!`);
+            } else {
+                toast.success(`Import xong: ${successCount} thành công, ${errorCount} lỗi`);
+            }
+        } catch (error) {
+            console.error('Import error:', error);
+            toast.error('Lỗi khi nhập CSV');
+        } finally {
+            setIsImporting(false);
+            // Reset file input
+            if (fileInputRef.current) {
+                fileInputRef.current.value = '';
+            }
+        }
+    };
+
+    const triggerFileInput = () => {
+        fileInputRef.current?.click();
+    };
 
     const filteredProducts = products.filter(product => {
         const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -80,7 +196,7 @@ const PerfumeAdminDashboard = ({ products, brands }: { products: IProduct[], bra
 
             // call api to save the product
             const res = await sendRequest<IBackendRes<IProduct>>({
-                url: `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/products/${deleteProductId}`,
+                url: `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/admin/products/${deleteProductId}`,
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${session?.accessToken}`
@@ -184,14 +300,40 @@ const PerfumeAdminDashboard = ({ products, brands }: { products: IProduct[], bra
                             <h2 className="text-2xl font-semibold text-gray-900">Quản lý sản phẩm</h2>
                         </div>
                         <div className="flex items-center space-x-2">
-                            <Button variant="outline" size="sm">
-                                <Download className="mr-2 h-4 w-4" />
-                                Xuất
-                            </Button>
-                            <Button variant="outline" size="sm">
-                                <Upload className="mr-2 h-4 w-4" />
-                                Nhập
-                            </Button>
+                            {/* Hidden file input for CSV import */}
+                            <input
+                                type="file"
+                                ref={fileInputRef}
+                                onChange={handleImportCSV}
+                                accept=".csv"
+                                className="hidden"
+                            />
+                            
+                            {/* Export/Import Dropdown */}
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button variant="outline" size="sm" disabled={isExporting || isImporting}>
+                                        <Download className="mr-2 h-4 w-4" />
+                                        {isExporting ? 'Đang xuất...' : 'Xuất/Nhập'}
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                    <DropdownMenuItem onClick={handleExportCSV} disabled={isExporting}>
+                                        <FileDown className="mr-2 h-4 w-4" />
+                                        Xuất CSV (Export)
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={handleDownloadTemplate}>
+                                        <Download className="mr-2 h-4 w-4" />
+                                        Tải Template CSV
+                                    </DropdownMenuItem>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem onClick={triggerFileInput} disabled={isImporting}>
+                                        <FileUp className="mr-2 h-4 w-4" />
+                                        {isImporting ? 'Đang nhập...' : 'Nhập CSV (Import)'}
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+
                             <Button onClick={() => setShowAddModal(true)}>
                                 <Plus className="mr-2 h-4 w-4" />
                                 Thêm sản phẩm
@@ -482,6 +624,35 @@ const PerfumeAdminDashboard = ({ products, brands }: { products: IProduct[], bra
                     <div className="flex justify-end gap-2 pt-4">
                         <Button variant="outline" onClick={cancelDeleteProduct}>Hủy</Button>
                         <Button variant="destructive" onClick={confirmDeleteProduct}>Xóa</Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
+
+            {/* Import Results Dialog */}
+            <Dialog open={showImportDialog} onOpenChange={() => setShowImportDialog(false)}>
+                <DialogContent className="max-w-2xl max-h-[80vh]">
+                    <DialogHeader>
+                        <DialogTitle>Kết quả Import CSV</DialogTitle>
+                        <DialogDescription>
+                            Tổng số dòng đã xử lý: {importMessages.length}
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="overflow-y-auto max-h-[50vh] space-y-2 p-2">
+                        {importMessages.map((message, index) => (
+                            <div
+                                key={index}
+                                className={`p-2 rounded text-sm ${
+                                    message.includes('ERROR')
+                                        ? 'bg-red-50 text-red-700 border border-red-200'
+                                        : 'bg-green-50 text-green-700 border border-green-200'
+                                }`}
+                            >
+                                {message}
+                            </div>
+                        ))}
+                    </div>
+                    <div className="flex justify-end gap-2 pt-4">
+                        <Button onClick={() => setShowImportDialog(false)}>Đóng</Button>
                     </div>
                 </DialogContent>
             </Dialog>

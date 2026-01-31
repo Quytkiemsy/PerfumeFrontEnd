@@ -262,7 +262,7 @@ const SidebarAdmin = () => {
                                         {session?.user?.name || 'Admin'}
                                     </p>
                                     <p className="text-xs text-gray-600 truncate">
-                                        {session?.user?.email || 'admin@example.com'}
+                                        {session?.user?.username || 'admin@example.com'}
                                     </p>
                                 </div>
                                 <button

@@ -162,7 +162,7 @@ const ProductFormDialog = ({ product = null, isOpen, onClose, brands, tiers }: I
 
         // call api to save the product
         const res = await sendRequest<IBackendRes<IProduct>>({
-            url: `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/products`,
+            url: `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/admin/products`,
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${session?.accessToken}`
@@ -219,7 +219,7 @@ const ProductFormDialog = ({ product = null, isOpen, onClose, brands, tiers }: I
 
         // call api to save the product
         const res = await sendRequest<IBackendRes<IProduct>>({
-            url: `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/products`,
+            url: `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/admin/products`,
             method: 'PUT',
             headers: {
                 'Authorization': `Bearer ${session?.accessToken}`

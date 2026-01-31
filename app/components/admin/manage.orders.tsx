@@ -111,7 +111,7 @@ const ManageOrders: React.FC<ManageOrdersProps> = ({ orders: initialOrders }) =>
 
         try {
             const res = await sendRequest<IBackendRes<IOrder>>({
-                url: `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/orders/${selectedOrder.id}/status`,
+                url: `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/admin/orders/${selectedOrder.id}/status`,
                 method: 'PUT',
                 headers: {
                     'Authorization': `Bearer ${session?.accessToken}`

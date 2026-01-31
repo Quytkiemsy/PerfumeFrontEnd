@@ -2,7 +2,7 @@
 
 import { Ban, Check, Edit, Mail, MoreHorizontal, Phone, RefreshCw, Search, Shield, Trash2, User, UserPlus, X } from 'lucide-react';
 import Image from 'next/image';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -30,6 +30,7 @@ import { sendRequest } from '@/app/util/api';
 import { useSession } from 'next-auth/react';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
+import { revalidateAdminUsers } from '@/app/actions/revalidate';
 
 interface ManageUsersProps {
     users: IUser[];
@@ -47,6 +48,10 @@ const ManageUsers: React.FC<ManageUsersProps> = ({ users: initialUsers }) => {
     const [editForm, setEditForm] = useState<Partial<IUser>>({});
     const { data: session } = useSession();
     const router = useRouter();
+
+    useEffect(() => {
+        setUsers(initialUsers);
+    }, [initialUsers]);
 
     const getRoleColor = (role: string) => {
         switch (role) {
@@ -100,7 +105,7 @@ const ManageUsers: React.FC<ManageUsersProps> = ({ users: initialUsers }) => {
 
         try {
             const res = await sendRequest<IBackendRes<IUser>>({
-                url: `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/users/${selectedUser.id}`,
+                url: `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/admin/users/${selectedUser.id}`,
                 method: 'PUT',
                 headers: {
                     'Authorization': `Bearer ${session?.accessToken}`
@@ -127,7 +132,7 @@ const ManageUsers: React.FC<ManageUsersProps> = ({ users: initialUsers }) => {
 
         try {
             const res = await sendRequest<IBackendRes<void>>({
-                url: `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/users/${selectedUser.id}`,
+                url: `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/admin/users/${selectedUser.id}`,
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${session?.accessToken}`
@@ -152,7 +157,7 @@ const ManageUsers: React.FC<ManageUsersProps> = ({ users: initialUsers }) => {
         try {
             const newStatus = user.status === 'ACTIVE' ? 'BANNED' : 'ACTIVE';
             const res = await sendRequest<IBackendRes<IUser>>({
-                url: `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/users/${user.id}`,
+                url: `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/admin/users/${user.id}`,
                 method: 'PUT',
                 headers: {
                     'Authorization': `Bearer ${session?.accessToken}`
@@ -200,7 +205,7 @@ const ManageUsers: React.FC<ManageUsersProps> = ({ users: initialUsers }) => {
                     <h1 className="text-3xl font-bold text-gray-900">Quản lý người dùng</h1>
                     <p className="text-gray-500 mt-1">Quản lý tài khoản và phân quyền</p>
                 </div>
-                <Button onClick={() => router.refresh()} variant="outline">
+                <Button onClick={async () => { await revalidateAdminUsers(); router.refresh(); }} variant="outline">
                     <RefreshCw className="w-4 h-4 mr-2" />
                     Làm mới
                 </Button>

@@ -93,6 +93,7 @@ const authOptions: AuthOptions = {
                     //@ts-ignore
                     token.expiresAt = dayjs(new Date()).add(+(user.expiresIn as string) - 10,
                         ('second' as ManipulateType)).unix()
+                    console.log(">>> User logged in with role:", token.user?.role);
                 }
             }
             console.log(">>> old token ", token?.refreshToken?.slice(-4), " time", new Date().toISOString());
@@ -117,6 +118,7 @@ const authOptions: AuthOptions = {
             session.accessToken = token.accessToken
             session.refreshToken = token.refreshToken
             session.error = token.error as string
+            console.log(">>> Session created with user role:", session.user?.role);
             return session
         },
     }
@@ -141,11 +143,13 @@ async function refreshAccessToken(token: JWT) {
             });
             if (res.data) {
                 console.log(">>> refresh token success");
+                const updatedUser = res.data?.user ?? token.user;
+                console.log(">>> User role after refresh:", updatedUser?.role);
                 return {
                     ...token,
                     accessToken: res.data?.accessToken,
                     refreshToken: res.data?.refreshToken ?? token.refreshToken, // fallback về token cũ nếu không có mới
-                    user: res.data?.user ?? token.user,
+                    user: updatedUser,
                     expiresAt: dayjs(new Date()).add(+(res.data.expiresIn as string) - 10,
                         ('second' as ManipulateType)).unix(),
                     error: "",
