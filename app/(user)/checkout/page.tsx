@@ -1,6 +1,16 @@
 // app/checkout/page.tsx
 
 import CheckoutForm from "@/app/components/cart/checkout.form";
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+    title: 'Thanh Toán',
+    description: 'Hoàn tất đơn hàng của bạn tại Perfume Shop. Thanh toán an toàn, bảo mật.',
+    robots: {
+        index: false,
+        follow: false,
+    },
+};
 
 export default function CheckoutPage() {
     return (

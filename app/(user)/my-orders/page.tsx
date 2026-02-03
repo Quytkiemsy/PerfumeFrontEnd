@@ -2,6 +2,16 @@ import OrdersPage from "@/app/components/orders/orders.page";
 import { authOptions } from '@/app/lib/auth/authOptions';
 import { sendRequest } from "@/app/util/api";
 import { getServerSession } from "next-auth";
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+    title: 'Đơn Hàng Của Tôi',
+    description: 'Xem lịch sử đơn hàng và theo dõi tình trạng giao hàng tại Perfume Shop.',
+    robots: {
+        index: false,
+        follow: false,
+    },
+};
 
 const MyOrdersPage = async () => {
     const session = await getServerSession(authOptions);

@@ -3,6 +3,9 @@ import { useLikedProductsStore } from "@/app/store/likedProductsStore";
 import ProductCard from "@/app/components/productDetail/product.card";
 import { Heart } from "lucide-react";
 
+// Note: Metadata should be in a separate layout.tsx for client components
+// This page uses client-side state so metadata would go in like/layout.tsx
+
 export default function LikedProductsPage() {
     const likedProducts = useLikedProductsStore(state => state.likedProducts);
 

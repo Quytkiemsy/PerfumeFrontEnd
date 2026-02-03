@@ -153,9 +153,10 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                 <div className="relative w-full h-64 overflow-hidden bg-gradient-to-br from-gray-100 to-gray-50">
                     <Image
                         src={`/api/image?filename=${product?.images[0]}`}
-                        alt={product.name}
+                        alt={`${product.name}${product.brand?.name ? ` - Nước hoa ${product.brand.name}` : ''} chính hãng`}
                         fill
                         className="object-cover transition-transform duration-700 group-hover:scale-110"
+                        loading="lazy"
                     />
                     {/* Overlay gradient on hover */}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>

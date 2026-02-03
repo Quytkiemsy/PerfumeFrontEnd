@@ -29,7 +29,7 @@ const Homepage = async ({ luxuryProduct, menProduct, womenProduct, unisexProduct
             <section className="relative w-full h-[90vh] overflow-hidden group">
                 <Image
                     src={`/api/image?filename=${luxuryProduct?.images[0]}`}
-                    alt={luxuryProduct?.name}
+                    alt={`${luxuryProduct?.name} - Nước hoa luxury cao cấp từ ${luxuryProduct?.brand?.name || 'thương hiệu nổi tiếng'}`}
                     fill
                     className="object-cover transition-transform duration-700 group-hover:scale-105"
                     priority
@@ -93,7 +93,7 @@ const Homepage = async ({ luxuryProduct, menProduct, womenProduct, unisexProduct
                         <div className="relative aspect-[3/4]">
                             <Image
                                 src={`/api/image?filename=${menProduct?.images[0]}`}
-                                alt={menProduct?.name}
+                                alt={`${menProduct?.name} - Nước hoa nam chính hãng từ ${menProduct?.brand?.name || 'thương hiệu cao cấp'}`}
                                 fill
                                 priority
                                 className="object-cover transition-transform duration-700 group-hover:scale-110"
@@ -129,7 +129,7 @@ const Homepage = async ({ luxuryProduct, menProduct, womenProduct, unisexProduct
                         <div className="relative aspect-[3/4]">
                             <Image
                                 src={`/api/image?filename=${womenProduct?.images[0]}`}
-                                alt={womenProduct?.name}
+                                alt={`${womenProduct?.name} - Nước hoa nữ chính hãng từ ${womenProduct?.brand?.name || 'thương hiệu cao cấp'}`}
                                 fill
                                 priority
                                 className="object-cover transition-transform duration-700 group-hover:scale-110"
@@ -163,7 +163,7 @@ const Homepage = async ({ luxuryProduct, menProduct, womenProduct, unisexProduct
                         <div className="relative aspect-[3/4]">
                             <Image
                                 src={`/api/image?filename=${unisexProduct?.images[0]}`}
-                                alt={unisexProduct?.name}
+                                alt={`${unisexProduct?.name} - Nước hoa unisex chính hãng từ ${unisexProduct?.brand?.name || 'thương hiệu cao cấp'}`}
                                 fill
                                 priority
                                 className="object-cover transition-transform duration-700 group-hover:scale-110"

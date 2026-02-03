@@ -38,7 +38,7 @@ export const useCartStore = create<CartStore>()(
           set({ isLoading: true, error: null });
           try {
             const newItem: ICartItem = {
-              id: Date.now(), // Simple ID generation
+              id: Math.floor(Math.random() * 1000000).toString(), // Random ID generation as string
               perfumeVariants: product.perfumeVariants?.[0] || undefined,
               quantity,
               totalPrice: 0
