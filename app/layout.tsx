@@ -2,6 +2,7 @@
 import { LoadingProvider } from '@/app/components/hooks/LoadingProvider';
 import NextAuthWrapper from '@/app/lib/next.auth.wrapper';
 import SessionErrorHandler from '@/app/lib/session.error';
+import { LanguageProvider } from '@/app/i18n/LanguageContext';
 import { ReactNode, Suspense } from 'react';
 import { Toaster } from 'react-hot-toast';
 import type { Metadata, Viewport } from 'next';
@@ -110,20 +111,22 @@ const Layout = ({ children }: LayoutProps) => {
             </head>
             <body>
                 <NextAuthWrapper>
-                    <SessionErrorHandler>
-                        <Suspense fallback={
-                            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-white to-gray-100">
-                                <div className="text-center">
-                                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto mb-4"></div>
-                                    <p className="text-gray-600">Đang tải...</p>
+                    <LanguageProvider>
+                        <SessionErrorHandler>
+                            <Suspense fallback={
+                                <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-white to-gray-100">
+                                    <div className="text-center">
+                                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto mb-4"></div>
+                                        <p className="text-gray-600">Đang tải...</p>
+                                    </div>
                                 </div>
-                            </div>
-                        }>
-                            <LoadingProvider>
-                                {children}
-                            </LoadingProvider>
-                        </Suspense>
-                    </SessionErrorHandler>
+                            }>
+                                <LoadingProvider>
+                                    {children}
+                                </LoadingProvider>
+                            </Suspense>
+                        </SessionErrorHandler>
+                    </LanguageProvider>
                 </NextAuthWrapper>
                 <Toaster position="top-center" reverseOrder={false} />
             </body>

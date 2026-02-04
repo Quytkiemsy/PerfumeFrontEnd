@@ -5,12 +5,14 @@ import { signIn } from "next-auth/react";
 import { useRouter } from 'next/navigation';
 import { useState } from "react";
 import { toast } from 'react-hot-toast';
+import { useLanguage } from '@/app/i18n/LanguageContext';
 
 export default function LoginPopup() {
     const [isOpen, setIsOpen] = useState(false);
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     const router = useRouter();
+    const { t } = useLanguage();
     const callbackUrl = typeof window !== "undefined" ? window.location.href : "/";
 
     const handleCredentialLogin = async () => {
@@ -54,7 +56,7 @@ export default function LoginPopup() {
                 onClick={() => setIsOpen(true)}
                 className="cursor-pointer hover:underline underline-offset-4 decoration-[2px]"
             >
-                Đăng nhập
+                {t('login')}
             </button>
 
             <AnimatePresence>
@@ -82,15 +84,13 @@ export default function LoginPopup() {
 
                             {/* Title */}
                             <p className="text-center text-gray-800 text-sm mb-6">
-                                Check your order status, create a return,<br />
-                                start an exchange, or update your<br />
-                                account.
+                                {t('loginDescription')}
                             </p>
 
                             {/* Email */}
                             <input
                                 type="email"
-                                placeholder="Email*"
+                                placeholder={`${t('email')}*`}
                                 className="w-full border border-black px-4 py-3 mb-4 text-sm outline-none"
                                 value={username}
                                 onChange={(e) => setUsername(e.target.value)}
@@ -99,7 +99,7 @@ export default function LoginPopup() {
                             {/* Password */}
                             <input
                                 type="password"
-                                placeholder="Password*"
+                                placeholder={`${t('password')}*`}
                                 className="w-full border border-black px-4 py-3 mb-6 text-sm outline-none"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
@@ -111,13 +111,13 @@ export default function LoginPopup() {
                                 onClick={handleCredentialLogin}
                                 className="w-full bg-black text-white py-3 mb-4 text-sm font-bold uppercase tracking-wide"
                             >
-                                Sign in
+                                {t('signIn')}
                             </button>
 
                             {/* Forgot password */}
                             <div className="text-center mb-6">
                                 <a href="#" className="text-sm text-black underline">
-                                    Forgot password?
+                                    {t('forgotPassword')}
                                 </a>
                             </div>
 
@@ -126,13 +126,13 @@ export default function LoginPopup() {
                                 onClick={handleGoogleLogin}
                                 className="w-full border border-black py-3 mb-6 text-sm font-semibold hover:bg-gray-100"
                             >
-                                Sign in with Google
+                                {t('signInWithGoogle')}
                             </button>
 
                             {/* Create account */}
                             <div className="text-center">
                                 <a href="#" className="text-sm text-black underline">
-                                    Create an account
+                                    {t('createAccount')}
                                 </a>
                             </div>
                         </motion.div>

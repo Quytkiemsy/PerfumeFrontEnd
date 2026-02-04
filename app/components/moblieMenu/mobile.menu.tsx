@@ -8,10 +8,12 @@ import { Eye, MapPin, Package, User2, X } from "lucide-react";
 import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
 import { useState, useEffect } from "react";
+import { useLanguage } from '@/app/i18n/LanguageContext';
 
 // Separate component for session-dependent content to isolate useSession call
 function AuthSection({ onClose }: { onClose: () => void }) {
     const { data: session, status } = useSession();
+    const { t } = useLanguage();
     const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
@@ -38,6 +40,7 @@ function AuthSection({ onClose }: { onClose: () => void }) {
 
 export default function MobileMenu({ brands }: { brands: IBrand[] }) {
     const [open, setOpen] = useState(false);
+    const { t } = useLanguage();
 
     const toggleMenu = () => setOpen(!open);
 
@@ -65,7 +68,7 @@ export default function MobileMenu({ brands }: { brands: IBrand[] }) {
                 )}
             >
                 <div className="flex items-center justify-between px-4 py-4 border-b">
-                    <span className="font-bold text-lg">Reformation</span>
+                    <span className="font-bold text-lg">{t('brandName')}</span>
                     <button onClick={toggleMenu}>
                         <X className="w-6 h-6" />
                     </button>
@@ -113,9 +116,9 @@ export default function MobileMenu({ brands }: { brands: IBrand[] }) {
 
                 <div className="mt-6 px-4 flex flex-col gap-4 text-sm">
 
-                    <Link href="#" className="flex items-center gap-2"><Eye className="w-4 h-4" /> Order lookup</Link>
-                    <Link href="#" className="flex items-center gap-2"><Package className="w-4 h-4" /> Contact Ref</Link>
-                    <Link href="#" className="flex items-center gap-2"><MapPin className="w-4 h-4" /> Vietnam</Link>
+                    <Link href="#" className="flex items-center gap-2"><Eye className="w-4 h-4" /> {t('orderLookup')}</Link>
+                    <Link href="#" className="flex items-center gap-2"><Package className="w-4 h-4" /> {t('contactRef')}</Link>
+                    <Link href="#" className="flex items-center gap-2"><MapPin className="w-4 h-4" /> {t('vietnam')}</Link>
 
                     <AuthSection onClose={() => setOpen(false)} />
                 </div>
@@ -126,6 +129,7 @@ export default function MobileMenu({ brands }: { brands: IBrand[] }) {
 
 
 export const ButtonLogout = () => {
+    const { t } = useLanguage();
 
     const logoutFromBackend = async () => {
         await sendRequest<void>({
@@ -139,7 +143,7 @@ export const ButtonLogout = () => {
     }
     return (
         <button onClick={handleLogout} className="cursor-pointer block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-            Logout
+            {t('logout')}
         </button>
     )
 }

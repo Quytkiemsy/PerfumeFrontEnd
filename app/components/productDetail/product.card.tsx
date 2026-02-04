@@ -10,12 +10,14 @@ import { useSession } from "next-auth/react";
 import toast from "react-hot-toast";
 import { Heart, ShoppingCart } from "lucide-react";
 import { sendRequest } from "@/app/util/api";
+import { useLanguage } from "@/app/i18n/LanguageContext";
 
 interface ProductCardProps {
     product: IProduct;
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
+    const { t } = useLanguage();
     const [isLiked, setIsLiked] = useState(false);
     const [isLiking, setIsLiking] = useState(false);
     const addItem = useCartStore(state => state.addItem);
@@ -38,7 +40,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         e.stopPropagation();
         
         if (!product || !product.perfumeVariants || product.perfumeVariants.length === 0) {
-            toast.error('No variants available for this product.');
+            toast.error(t('noVariantsAvailable'));
             return;
         }
 
@@ -46,7 +48,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         const availableVariant = product.perfumeVariants.find(v => (v.stockQuantity ?? 0) > 0);
         
         if (!availableVariant) {
-            toast.error('Product is out of stock.');
+            toast.error(t('productOutOfStock'));
             return;
         }
 
@@ -65,7 +67,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         } else {
             addItem(productCart, localStorage.getItem('guestId') || '', 1);
         }
-        toast.success('Added to cart successfully!');
+        toast.success(t('addedToCartSuccess'));
     };
 
     const handleLike = async (e: React.MouseEvent) => {
@@ -73,7 +75,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         e.stopPropagation();
         
         if (!session?.user?.username) {
-            toast.error('Please login to like products.');
+            toast.error(t('pleaseLoginToLike'));
             return;
         }
 
@@ -92,7 +94,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                 });
                 removeLikedProduct(product.id);
                 setIsLiked(false);
-                toast.success('Removed from favorites!');
+                toast.success(t('removedFromFavorites'));
             } else {
                 // Like: add to favorites
                 const url = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/users/${session.user.username}/like/${product.id}`;
@@ -106,7 +108,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                 });
                 addLikedProduct(product);
                 setIsLiked(true);
-                toast.success('Added to favorites!');
+                toast.success(t('addedToFavorites'));
             }
             
             // Trigger a custom event to update the header count

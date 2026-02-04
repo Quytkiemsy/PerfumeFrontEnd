@@ -8,6 +8,11 @@ import { SEX_OPTIONS, TIERS_OPTIONS } from "@/app/util/api";
 import { getServerSession } from "next-auth";
 import Link from "next/link";
 import SearchForm from "@/app/components/header/search.form";
+import HeaderTopBar from "@/app/components/header/header.topbar";
+import LanguageToggle from "@/app/components/LanguageToggle";
+import AuthMenuLinks from "@/app/components/header/auth.menu.links";
+import HeaderMainNav from "@/app/components/header/header.mainnav";
+import HeaderLogo from "@/app/components/header/header.logo";
 
 
 export default async function Header({ brands }: { brands: IBrand[] }) {
@@ -16,24 +21,7 @@ export default async function Header({ brands }: { brands: IBrand[] }) {
     return (
         <header className="sticky top-0 z-50 bg-white shadow-md border-b border-gray-100">
             {/* Top Bar */}
-            <div className="bg-gradient-to-r from-gray-800 to-gray-900 text-white py-2">
-                <div className="max-w-7xl mx-auto px-4 flex items-center justify-between text-xs">
-                    <div className="flex items-center gap-4">
-                        <span className="flex items-center gap-1 hover:text-gray-200 transition cursor-pointer">
-                            🌍 Vietnam
-                        </span>
-                        <Link href="#" className="hover:text-gray-200 transition hidden md:block">
-                            📍 Our Stores
-                        </Link>
-                        <Link href="#" className="hover:text-gray-200 transition hidden md:block">
-                            🌱 Sustainability
-                        </Link>
-                    </div>
-                    <div className="hidden lg:block text-xs">
-                        ✨ Free shipping on orders over 500,000đ
-                    </div>
-                </div>
-            </div>
+            <HeaderTopBar />
 
             {/* Main Header */}
             <div className="max-w-7xl mx-auto px-4 py-4">
@@ -47,32 +35,12 @@ export default async function Header({ brands }: { brands: IBrand[] }) {
 
                         {/* Desktop Quick Links */}
                         <div className="hidden lg:flex items-center gap-6">
-                            <Link 
-                                href="/product?isNew=true" 
-                                className="text-sm font-semibold text-gray-700 hover:text-gray-900 transition-colors relative group"
-                            >
-                                🔥 New Arrivals
-                                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-gray-700 to-gray-900 group-hover:w-full transition-all duration-300"></span>
-                            </Link>
-                            <Link 
-                                href="/product" 
-                                className="text-sm font-semibold text-gray-700 hover:text-gray-900 transition-colors relative group"
-                            >
-                                All Products
-                                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-gray-700 to-gray-900 group-hover:w-full transition-all duration-300"></span>
-                            </Link>
+                            <HeaderMainNav />
                         </div>
                     </div>
 
                     {/* Center: Logo */}
-                    <Link href="/" className="flex items-center justify-center flex-shrink-0">
-                        <div className="text-center">
-                            <h1 className="text-2xl lg:text-3xl font-bold bg-gradient-to-r from-gray-800 to-gray-900 bg-clip-text text-transparent tracking-tight">
-                                ✨ Reformation
-                            </h1>
-                            <p className="text-xs text-gray-500 hidden lg:block">Premium Fragrance</p>
-                        </div>
-                    </Link>
+                    <HeaderLogo />
 
                     {/* Right: Icons + Auth */}
                     <div className="flex items-center gap-3 lg:gap-6 flex-1 justify-end">
@@ -88,6 +56,9 @@ export default async function Header({ brands }: { brands: IBrand[] }) {
                         <div className="relative">
                             <CounterShoppingBar />
                         </div>
+
+                        {/* Language Toggle */}
+                        <LanguageToggle />
 
                         {/* Auth Section (Desktop) */}
                         <div className="hidden lg:block ml-2">
@@ -109,49 +80,10 @@ export default async function Header({ brands }: { brands: IBrand[] }) {
                                             <p className="font-bold text-gray-900">{session.user.username}</p>
                                             <p className="text-xs text-gray-500">{session.user.email}</p>
                                         </div>
-                                        <ul className="py-2">
-                                            <li>
-                                                <Link 
-                                                    href="/profile" 
-                                                    className="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gradient-to-r hover:from-gray-50 hover:to-gray-100 transition-all"
-                                                >
-                                                    <span>👤</span>
-                                                    <span className="font-medium">My Profile</span>
-                                                </Link>
-                                            </li>
-                                            <li>
-                                                <Link 
-                                                    href="/profile/addresses" 
-                                                    className="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gradient-to-r hover:from-gray-50 hover:to-gray-100 transition-all"
-                                                >
-                                                    <span>📍</span>
-                                                    <span className="font-medium">My Addresses</span>
-                                                </Link>
-                                            </li>
-                                            <li>
-                                                <Link 
-                                                    href="/my-orders" 
-                                                    className="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gradient-to-r hover:from-gray-50 hover:to-gray-100 transition-all"
-                                                >
-                                                    <span>📦</span>
-                                                    <span className="font-medium">My Orders</span>
-                                                </Link>
-                                            </li>
-                                            {session.user.role === 'ADMIN' && (
-                                                <li>
-                                                    <Link 
-                                                        href="/admin/dashboard" 
-                                                        className="flex items-center gap-3 px-4 py-3 text-sm text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 transition-all"
-                                                    >
-                                                        <span>⚙️</span>
-                                                        <span className="font-medium">Admin Dashboard</span>
-                                                    </Link>
-                                                </li>
-                                            )}
-                                            <li className="border-t border-gray-100 mt-2 pt-2">
-                                                <ButtonLogout />
-                                            </li>
-                                        </ul>
+                                        <AuthMenuLinks session={session.user} />
+                                        <div className="border-t border-gray-100 mt-2 pt-2">
+                                            <ButtonLogout />
+                                        </div>
                                     </div>
                                 </div>
                             ) : (
