@@ -27,6 +27,7 @@ import {
     TableRow
 } from '@/components/ui/table';
 import { sendRequest } from '@/app/util/api';
+import { formatDateLong, formatDateTime } from '@/app/util/dateUtils';
 import { useSession } from 'next-auth/react';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
@@ -77,16 +78,6 @@ const ManageUsers: React.FC<ManageUsersProps> = ({ users: initialUsers }) => {
         }
     };
 
-    const formatDate = (dateString?: string) => {
-        if (!dateString) return '-';
-        return new Date(dateString).toLocaleDateString('vi-VN', {
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
-    };
 
     const handleEditUser = (user: IUser) => {
         setSelectedUser(user);
@@ -349,7 +340,7 @@ const ManageUsers: React.FC<ManageUsersProps> = ({ users: initialUsers }) => {
                                             {user.status === 'ACTIVE' ? 'Hoạt động' : user.status === 'BANNED' ? 'Đã khóa' : 'Không hoạt động'}
                                         </Badge>
                                     </TableCell>
-                                    <TableCell>{formatDate(user.createdAt)}</TableCell>
+                                    <TableCell>{formatDateTime(user.createdAt)}</TableCell>
                                     <TableCell className="text-right">
                                         <DropdownMenu>
                                             <DropdownMenuTrigger asChild>
@@ -470,11 +461,11 @@ const ManageUsers: React.FC<ManageUsersProps> = ({ users: initialUsers }) => {
                                 </div>
                                 <div>
                                     <p className="text-sm text-gray-500">Ngày tạo</p>
-                                    <p className="font-medium">{formatDate(selectedUser.createdAt)}</p>
+                                    <p className="font-medium">{formatDateTime(selectedUser.createdAt)}</p>
                                 </div>
                                 <div>
                                     <p className="text-sm text-gray-500">Cập nhật lần cuối</p>
-                                    <p className="font-medium">{formatDate(selectedUser.updatedAt)}</p>
+                                    <p className="font-medium">{formatDateTime(selectedUser.updatedAt)}</p>
                                 </div>
                             </div>
                         </div>

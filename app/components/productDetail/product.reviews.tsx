@@ -12,6 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { sendRequest } from '@/app/util/api';
+import { formatDateLong } from '@/app/util/dateUtils';
 
 interface ProductReviewsProps {
     productId: number;
@@ -141,15 +142,6 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({
         } catch (error) {
             console.error('Error marking helpful:', error);
         }
-    };
-
-    const formatDate = (dateString?: string) => {
-        if (!dateString) return '';
-        return new Date(dateString).toLocaleDateString('vi-VN', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-        });
     };
 
     const renderStars = (rating: number, size: 'sm' | 'md' | 'lg' = 'md', interactive = false, onRate?: (r: number) => void) => {
@@ -285,7 +277,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({
                                                         </span>
                                                     )}
                                                 </div>
-                                                <p className="text-sm text-gray-500">{formatDate(review.createdAt)}</p>
+                                                <p className="text-sm text-gray-500">{formatDateLong(review.createdAt)}</p>
                                             </div>
                                         </div>
                                         {renderStars(review.rating, 'sm')}

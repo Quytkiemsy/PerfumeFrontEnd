@@ -7,11 +7,37 @@ import clsx from "clsx";
 import { Eye, MapPin, Package, User2, X } from "lucide-react";
 import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+
+// Separate component for session-dependent content to isolate useSession call
+function AuthSection({ onClose }: { onClose: () => void }) {
+    const { data: session, status } = useSession();
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
+    if (!mounted || status === 'loading') {
+        return <div className="h-10" />;
+    }
+
+    if (session?.user) {
+        return (
+            <>
+                <Link href="/profile" className="flex items-center gap-2" onClick={onClose}>
+                    <User2 className="w-4 h-4" /> {session.user.username}
+                </Link>
+                <ButtonLogout />
+            </>
+        );
+    }
+
+    return <LoginPopup />;
+}
 
 export default function MobileMenu({ brands }: { brands: IBrand[] }) {
     const [open, setOpen] = useState(false);
-    const { data: session } = useSession();
 
     const toggleMenu = () => setOpen(!open);
 
@@ -91,16 +117,7 @@ export default function MobileMenu({ brands }: { brands: IBrand[] }) {
                     <Link href="#" className="flex items-center gap-2"><Package className="w-4 h-4" /> Contact Ref</Link>
                     <Link href="#" className="flex items-center gap-2"><MapPin className="w-4 h-4" /> Vietnam</Link>
 
-                    {
-                        session?.user ? (
-                            <>
-                                <Link href="/profile" className="flex items-center gap-2"><User2 className="w-4 h-4" /> {session.user.username}</Link>
-                                <ButtonLogout />
-                            </>
-                        ) : (
-                            <LoginPopup />
-                        )
-                    }
+                    <AuthSection onClose={() => setOpen(false)} />
                 </div>
             </aside>
         </>

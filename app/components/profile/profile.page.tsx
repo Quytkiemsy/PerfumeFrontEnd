@@ -14,6 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { sendRequest } from '@/app/util/api';
+import { formatDateLong } from '@/app/util/dateUtils';
 
 interface ProfilePageProps {
     user: IUser;
@@ -104,15 +105,6 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ user: initialUser }) => {
         } catch (error) {
             toast.error('Có lỗi xảy ra');
         }
-    };
-
-    const formatDate = (dateString?: string) => {
-        if (!dateString) return '-';
-        return new Date(dateString).toLocaleDateString('vi-VN', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-        });
     };
 
     return (
@@ -294,7 +286,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ user: initialUser }) => {
                                             </div>
                                             <div>
                                                 <p className="text-sm text-gray-500">Ngày tham gia</p>
-                                                <p className="font-medium">{formatDate(user.createdAt)}</p>
+                                                <p className="font-medium">{formatDateLong(user.createdAt)}</p>
                                             </div>
                                         </div>
                                     </div>

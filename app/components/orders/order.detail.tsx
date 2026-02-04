@@ -2,6 +2,7 @@
 
 import { sendRequest } from '@/app/util/api';
 import { orderApi } from '@/app/util/orderApi';
+import { formatDateTime } from '@/app/util/dateUtils';
 import {
     AlertCircle,
     ArrowBigRightDash,
@@ -100,16 +101,6 @@ const OrderDetailPage: React.FC<IOrderProps> = ({ order }: IOrderProps) => {
             style: 'currency',
             currency: 'VND'
         }).format(price);
-    };
-
-    const formatDate = (dateString: string) => {
-        return new Date(dateString).toLocaleDateString('vi-VN', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
     };
     const statusConfig = getStatusConfig(order.status);
     const StatusIcon = statusConfig.icon;
@@ -223,7 +214,7 @@ const OrderDetailPage: React.FC<IOrderProps> = ({ order }: IOrderProps) => {
                                 </div>
                                 <div className="flex items-center space-x-2 text-sm text-gray-500">
                                     <Calendar className="h-4 w-4" />
-                                    <span>Đặt hàng vào {formatDate(order.createdAt)}</span>
+                                    <span>Đặt hàng vào {formatDateTime(order.createdAt)}</span>
                                 </div>
                             </div>
                         </div>

@@ -19,6 +19,7 @@ import {
     TableRow
 } from '@/components/ui/table';
 import { sendRequest } from '@/app/util/api';
+import { formatDateTime } from '@/app/util/dateUtils';
 import { useSession } from 'next-auth/react';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
@@ -94,16 +95,6 @@ const ManageOrders: React.FC<ManageOrdersProps> = ({ orders: initialOrders }) =>
             style: 'currency',
             currency: 'VND'
         }).format(price);
-    };
-
-    const formatDate = (dateString: string) => {
-        return new Date(dateString).toLocaleDateString('vi-VN', {
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
     };
 
     const handleUpdateStatus = async () => {
@@ -283,7 +274,7 @@ const ManageOrders: React.FC<ManageOrdersProps> = ({ orders: initialOrders }) =>
                                                 <p className="text-sm text-gray-500">{order.shippingInfo.phoneNumber}</p>
                                             </div>
                                         </TableCell>
-                                        <TableCell>{formatDate(order.createdAt)}</TableCell>
+                                        <TableCell>{formatDateTime(order.createdAt)}</TableCell>
                                         <TableCell className="font-medium text-green-600">
                                             {formatPrice(order.totalPrice)}
                                         </TableCell>
@@ -413,7 +404,7 @@ const ManageOrders: React.FC<ManageOrdersProps> = ({ orders: initialOrders }) =>
                                     <p className="text-sm text-gray-500">Ngày đặt</p>
                                     <div className="flex items-center gap-2">
                                         <Calendar className="w-4 h-4 text-gray-400" />
-                                        <span>{formatDate(selectedOrder.createdAt)}</span>
+                                        <span>{formatDateTime(selectedOrder.createdAt)}</span>
                                     </div>
                                 </div>
                             </div>

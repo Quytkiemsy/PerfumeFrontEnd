@@ -37,6 +37,7 @@ import {
     XAxis,
     YAxis
 } from 'recharts';
+import { formatDate, formatDateTime } from '@/app/util/dateUtils';
 
 interface IStatisticalProps {
     orders: IOrder[];
@@ -141,7 +142,7 @@ const OrderDashboard: React.FC<IStatisticalProps> = ({ orders }) => {
 
         return Array.from(dateMap.entries())
             .map(([date, revenue]) => ({
-                date: new Date(date).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' }),
+                date: formatDate(date),
                 fullDate: date,
                 revenue: (revenue as number) / 1000000,
                 orders: orderCountMap.get(date) || 0
@@ -819,17 +820,7 @@ const OrderDashboard: React.FC<IStatisticalProps> = ({ orders }) => {
                                                 </TableCell>
                                                 <TableCell>
                                                     <div className="text-sm text-gray-600">
-                                                        {new Date(order.createdAt).toLocaleDateString('vi-VN', {
-                                                            day: '2-digit',
-                                                            month: '2-digit',
-                                                            year: 'numeric'
-                                                        })}
-                                                    </div>
-                                                    <div className="text-xs text-gray-400">
-                                                        {new Date(order.createdAt).toLocaleTimeString('vi-VN', {
-                                                            hour: '2-digit',
-                                                            minute: '2-digit'
-                                                        })}
+                                                        {formatDateTime(order.createdAt)}
                                                     </div>
                                                 </TableCell>
                                             </TableRow>

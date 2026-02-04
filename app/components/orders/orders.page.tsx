@@ -13,6 +13,8 @@ import { sendRequest } from '@/app/util/api';
 import { orderApi } from '@/app/util/orderApi';
 import toast from 'react-hot-toast';
 import { useSession } from 'next-auth/react';
+import { formatDateTime } from '@/app/util/dateUtils';
+import { formatDateLong } from '@/app/util/dateUtils';
 
 const statusList: OrderStatus[] = ['PENDING', 'PAID', 'SHIPPING', 'CANCELLED'];
 
@@ -89,16 +91,6 @@ const OrdersPage: React.FC<{ orders: IOrder[] }> = ({ orders }) => {
             style: 'currency',
             currency: 'VND'
         }).format(price);
-    };
-
-    const formatDate = (dateString: string) => {
-        return new Date(dateString).toLocaleDateString('vi-VN', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
     };
 
     const handleChangePayment = (order: IOrder) => {
@@ -234,7 +226,7 @@ const OrdersPage: React.FC<{ orders: IOrder[] }> = ({ orders }) => {
                                             </h3>
                                             <div className="flex items-center space-x-2 text-sm text-gray-500 mt-1">
                                                 <Calendar className="h-4 w-4" />
-                                                <span>{formatDate(order.createdAt)}</span>
+                                                <span>{formatDateTime(order.createdAt)}</span>
                                             </div>
                                         </div>
                                     </div>
