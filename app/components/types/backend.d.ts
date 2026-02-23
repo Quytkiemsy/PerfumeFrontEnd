@@ -219,4 +219,68 @@ declare global {
         createdAt: string;
     }
 
+    // Dashboard Types
+    type DashboardPeriod = 'week' | 'month' | 'year';
+
+    interface DashboardDTO {
+        // Overview Cards
+        totalRevenue: number;
+        revenueGrowthPercent: number;
+        totalOrders: number;
+        orderGrowthPercent: number;
+        totalUsers: number;
+        userGrowthPercent: number;
+        totalProducts: number;
+
+        // Charts & Tables
+        orderStatusDistribution: Record<string, number>;
+        revenueChart: RevenueChartItem[] | null;
+        topSellingProducts: TopProductItem[] | null;
+        topVisitedProducts: TopProductItem[] | null;
+        recentOrders: RecentOrderItem[] | null;
+        revenueByBrand: BrandRevenueItem[] | null;
+        revenueByPaymentMethod: Record<string, number> | null;
+        lowStockProducts: LowStockItem[] | null;
+    }
+
+    interface RevenueChartItem {
+        label: string;
+        revenue: number;
+        orders: number;
+    }
+
+    interface TopProductItem {
+        productId: number;
+        productName: string;
+        image: string | null;
+        totalSold: number | null;
+        totalRevenue: number | null;
+        visitCount: number | null;
+    }
+
+    interface RecentOrderItem {
+        orderId: number;
+        customerName: string;
+        customerEmail: string;
+        totalPrice: number;
+        status: OrderStatus;
+        paymentMethod: string;
+        createdAt: string;
+    }
+
+    interface BrandRevenueItem {
+        brandId: number;
+        brandName: string;
+        revenue: number;
+        orderCount: number;
+    }
+
+    interface LowStockItem {
+        productId: number;
+        productName: string;
+        variantInfo: string;
+        stockQuantity: number;
+        variantId: number;
+    }
+
 }

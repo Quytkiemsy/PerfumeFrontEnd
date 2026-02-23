@@ -1,6 +1,6 @@
 import OrderDashboard from '@/app/components/statistical/page';
 import { getSession } from '@/app/lib/auth/authOptions';
-import { sendRequest } from '@/app/util/api';
+import { dashboardApi } from '@/app/util/dashboardApi';
 import React from 'react';
 
 const DashboardPage = async () => {
@@ -16,7 +16,7 @@ const DashboardPage = async () => {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                         </svg>
                     </div>
-                    <h1 className="text-2xl font-bold text-gray-900 mb-2">⛔ Access Denied</h1>
+                    <h1 className="text-2xl font-bold text-gray-900 mb-2">Truy cập bị từ chối</h1>
                     <p className="text-gray-600 mb-6">
                         Bạn không có quyền truy cập trang này. Chỉ Admin mới được phép.
                     </p>
@@ -31,16 +31,22 @@ const DashboardPage = async () => {
         );
     }
 
-    const resProducts = await sendRequest<IBackendRes<IModelPaginate<IOrder>>>({
-        url: `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/admin/orders/all`,
-        method: 'GET',
-        headers: {
-            Authorization: `Bearer ${session?.accessToken}`
+    // Fetch initial dashboard data (SSR)
+    let initialData: DashboardDTO | null = null;
+    try {
+        const res = await dashboardApi.getFullDashboard('month', session.accessToken);
+        if (res.data) {
+            initialData = res.data;
         }
-    });
-    const orders = resProducts.data?.result || [] as IOrder[];
+    } catch (err) {
+        console.error('Failed to fetch initial dashboard data:', err);
+    }
+
     return (
-        <OrderDashboard orders={orders} />
+        <OrderDashboard 
+            accessToken={session.accessToken} 
+            initialData={initialData} 
+        />
     );
 }
 
