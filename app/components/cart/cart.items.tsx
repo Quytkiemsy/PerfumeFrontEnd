@@ -1,9 +1,11 @@
 'use client'
 
 import { useCartStore } from '@/app/store/cartStore'
+import { sendRequest } from '@/app/util/api'
 import { useSession } from 'next-auth/react'
 import Image from 'next/image'
-import { useEffect } from 'react'
+import { useEffect, useState, useCallback } from 'react'
+import toast from 'react-hot-toast'
 
 interface ProductStockInfo {
     variantId: number;
@@ -19,8 +21,89 @@ interface CartItemProps {
 }
 
 export function CartItem({ item, stockStatus }: CartItemProps) {
-    const { updateQuantity, removeItem } = useCartStore()
+    const { updateQuantity, removeItem, addItem, fetchCart, swapVariant } = useCartStore()
     const { data: session, status } = useSession();
+
+    // State for variant/volume selection
+    const currentVariant = item.perfumeVariants;
+    const product = currentVariant?.product;
+
+    const [fullProduct, setFullProduct] = useState<IProduct | null>(null);
+    const [isLoadingVariants, setIsLoadingVariants] = useState(false);
+    const [selectedType, setSelectedType] = useState<string>(currentVariant?.variantType ?? '');
+    const [selectedVolume, setSelectedVolume] = useState<string>(currentVariant?.volume ?? '');
+    const [isChangingVariant, setIsChangingVariant] = useState(false);
+
+    // Fetch full product data (with all variants) from DB
+    const fetchFullProduct = useCallback(async () => {
+        const productId = product?.id;
+        if (!productId) return;
+
+        setIsLoadingVariants(true);
+        try {
+            const res = await sendRequest<IBackendRes<IProduct>>({
+                url: `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/products/${productId}`,
+                method: 'GET',
+            });
+            if (res?.data) {
+                setFullProduct(res.data);
+            }
+        } catch (error) {
+            console.error('Failed to fetch product variants:', error);
+        } finally {
+            setIsLoadingVariants(false);
+        }
+    }, [product?.id]);
+
+    useEffect(() => {
+        fetchFullProduct();
+    }, [fetchFullProduct]);
+
+    const allVariants = fullProduct?.perfumeVariants ?? [];
+
+    // Get unique variant types
+    const availableTypes = [...new Set(allVariants.map(v => v.variantType).filter(Boolean))] as string[];
+
+    // Get volumes for the selected type
+    const volumesForType = allVariants.filter(v => v.variantType === selectedType);
+
+
+    // Sync state when item changes externally
+    useEffect(() => {
+        setSelectedType(currentVariant?.variantType ?? '');
+        setSelectedVolume(currentVariant?.volume ?? '');
+    }, [currentVariant?.id]);
+
+    // Handle variant change (type or volume)
+    const handleVariantChange = async (newType: string, newVolume: string) => {
+        const newVariant = allVariants.find(v => v.variantType === newType && v.volume === newVolume);
+        if (!newVariant || !product || newVariant.id === currentVariant?.id) return;
+
+        if ((newVariant.stockQuantity ?? 0) === 0) {
+            toast.error('Dung tích này đã hết hàng!');
+            // Reset selection
+            setSelectedType(currentVariant?.variantType ?? '');
+            setSelectedVolume(currentVariant?.volume ?? '');
+            return;
+        }
+
+        setIsChangingVariant(true);
+        try {
+            const userId = session?.user?.username || localStorage.getItem('guestId') || '';
+
+            // Swap variant in one atomic operation (no intermediate re-render)
+            await swapVariant(userId, product, String(currentVariant?.id), newVariant, item.quantity);
+
+            toast.success('Đã thay đổi dung tích!');
+        } catch (error) {
+            toast.error('Không thể thay đổi dung tích. Vui lòng thử lại.');
+            // Reset selection on error
+            setSelectedType(currentVariant?.variantType ?? '');
+            setSelectedVolume(currentVariant?.volume ?? '');
+        } finally {
+            setIsChangingVariant(false);
+        }
+    };
 
     // Auto-adjust quantity if exceeds available stock
     useEffect(() => {
@@ -63,9 +146,9 @@ export function CartItem({ item, stockStatus }: CartItemProps) {
     const isOutOfStock = stockStatus?.availableStock === 0;
     const isLowStock = stockStatus && stockStatus.availableStock > 0 && stockStatus.availableStock < 5;
     const isOverQuantity = stockStatus && !stockStatus.available && stockStatus.availableStock > 0;
-
+    console.log('Stock status for item:', item);
     return (
-        <div className={`flex flex-col sm:flex-row sm:items-center gap-4 p-4 border-b border-gray-200 w-full ${isOutOfStock ? 'bg-red-50/50' : ''}`}>
+        <div className={`flex flex-col sm:flex-row sm:items-start gap-4 p-4 border-b border-gray-200 w-full ${isOutOfStock ? 'bg-red-50/50' : ''} ${isChangingVariant ? 'opacity-60 pointer-events-none' : ''}`}>
             <div className="relative w-16 h-16 flex-shrink-0 mx-auto sm:mx-0">
                 <Image
                     src={`/api/image?filename=${item?.perfumeVariants?.product?.images?.[0]}`}
@@ -84,7 +167,80 @@ export function CartItem({ item, stockStatus }: CartItemProps) {
                     {item?.perfumeVariants?.product?.name}
                 </h3>
                 <p className="text-xs sm:text-sm text-gray-500">₫{(item?.perfumeVariants?.price?.toLocaleString('en-US') ?? 0)} mỗi cái</p>
-                <p className="text-xs sm:text-sm text-gray-500">Dung tích: {item?.perfumeVariants?.volume ?? 0} ml</p>
+
+                {/* Variant Type & Volume Selector */}
+                {allVariants.length > 0 ? (
+                    <div className="mt-2 space-y-2">
+                        {/* Variant Type Selector */}
+                        {availableTypes.length > 1 && (
+                            <div>
+                                <label className="block text-xs font-semibold text-gray-500 mb-1">Loại</label>
+                                <div className="flex gap-1.5 flex-wrap">
+                                    {availableTypes.map((type) => (
+                                        <button
+                                            key={type}
+                                            onClick={() => {
+                                                setSelectedType(type);
+                                                // Auto-select first available volume for new type
+                                                const firstVolumeForType = allVariants.find(v => v.variantType === type && (v.stockQuantity ?? 0) > 0);
+                                                const newVol = firstVolumeForType?.volume ?? allVariants.find(v => v.variantType === type)?.volume ?? '';
+                                                setSelectedVolume(newVol);
+                                                if (newVol) {
+                                                    handleVariantChange(type, newVol);
+                                                }
+                                            }}
+                                            className={`py-1 px-3 rounded-lg font-medium text-xs transition-all duration-200
+                                                ${type === selectedType
+                                                    ? 'bg-gray-800 text-white shadow-sm'
+                                                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                                }`}
+                                        >
+                                            {type === 'FULLBOTTLE' ? '🍾 Full Bottle' : '💧 Decant'}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Volume Selector */}
+                        <div>
+                            <label className="block text-xs font-semibold text-gray-500 mb-1">Dung tích</label>
+                            <div className="flex gap-1.5 flex-wrap">
+                                {volumesForType.map((variant, i) => {
+                                    const isSelected = selectedVolume === variant.volume;
+                                    const isVariantOutOfStock = (variant.stockQuantity ?? 0) === 0;
+
+                                    return (
+                                        <button
+                                            key={i}
+                                            disabled={isVariantOutOfStock}
+                                            onClick={() => {
+                                                if (variant.volume && variant.volume !== currentVariant?.volume) {
+                                                    setSelectedVolume(variant.volume);
+                                                    handleVariantChange(selectedType, variant.volume);
+                                                }
+                                            }}
+                                            className={`relative py-1 px-3 rounded-lg font-medium text-xs transition-all duration-200
+                                                ${isSelected
+                                                    ? 'bg-gray-800 text-white shadow-sm ring-1 ring-gray-400'
+                                                    : isVariantOutOfStock
+                                                        ? 'bg-gray-50 text-gray-300 cursor-not-allowed line-through'
+                                                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                                }`}
+                                        >
+                                            {variant?.volume}ml
+                                            {isVariantOutOfStock && (
+                                                <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-400 rounded-full" />
+                                            )}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    </div>
+                ) : (
+                    <p className="text-xs sm:text-sm text-gray-500">Dung tích: {item?.perfumeVariants?.volume ?? 0} ml</p>
+                )}
 
                 {/* Stock Quantity Display */}
                 {stockStatus && (

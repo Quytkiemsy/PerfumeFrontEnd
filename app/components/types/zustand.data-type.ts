@@ -68,6 +68,7 @@ declare global {
         addItem: (product: IProduct, userId: string, quantity?: number) => void
         removeItem: (product: IProduct, userId: string, variantId: string) => void
         updateQuantity: (product: IProduct, quantity: number, userId: string, variant: IPerfumeVariant) => void
+        swapVariant: (userId: string, product: IProduct, oldVariantId: string, newVariant: IPerfumeVariant, quantity: number) => Promise<void>
         clearCart: (userId: string) => void
         syncWithServer?: () => void
         setHasHydrated: () => void

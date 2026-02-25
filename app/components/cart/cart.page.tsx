@@ -129,6 +129,7 @@ export default function CartPage() {
             </div>
         )
     }
+    console.log('Cart items:', items);
 
     // Empty cart
     if (items && items.length === 0) {

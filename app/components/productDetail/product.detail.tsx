@@ -49,6 +49,8 @@ export default function ProductDetail({ product, sortedProductByPrice }: IProduc
 
     const mainImgRef = useRef<HTMLImageElement | null>(null);
 
+    console.log('Selected product:', product);
+
     return (
         <>
             <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">

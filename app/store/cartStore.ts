@@ -27,6 +27,7 @@ export const useCartStore = create<CartStore>()(
           set({ isLoading: true, error: null });
           try {
             const cart: ICartState = await cartApi.getCart(userId);
+            console.log("cart redis", cart);
             set({ ...cart, isLoading: false });
           } catch (error) {
             const errorMessage = error instanceof Error ? error.message : 'Failed to fetch cart';
@@ -70,6 +71,46 @@ export const useCartStore = create<CartStore>()(
           } catch (error) {
             const errorMessage = error instanceof Error ? error.message : 'Failed to add item';
             set({ error: errorMessage, isLoading: false });
+          }
+        },
+
+        swapVariant: async (userId: string, product: IProduct, oldVariantId: string, newVariant: IPerfumeVariant, quantity: number) => {
+          const currentState = get();
+          const currentItems = currentState.items;
+
+          // Optimistic update: swap variant on existing item immediately (keeps same item ID → no remount)
+          const optimisticItems = currentItems.map(item => {
+            if (String(item.perfumeVariants?.id) === oldVariantId) {
+              return {
+                ...item,
+                perfumeVariants: {
+                  ...newVariant,
+                  product: item.perfumeVariants?.product, // preserve product data
+                },
+                totalPrice: (newVariant.price ?? 0) * item.quantity,
+              };
+            }
+            return item;
+          });
+          const optimisticTotal = optimisticItems.reduce((sum, i) => sum + (i.totalPrice ?? 0), 0);
+          set({ items: optimisticItems, totalPrice: optimisticTotal, error: null });
+
+          try {
+            // Sync with backend (no state update — optimistic data is already correct)
+            await cartApi.removeItem(userId, String(product.id), oldVariantId);
+            const newItem: ICartItem = {
+              id: Math.floor(Math.random() * 1000000).toString(),
+              perfumeVariants: newVariant,
+              quantity,
+              totalPrice: 0
+            }
+            await cartApi.addItem(userId, newItem);
+          } catch (error) {
+            // Rollback on error
+            set({ items: currentItems, totalPrice: currentState.totalPrice });
+            const errorMessage = error instanceof Error ? error.message : 'Failed to swap variant';
+            set({ error: errorMessage });
+            throw error;
           }
         },
 
